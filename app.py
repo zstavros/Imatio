@@ -23,7 +23,7 @@ def get_gspread_client():
 
 def load_tab(tab_name):
     client = get_gspread_client()
-    sheet_url = st.secrets["spreadsheet_url"]
+    sheet_url = "https://docs.google.com/spreadsheets/d/18_Rke4EW04J0QaTw2PBgU1Q-NLgT7G2l3yR0NvX1jmE/edit?gid=0#gid=0"
     sh = client.open_by_url(sheet_url)
     worksheet = sh.worksheet(tab_name)
     data = worksheet.get_all_records()

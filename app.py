@@ -5,7 +5,12 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 
-st.set_page_config(page_title="ImatioApp", page_icon="🧺", layout="centered")
+st.set_page_config(
+    page_title="ImatioApp", 
+    page_icon="🧺", 
+    layout="centered",
+    initial_sidebar_state="collapsed"  # Κλείνει αυτόματα την πλευρική μπάρα
+)
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",

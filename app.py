@@ -12,6 +12,18 @@ st.set_page_config(
     initial_sidebar_state="collapsed"  # Κλείνει αυτόματα την πλευρική μπάρα
 )
 
+# Κρύβει τα κουμπιά GitHub, Fork, Streamlit menu & Footer
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            .stAppHeader {display: none;}
+            [data-testid="stToolbar"] {display: none;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"

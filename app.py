@@ -9,7 +9,7 @@ st.set_page_config(
     page_title="ImatioApp", 
     page_icon="🧺", 
     layout="centered",
-    initial_sidebar_state="collapsed"  # Κλείνει αυτόματα την πλευρική μπάρα
+   # initial_sidebar_state="collapsed"  # Κλείνει αυτόματα την πλευρική μπάρα
 )
 
 # Κρύβει τα κουμπιά GitHub, Fork, Streamlit menu & Footer

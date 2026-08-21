@@ -14,10 +14,14 @@ SCOPES = [
 ]
 
 @st.cache_resource(ttl=600)
-@st.cache_resource(ttl=600)
 def get_gspread_client():
-    # Διαβάζει όλο το JSON αυτούσιο χωρίς να μπερδεύεται το TOML
-    creds_dict = json.loads(st.secrets["gcp_service_account_json"])
+    # Διαβάζει το section [gcp_service_account] από τα Secrets
+    creds_dict = dict(st.secrets["gcp_service_account"])
+    
+    # Διορθώνει τα newlines στο private key αν χρειαστεί
+    if "private_key" in creds_dict:
+        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+        
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     return gspread.authorize(creds)
 

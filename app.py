@@ -128,23 +128,23 @@ if user_role == "📱 Πελάτης":
 else:
     st.sidebar.divider()
     
-    # Έλεγχος αν ο χρήστης είναι συνδεδεμένος μέσω Google OAuth
-    if not st.experimental_user.is_logged_in:
+    # Έλεγχος ταυτοποίησης χρήστη
+    if not st.user.is_logged_in:
         st.subheader("🔒 Περιοχή Διαχειριστή")
         st.info("Παρακαλώ συνδεθείτε με τον λογαριασμό Google για πρόσβαση.")
         if st.button("🔑 Σύνδεση με Google", type="primary"):
             st.login()
     else:
-        user_email = st.experimental_user.email
+        user_email = st.user.email
         admin_email = st.secrets["auth"].get("admin_email", "")
 
-        # Έλεγχος αν το email του χρήστη έχει δικαιώματα Admin
+        # Έλεγχος αν το email έχει δικαιώματα Admin
         if user_email.lower() != admin_email.lower():
             st.error(f"❌ Ο λογαριασμός **{user_email}** δεν έχει δικαιώματα διαχειριστή.")
             if st.button("🚪 Αποσύνδεση"):
                 st.logout()
         else:
-            st.sidebar.write(f"👤 **{st.experimental_user.name}**")
+            st.sidebar.write(f"👤 **{st.user.name}**")
             st.sidebar.caption(f"({user_email})")
             if st.sidebar.button("🚪 Αποσύνδεση"):
                 st.logout()

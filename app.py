@@ -15,18 +15,14 @@ st.set_page_config(
 # Κρύβει τα κουμπιά GitHub, Fork, Streamlit menu & Footer
 hide_streamlit_style = """
     <style>
-    /* Κρύβει την πάνω μπάρα (Header), το Fork & το GitHub icon */
-    header {visibility: hidden !important; display: none !important;}
-    [data-testid="stHeader"] {display: none !important;}
-    [data-testid="stToolbar"] {display: none !important;}
+    /* Κρύβει μόνο το μενού, τα εργαλεία και το footer, αφήνοντας το κουμπί της sidebar */
+    [data-testid="stToolbar"] {visibility: hidden !important;}
     [data-testid="stDecoration"] {display: none !important;}
     [data-testid="stStatusWidget"] {display: none !important;}
-    
-    /* Κρύβει το footer και τα κουμπιά κάτω δεξιά (Manage app κτλ) */
     footer {visibility: hidden !important; display: none !important;}
     .stAppFooter {display: none !important;}
     
-    /* Αφαιρεί το πάνω περιθώριο για να ανέβει η εφαρμογή τέρμα πάνω */
+    /* Αφαιρεί το πάνω περιθώριο */
     .block-container {
         padding-top: 1.5rem !important;
     }

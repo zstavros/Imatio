@@ -49,10 +49,7 @@ STATUS_OPTIONS = [
 
 @st.cache_resource(ttl=300)
 def get_gspread_client():
-    # Διαβάζει το section [gcp_service_account] από τα Secrets
     creds_dict = dict(st.secrets["gcp_service_account"])
-    
-    # Διορθώνει τα newlines στο private key
     if "private_key" in creds_dict:
         creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
         
@@ -114,7 +111,6 @@ if user_role == "📱 Πελάτης":
                     for _, row in user_orders.iterrows():
                         status = row.get('Status', 'Προς επεξεργασία')
                         
-                        # Έγχρωμα Badges ανάλογα με τα 4 νέα Statuses
                         if status == "Έτοιμος για παραλαβή":
                             badge = "🟢 **ΕΤΟΙΜΟΣ ΓΙΑ ΠΑΡΑΛΑΒΗ**"
                         elif status == "Προς φύλαξη":
@@ -131,96 +127,112 @@ if user_role == "📱 Πελάτης":
 
 
 # ==========================================
-# 🔒 2. ΠΡΟΒΟΛΗ ΔΙΑΧΕΙΡΙΣΤΗ (ADMIN MODE)
+# 🔒 2. ΠΡΟΒΟΛΗ ΔΙΑΧΕΙΡΙΣΤΗ (ADMIN MODE - GOOGLE OAUTH)
 # ==========================================
 else:
     st.sidebar.divider()
-    admin_password = st.sidebar.text_input("Κωδικός Διαχειριστή", type="password")
-
-    if admin_password != "1234":
-        st.warning("🔒 Εισάγετε τον κωδικό διαχειριστή στη Sidebar για πρόσβαση.")
+    
+    # Έλεγχος αν ο χρήστης είναι συνδεδεμένος μέσω Google OAuth
+    if not st.experimental_user.is_logged_in:
+        st.subheader("🔒 Περιοχή Διαχειριστή")
+        st.info("Παρακαλώ συνδεθείτε με τον λογαριασμό Google για πρόσβαση.")
+        if st.button("🔑 Σύνδεση με Google", type="primary"):
+            st.login()
     else:
-        st.title("🧺 ImatioApp - Διαχείριση (Admin)")
+        user_email = st.experimental_user.email
+        admin_email = st.secrets["auth"].get("admin_email", "")
 
-        # --- ΝΕΑ ΠΑΡΑΓΓΕΛΙΑ ---
-        with st.form("new_order_form", clear_on_submit=True):
-            st.subheader("➕ Νέα Παραγγελία")
+        # Έλεγχος αν το email του χρήστη έχει δικαιώματα Admin
+        if user_email.lower() != admin_email.lower():
+            st.error(f"❌ Ο λογαριασμός **{user_email}** δεν έχει δικαιώματα διαχειριστή.")
+            if st.button("🚪 Αποσύνδεση"):
+                st.logout()
+        else:
+            st.sidebar.write(f"👤 **{st.experimental_user.name}**")
+            st.sidebar.caption(f"({user_email})")
+            if st.sidebar.button("🚪 Αποσύνδεση"):
+                st.logout()
 
-            customer_list = ["-- Νέος Πελάτης --"]
-            if not df_customers.empty and 'Name' in df_customers.columns:
-                phone_col = 'Mobile' if 'Mobile' in df_customers.columns else 'Phone'
-                customer_list += [f"{row['Name']} ({row[phone_col]})" for _, row in df_customers.iterrows() if pd.notnull(row['Name'])]
+            st.title("🧺 ImatioApp - Διαχείριση (Admin)")
 
-            selected_customer = st.selectbox("Επιλογή Πελάτη", customer_list)
+            # --- ΝΕΑ ΠΑΡΑΓΓΕΛΙΑ ---
+            with st.form("new_order_form", clear_on_submit=True):
+                st.subheader("➕ Νέα Παραγγελία")
 
-            new_name, new_phone = "", ""
-            if selected_customer == "-- Νέος Πελάτης --":
-                new_name = st.text_input("Όνομα Νέου Πελάτη")
-                new_phone = st.text_input("Τηλέφωνο Νέου Πελάτη")
+                customer_list = ["-- Νέος Πελάτης --"]
+                if not df_customers.empty and 'Name' in df_customers.columns:
+                    phone_col = 'Mobile' if 'Mobile' in df_customers.columns else 'Phone'
+                    customer_list += [f"{row['Name']} ({row[phone_col]})" for _, row in df_customers.iterrows() if pd.notnull(row['Name'])]
 
-            items_desc = st.text_area("Περιγραφή / Είδη")
-            price = st.number_input("Συνολικό Κόστος (€)", min_value=0.0, step=0.50)
-            initial_status = st.selectbox("Αρχική Κατάσταση", STATUS_OPTIONS, index=1)
+                selected_customer = st.selectbox("Επιλογή Πελάτη", customer_list)
 
-            submit_order = st.form_submit_button("Καταχώρηση Παραγγελίας")
-
-            if submit_order:
+                new_name, new_phone = "", ""
                 if selected_customer == "-- Νέος Πελάτης --":
-                    if not new_name or not new_phone:
-                        st.error("Συμπληρώστε όνομα και τηλέφωνο.")
-                        st.stop()
+                    new_name = st.text_input("Όνομα Νέου Πελάτη")
+                    new_phone = st.text_input("Τηλέφωνο Νέου Πελάτη")
 
-                    cust_id = 1 if df_customers.empty or 'CustomerID' not in df_customers.columns else int(df_customers['CustomerID'].max()) + 1
-                    ws_customers.append_row([cust_id, new_name, "", "", "", str(new_phone).strip(), "", ""])
+                items_desc = st.text_area("Περιγραφή / Είδη")
+                price = st.number_input("Συνολικό Κόστος (€)", min_value=0.0, step=0.50)
+                initial_status = st.selectbox("Αρχική Κατάσταση", STATUS_OPTIONS, index=1)
+
+                submit_order = st.form_submit_button("Καταχώρηση Παραγγελίας")
+
+                if submit_order:
+                    if selected_customer == "-- Νέος Πελάτης --":
+                        if not new_name or not new_phone:
+                            st.error("Συμπληρώστε όνομα και τηλέφωνο.")
+                            st.stop()
+
+                        cust_id = 1 if df_customers.empty or 'CustomerID' not in df_customers.columns else int(df_customers['CustomerID'].max()) + 1
+                        ws_customers.append_row([cust_id, new_name, "", "", "", str(new_phone).strip(), "", ""])
+                    else:
+                        cust_name_display = selected_customer.split(" (")[0]
+                        cust_id = int(df_customers[df_customers['Name'] == cust_name_display]['CustomerID'].values[0])
+
+                    trans_id = 1 if df_transactions.empty or 'TransactionID' not in df_transactions.columns else int(df_transactions['TransactionID'].max()) + 1
+                    today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+                    ws_transactions.append_row([trans_id, cust_id, items_desc, price, initial_status, today_str])
+
+                    st.success(f"✅ Η παραγγελία #{trans_id} καταχωρήθηκε!")
+                    st.rerun()
+
+            # --- ΕΝΕΡΓΕΣ ΠΑΡΑΓΓΕΛΙΕΣ ---
+            st.divider()
+            st.subheader("📋 Ενεργές Παραγγελίες")
+
+            if not df_transactions.empty and 'Status' in df_transactions.columns:
+                active_orders = df_transactions[df_transactions['Status'] != 'Παραδόθηκε']
+
+                if active_orders.empty:
+                    st.info("Δεν υπάρχουν εκκρεμείς παραγγελίες.")
                 else:
-                    cust_name_display = selected_customer.split(" (")[0]
-                    cust_id = int(df_customers[df_customers['Name'] == cust_name_display]['CustomerID'].values[0])
+                    for idx, row in active_orders.iterrows():
+                        cust_info = df_customers[df_customers['CustomerID'] == row['CustomerID']]
+                        c_name = cust_info['Name'].values[0] if not cust_info.empty else "Άγνωστος"
 
-                trans_id = 1 if df_transactions.empty or 'TransactionID' not in df_transactions.columns else int(df_transactions['TransactionID'].max()) + 1
-                today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+                        phone_val = "-"
+                        if not cust_info.empty:
+                            p_col = 'Mobile' if 'Mobile' in cust_info.columns else 'Phone'
+                            phone_val = cust_info[p_col].values[0] if pd.notnull(cust_info[p_col].values[0]) else "-"
 
-                ws_transactions.append_row([trans_id, cust_id, items_desc, price, initial_status, today_str])
+                        with st.expander(f"📦 #{int(row['TransactionID'])} - {c_name} ({row.get('Status', 'Προς επεξεργασία')})"):
+                            st.write(f"📞 **Τηλέφωνο:** {phone_val}")
+                            st.write(f"👕 **Είδη:** {row['Item']}")
+                            st.write(f"💶 **Κόστος:** {row['TotalPrice']}€")
+                            st.write(f"📅 **Ημερομηνία:** {row['Date']}")
 
-                st.success(f"✅ Η παραγγελία #{trans_id} καταχωρήθηκε!")
-                st.rerun()
+                            curr_st = row.get('Status', 'Προς επεξεργασία')
+                            new_st = st.selectbox(
+                                "Αλλαγή Κατάστασης", 
+                                STATUS_OPTIONS, 
+                                index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 1, 
+                                key=f"st_{row['TransactionID']}"
+                            )
 
-        # --- ΕΝΕΡΓΕΣ ΠΑΡΑΓΓΕΛΙΕΣ ---
-        st.divider()
-        st.subheader("📋 Ενεργές Παραγγελίες")
-
-        if not df_transactions.empty and 'Status' in df_transactions.columns:
-            # Εμφανίζουμε όλες όσες ΔΕΝ έχουν παραδοθεί
-            active_orders = df_transactions[df_transactions['Status'] != 'Παραδόθηκε']
-
-            if active_orders.empty:
-                st.info("Δεν υπάρχουν εκκρεμείς παραγγελίες.")
-            else:
-                for idx, row in active_orders.iterrows():
-                    cust_info = df_customers[df_customers['CustomerID'] == row['CustomerID']]
-                    c_name = cust_info['Name'].values[0] if not cust_info.empty else "Άγνωστος"
-
-                    phone_val = "-"
-                    if not cust_info.empty:
-                        p_col = 'Mobile' if 'Mobile' in cust_info.columns else 'Phone'
-                        phone_val = cust_info[p_col].values[0] if pd.notnull(cust_info[p_col].values[0]) else "-"
-
-                    with st.expander(f"📦 #{int(row['TransactionID'])} - {c_name} ({row.get('Status', 'Προς επεξεργασία')})"):
-                        st.write(f"📞 **Τηλέφωνο:** {phone_val}")
-                        st.write(f"👕 **Είδη:** {row['Item']}")
-                        st.write(f"💶 **Κόστος:** {row['TotalPrice']}€")
-                        st.write(f"📅 **Ημερομηνία:** {row['Date']}")
-
-                        curr_st = row.get('Status', 'Προς επεξεργασία')
-                        new_st = st.selectbox(
-                            "Αλλαγή Κατάστασης", 
-                            STATUS_OPTIONS, 
-                            index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 1, 
-                            key=f"st_{row['TransactionID']}"
-                        )
-
-                        if new_st != curr_st:
-                            cell = ws_transactions.find(str(row['TransactionID']))
-                            status_col_idx = df_transactions.columns.get_loc("Status") + 1
-                            ws_transactions.update_cell(cell.row, status_col_idx, new_st)
-                            st.toast(f"Ενημερώθηκε σε '{new_st}'")
-                            st.rerun()
+                            if new_st != curr_st:
+                                cell = ws_transactions.find(str(row['TransactionID']))
+                                status_col_idx = df_transactions.columns.get_loc("Status") + 1
+                                ws_transactions.update_cell(cell.row, status_col_idx, new_st)
+                                st.toast(f"Ενημερώθηκε σε '{new_st}'")
+                                st.rerun()

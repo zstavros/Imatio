@@ -160,11 +160,11 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
             if df_customers.empty or name_col not in df_customers.columns:
                 st.warning("⚠️ Δεν βρέθηκαν καταχωρημένοι πελάτες.")
             else:
-                # Χρήση session state για αποθήκευση επιλεγμένου πελάτη προς επεξεργασία
                 if "selected_edit_customer" not in st.session_state:
                     st.session_state.selected_edit_customer = None
 
-                search_query = st.text_input("Αναζήτηση πελάτη", placeholder="Γράψτε όνομα ή κινητό...", label_visibility="collapsed", key="cust_search_input")
+                # Πεδίο αναζήτησης: καθώς πληκτρολογείς ενημερώνεται ζωντανά η οθόνη
+                search_query = st.text_input("Αναζήτηση πελάτη", placeholder="Πληκτρολογήστε όνομα ή κινητό...", label_visibility="collapsed", key="cust_search_live")
 
                 valid_customers = df_customers[df_customers[name_col].astype(str).str.strip() != ""]
 
@@ -180,24 +180,25 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                 else:
                     filtered_df = pd.DataFrame()
 
+                # Αν δεν έχει πληκτρολογήσει κάτι ή αν καθάρισε το πεδίο
                 if search_query.strip() == "":
-                    st.info("👆 Πληκτρολογήστε γράμματα για να εμφανιστούν ανοιχτά οι πελάτες.")
+                    st.info("👆 Πληκτρολογήστε γράμματα (π.χ. ΣΤ) για άμεση εμφάνιση αποτελεσμάτων.")
                     st.session_state.selected_edit_customer = None
                 elif filtered_df.empty:
                     st.warning("❌ Δεν βρέθηκε πελάτης.")
                     st.session_state.selected_edit_customer = None
                 else:
-                    st.markdown(f"<p style='font-size: 0.85rem; color: gray; margin-bottom: 4px;'>Βρέθηκαν {len(filtered_df)} πελάτες (επιλέξτε έναν):</p>", unsafe_allow_html=True)
+                    # Εμφάνιση ανοιχτών επιλογών ζωντανά
+                    st.markdown(f"<p style='font-size: 0.85rem; color: #0288d1; margin: 4px 0px; font-weight: 500;'>Ζωντανά αποτελέσματα ({len(filtered_df)}): Επιλέξτε:</p>", unsafe_allow_html=True)
                     
-                    # Ανοιχτή λίστα με κουμπιά για κάθε πελάτη που ταιριάζει
                     for _, row in filtered_df.iterrows():
                         phone = row.get('CuPhone') if pd.notnull(row.get('CuPhone')) and str(row.get('CuPhone')).strip() != '' else row.get('CuMobile', '')
                         c_display_str = f"{row[name_col]} ({phone})"
                         
-                        if st.button(f"👤 {c_display_str}", key=f"btn_cust_{row.get('CustomerID', row[name_col])}", use_container_width=True):
+                        if st.button(f"👤 {c_display_str}", key=f"live_btn_{row.get('CustomerID', row[name_col])}", use_container_width=True):
                             st.session_state.selected_edit_customer = row[name_col]
 
-                # Αν έχει επιλεγεί πελάτης, εμφανίζουμε τη φόρμα επεξεργασίας του ανοιχτή
+                # Αν έχει πατηθεί κάποιος πελάτης, ανοίγει η φόρμα επεξεργασίας από κάτω
                 if st.session_state.selected_edit_customer:
                     c_name_val = st.session_state.selected_edit_customer
                     c_row_data = valid_customers[valid_customers[name_col] == c_name_val].iloc[0]

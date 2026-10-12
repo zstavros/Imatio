@@ -10,7 +10,7 @@ STATUS_OPTIONS = [
 ]
 
 def render_admin_dashboard(load_tab_data, get_worksheet):
-    # ΕΠΙΘΕΤΙΚΟ CSS: Μηδενισμός κάθε κενου από πάνω και συμπύκνωση φόρμας για να φαίνεται το κουμπί
+    # CSS: Μηδενισμός περιθωρίων κορυφής
     st.markdown("""
         <style>
         header {display: none !important;}
@@ -18,7 +18,6 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
         [data-testid="stToolbar"] {display: none !important;}
         footer {display: none !important;}
         
-        /* Τέρμα πάνω η σελίδα, μηδενικά περιθώρια */
         .block-container {
             padding-top: 0rem !important;
             margin-top: 0rem !important;
@@ -27,27 +26,23 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
             padding-bottom: 0rem !important;
         }
         
-        /* Πολύ κοντά πεδία κειμένου */
         div.stTextInput input {
-            min-height: 24px !important;
-            height: 24px !important;
-            padding-top: 0px !important;
-            padding-bottom: 0px !important;
-            font-size: 0.85rem !important;
-        }
-        div.stTextArea textarea {
-            min-height: 35px !important;
-            height: 35px !important;
-            font-size: 0.85rem !important;
+            min-height: 26px !important;
+            height: 26px !important;
+            padding-top: 1px !important;
+            padding-bottom: 1px !important;
+            font-size: 0.9rem !important;
         }
         
-        /* Συμπύκνωση φόρμας για να μην κόβεται το κουμπί αποθήκευσης */
+        div.stTextArea textarea {
+            min-height: 80px !important;
+            height: 80px !important;
+            font-size: 0.9rem !important;
+        }
+        
         .stForm {
             padding: 2px !important;
             margin-bottom: 0px !important;
-        }
-        div[data-testid="stFormSubmitButton"] {
-            margin-top: -5px !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -57,7 +52,6 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     df_tr_items = load_tab_data("TrItems")
     df_tr_xalia = load_tab_data("TrXalia")
 
-    # Καρτέλες κολλημένες τέρματα στην κορυφή
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📝 Νέα", 
         "📋 Ανοιχτά", 
@@ -125,11 +119,11 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
 
     # --- 3. ΠΕΛΑΤΕΣ ---
     with tab3:
-        r_col1, r_col2 = st.columns([0.38, 0.62])
+        r_col1, r_col2 = st.columns([0.30, 0.70])
         with r_col1:
-            st.markdown("<p style='margin-top: 2px; margin-bottom: 0px; font-weight: 500; font-size: 0.85rem;'>Επιλογή Action:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: bold; font-size: 0.95rem;'>ΠΕΛΑΤΕΣ</p>", unsafe_allow_html=True)
         with r_col2:
-            customer_mode = st.radio("Επιλογή Action:", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio", label_visibility="collapsed")
+            customer_mode = st.radio("ΠΕΛΑΤΕΣ", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio", label_visibility="collapsed")
 
         ws_customers = get_worksheet("Customers")
 
@@ -233,11 +227,11 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
 
     # --- 4. ΕΙΔΗ ---
     with tab4:
-        r_col1, r_col2 = st.columns([0.38, 0.62])
+        r_col1, r_col2 = st.columns([0.30, 0.70])
         with r_col1:
-            st.markdown("<p style='margin-top: 2px; margin-bottom: 0px; font-weight: 500; font-size: 0.85rem;'>Επιλογή Action:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: bold; font-size: 0.95rem;'>ΕΙΔΗ</p>", unsafe_allow_html=True)
         with r_col2:
-            item_mode = st.radio("Επιλογή Action:", ["Νέο Είδος", "Επεξεργασία"], horizontal=True, key="i_mode", label_visibility="collapsed")
+            item_mode = st.radio("ΕΙΔΗ", ["Νέο Είδος", "Επεξεργασία"], horizontal=True, key="i_mode", label_visibility="collapsed")
             
         ws_items = get_worksheet("Items")
 

@@ -121,7 +121,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     with tab3:
         r_col1, r_col2 = st.columns([0.35, 0.65])
         with r_col1:
-            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: bold; font-size: 1.15rem;'>👥 ΠΕΛΑΤΕΣ</p>", unsafe_allow_html=True)
+            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: bold; font-size: 1.25rem;'>👥 ΠΕΛΑΤΕΣ</p>", unsafe_allow_html=True)
         with r_col2:
             customer_mode = st.radio("👥 ΠΕΛΑΤΕΣ", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio", label_visibility="collapsed")
 

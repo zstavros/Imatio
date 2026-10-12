@@ -119,11 +119,11 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
 
     # --- 3. ΠΕΛΑΤΕΣ ---
     with tab3:
-        r_col1, r_col2 = st.columns([0.30, 0.70])
+        r_col1, r_col2 = st.columns([0.35, 0.65])
         with r_col1:
-            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: bold; font-size: 0.95rem;'>ΠΕΛΑΤΕΣ</p>", unsafe_allow_html=True)
+            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: bold; font-size: 1.15rem;'>👥 ΠΕΛΑΤΕΣ</p>", unsafe_allow_html=True)
         with r_col2:
-            customer_mode = st.radio("ΠΕΛΑΤΕΣ", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio", label_visibility="collapsed")
+            customer_mode = st.radio("👥 ΠΕΛΑΤΕΣ", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio", label_visibility="collapsed")
 
         ws_customers = get_worksheet("Customers")
 
@@ -227,11 +227,11 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
 
     # --- 4. ΕΙΔΗ ---
     with tab4:
-        r_col1, r_col2 = st.columns([0.30, 0.70])
+        r_col1, r_col2 = st.columns([0.35, 0.65])
         with r_col1:
-            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: bold; font-size: 0.95rem;'>ΕΙΔΗ</p>", unsafe_allow_html=True)
+            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: bold; font-size: 1.15rem;'>👕 ΕΙΔΗ</p>", unsafe_allow_html=True)
         with r_col2:
-            item_mode = st.radio("ΕΙΔΗ", ["Νέο Είδος", "Επεξεργασία"], horizontal=True, key="i_mode", label_visibility="collapsed")
+            item_mode = st.radio("👕 ΕΙΔΗ", ["Νέο Είδος", "Επεξεργασία"], horizontal=True, key="i_mode", label_visibility="collapsed")
             
         ws_items = get_worksheet("Items")
 

@@ -160,7 +160,11 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
             if df_customers.empty or name_col not in df_customers.columns:
                 st.warning("⚠️ Δεν βρέθηκαν καταχωρημένοι πελάτες.")
             else:
-                search_query = st.text_input("Αναζήτηση πελάτη", placeholder="Γράψτε όνομα ή κινητό...", label_visibility="collapsed")
+                # Χρήση session state για αποθήκευση επιλεγμένου πελάτη προς επεξεργασία
+                if "selected_edit_customer" not in st.session_state:
+                    st.session_state.selected_edit_customer = None
+
+                search_query = st.text_input("Αναζήτηση πελάτη", placeholder="Γράψτε όνομα ή κινητό...", label_visibility="collapsed", key="cust_search_input")
 
                 valid_customers = df_customers[df_customers[name_col].astype(str).str.strip() != ""]
 
@@ -177,53 +181,61 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                     filtered_df = pd.DataFrame()
 
                 if search_query.strip() == "":
-                    st.info("👆 Πληκτρολογήστε γράμματα για αναζήτηση.")
+                    st.info("👆 Πληκτρολογήστε γράμματα για να εμφανιστούν ανοιχτά οι πελάτες.")
+                    st.session_state.selected_edit_customer = None
                 elif filtered_df.empty:
                     st.warning("❌ Δεν βρέθηκε πελάτης.")
+                    st.session_state.selected_edit_customer = None
                 else:
-                    cust_options = []
+                    st.markdown(f"<p style='font-size: 0.85rem; color: gray; margin-bottom: 4px;'>Βρέθηκαν {len(filtered_df)} πελάτες (επιλέξτε έναν):</p>", unsafe_allow_html=True)
+                    
+                    # Ανοιχτή λίστα με κουμπιά για κάθε πελάτη που ταιριάζει
                     for _, row in filtered_df.iterrows():
                         phone = row.get('CuPhone') if pd.notnull(row.get('CuPhone')) and str(row.get('CuPhone')).strip() != '' else row.get('CuMobile', '')
-                        cust_options.append(f"{row[name_col]} ({phone})")
-
-                    selected_c = st.selectbox("Αποτελέσματα Αναζήτησης", cust_options, label_visibility="collapsed")
-
-                    if selected_c:
-                        c_name_val = selected_c.split(" (")[0]
-                        c_row_data = filtered_df[filtered_df[name_col] == c_name_val].iloc[0]
+                        c_display_str = f"{row[name_col]} ({phone})"
                         
-                        with st.form("edit_customer_form"):
-                            st.write(f"✏️ Επεξεργασία: **{c_name_val}**")
-                            e_name = st.text_input("Ονοματεπώνυμο", value=str(c_row_data.get('CuName', c_row_data.get('Name', ''))))
-                            e_mobile1 = st.text_input("Κινητό-1", value=str(c_row_data.get('CuPhone', '')))
-                            e_mobile2 = st.text_input("Κινητό-2", value=str(c_row_data.get('CuMobile', '')))
-                            e_address = st.text_input("Διεύθυνση", value=str(c_row_data.get('CuAddress', '')))
-                            e_email = st.text_input("Email", value=str(c_row_data.get('CuEmail', '')))
-                            e_notes = st.text_area("Σημειώσεις", value=str(c_row_data.get('CuNotes', '')))
-                            
-                            if st.form_submit_button("🔄 Ενημέρωση Στοιχείων"):
-                                try:
-                                    cell = ws_customers.find(c_name_val)
-                                    
-                                    name_col_idx = df_customers.columns.get_loc(name_col) + 1
-                                    phone_col_idx = df_customers.columns.get_loc("CuPhone") + 1 if "CuPhone" in df_customers.columns else 5
-                                    mobile_col_idx = df_customers.columns.get_loc("CuMobile") + 1 if "CuMobile" in df_customers.columns else 6
-                                    address_col_idx = df_customers.columns.get_loc("CuAddress") + 1 if "CuAddress" in df_customers.columns else 3
-                                    email_col_idx = df_customers.columns.get_loc("CuEmail") + 1 if "CuEmail" in df_customers.columns else 7
-                                    notes_col_idx = df_customers.columns.get_loc("CuNotes") + 1 if "CuNotes" in df_customers.columns else 8
-                                    
-                                    ws_customers.update_cell(cell.row, name_col_idx, e_name)
-                                    ws_customers.update_cell(cell.row, phone_col_idx, e_mobile1)
-                                    ws_customers.update_cell(cell.row, mobile_col_idx, e_mobile2)
-                                    ws_customers.update_cell(cell.row, address_col_idx, e_address)
-                                    ws_customers.update_cell(cell.row, email_col_idx, e_email)
-                                    ws_customers.update_cell(cell.row, notes_col_idx, e_notes)
-                                    
-                                    st.success("✅ Τα στοιχεία ενημερώθηκαν επιτυχώς!")
-                                    st.cache_data.clear()
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"❌ Σφάλμα: {e}")
+                        if st.button(f"👤 {c_display_str}", key=f"btn_cust_{row.get('CustomerID', row[name_col])}", use_container_width=True):
+                            st.session_state.selected_edit_customer = row[name_col]
+
+                # Αν έχει επιλεγεί πελάτης, εμφανίζουμε τη φόρμα επεξεργασίας του ανοιχτή
+                if st.session_state.selected_edit_customer:
+                    c_name_val = st.session_state.selected_edit_customer
+                    c_row_data = valid_customers[valid_customers[name_col] == c_name_val].iloc[0]
+                    
+                    st.markdown(f"<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
+                    with st.form("edit_customer_form"):
+                        st.write(f"✏️ Επεξεργασία: **{c_name_val}**")
+                        e_name = st.text_input("Ονοματεπώνυμο", value=str(c_row_data.get('CuName', c_row_data.get('Name', ''))))
+                        e_mobile1 = st.text_input("Κινητό-1", value=str(c_row_data.get('CuPhone', '')))
+                        e_mobile2 = st.text_input("Κινητό-2", value=str(c_row_data.get('CuMobile', '')))
+                        e_address = st.text_input("Διεύθυνση", value=str(c_row_data.get('CuAddress', '')))
+                        e_email = st.text_input("Email", value=str(c_row_data.get('CuEmail', '')))
+                        e_notes = st.text_area("Σημειώσεις", value=str(c_row_data.get('CuNotes', '')))
+                        
+                        if st.form_submit_button("🔄 Ενημέρωση Στοιχείων"):
+                            try:
+                                cell = ws_customers.find(c_name_val)
+                                
+                                name_col_idx = df_customers.columns.get_loc(name_col) + 1
+                                phone_col_idx = df_customers.columns.get_loc("CuPhone") + 1 if "CuPhone" in df_customers.columns else 5
+                                mobile_col_idx = df_customers.columns.get_loc("CuMobile") + 1 if "CuMobile" in df_customers.columns else 6
+                                address_col_idx = df_customers.columns.get_loc("CuAddress") + 1 if "CuAddress" in df_customers.columns else 3
+                                email_col_idx = df_customers.columns.get_loc("CuEmail") + 1 if "CuEmail" in df_customers.columns else 7
+                                notes_col_idx = df_customers.columns.get_loc("CuNotes") + 1 if "CuNotes" in df_customers.columns else 8
+                                
+                                ws_customers.update_cell(cell.row, name_col_idx, e_name)
+                                ws_customers.update_cell(cell.row, phone_col_idx, e_mobile1)
+                                ws_customers.update_cell(cell.row, mobile_col_idx, e_mobile2)
+                                ws_customers.update_cell(cell.row, address_col_idx, e_address)
+                                ws_customers.update_cell(cell.row, email_col_idx, e_email)
+                                ws_customers.update_cell(cell.row, notes_col_idx, e_notes)
+                                
+                                st.success("✅ Τα στοιχεία ενημερώθηκαν επιτυχώς!")
+                                st.session_state.selected_edit_customer = None
+                                st.cache_data.clear()
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Σφάλμα: {e}")
 
     # --- 4. ΕΙΔΗ ---
     with tab4:

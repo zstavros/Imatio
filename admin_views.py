@@ -91,7 +91,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
         with sub_tab_x:
             _render_active_list(df_tr_xalia, df_customers, "TrXalia", get_worksheet)
 
-    # --- 3. ΠΕΛΑΤΕΣ ---
+   # --- 3. ΠΕΛΑΤΕΣ ---
     with tab3:
         st.write("### Διαχείριση Πελατών")
         customer_mode = st.radio("Επιλογή:", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio")
@@ -119,23 +119,42 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
             if df_customers.empty or name_col not in df_customers.columns:
                 st.warning("⚠️ Δεν βρέθηκαν καταχωρημένοι πελάτες.")
             else:
+                st.write("🔍 **Γράψτε όνομα ή κινητό για άμεση ανεύρεση:**")
+                search_query = st.text_input("Αναζήτηση πελάτη", placeholder="π.χ. Σταύρος ή 69...", label_visibility="collapsed")
+
                 valid_customers = df_customers[df_customers[name_col].astype(str).str.strip() != ""]
-                
-                if valid_customers.empty:
-                    st.info("ℹ️ Δεν υπάρχουν πελάτες.")
+
+                if search_query.strip() != "":
+                    # Φιλτράρουμε αυτόματα με βάση αυτό που πληκτρολογεί (σε όνομα ή κινητό/τηλέφωνο)
+                    q = search_query.strip().lower()
+                    phone_col = 'CuMobile' if 'CuMobile' in df_customers.columns else ('CuPhone' if 'CuPhone' in df_customers.columns else '')
+                    
+                    mask = valid_customers[name_col].astype(str).str.lower().str.contains(q)
+                    if phone_col and phone_col in valid_customers.columns:
+                        mask = mask | valid_customers[phone_col].astype(str).str.lower().str.contains(q)
+                    
+                    filtered_df = valid_customers[mask]
+                else:
+                    filtered_df = pd.DataFrame() # Κενό μέχρι να γράψει κάτι για να μη φορτώνει 5000 πελάτες
+
+                if search_query.strip() == "":
+                    st.info("👆 Πληκτρολογήστε μερικά γράμματα από το όνομα ή το τηλέφωνο του πελάτη για να εμφανιστεί.")
+                elif filtered_df.empty:
+                    st.warning("❌ Δεν βρέθηκε πελάτης που να ταιριάζει με την αναζήτηση.")
                 else:
                     cust_options = []
-                    for _, row in valid_customers.iterrows():
+                    for _, row in filtered_df.iterrows():
                         phone = row.get('CuMobile') if pd.notnull(row.get('CuMobile')) and str(row.get('CuMobile')).strip() != '' else row.get('CuPhone', '')
                         cust_options.append(f"{row[name_col]} ({phone})")
 
-                    selected_c = st.selectbox("🔍 Επιλέξτε πελάτη για επεξεργασία", cust_options)
-                    
+                    selected_c = st.selectbox("Αποτελέσματα Αναζήτησης", cust_options, label_visibility="collapsed")
+
                     if selected_c:
                         c_name_val = selected_c.split(" (")[0]
-                        c_row_data = valid_customers[valid_customers[name_col] == c_name_val].iloc[0]
+                        c_row_data = filtered_df[filtered_df[name_col] == c_name_val].iloc[0]
                         
                         with st.form("edit_customer_form"):
+                            st.write(f"✏️ Επεξεργασία πελάτη: **{c_name_val}**")
                             e_name = st.text_input("Ονοματεπώνυμο", value=str(c_row_data.get('CuName', c_row_data.get('Name', ''))))
                             e_phone = st.text_input("Τηλέφωνο", value=str(c_row_data.get('CuPhone', '')))
                             e_mobile = st.text_input("Κινητό", value=str(c_row_data.get('CuMobile', '')))

@@ -10,24 +10,34 @@ STATUS_OPTIONS = [
 ]
 
 def render_admin_dashboard(load_tab_data, get_worksheet):
-    # Ultra-compact CSS για μηδενισμό κενών και στενά πεδία κειμένου (input fields)
+    # Επιθετικό CSS για μηδενισμό κενών στην κορυφή και συμπύκνωση φόρμας
     st.markdown("""
         <style>
+        /* Κρύψιμο header Streamlit και μηδενισμός margins */
+        header {visibility: hidden !important; height: 0px !important;}
+        [data-testid="stHeader"] {display: none !important; height: 0px !important;}
         .block-container {
-            padding-top: 0.3rem !important;
+            padding-top: 0rem !important;
+            margin-top: -2rem !important;
             padding-bottom: 0rem !important;
         }
-        /* Μίκρυνσέ το ύψος σε όλα τα πεδία εισαγωγής κειμένου (inputs) */
+        /* Στενά πεδία κειμένου για εξοικονόμηση χώρου */
         div.stTextInput input {
-            min-height: 28px !important;
-            height: 28px !important;
-            padding-top: 2px !important;
-            padding-bottom: 2px !important;
+            min-height: 26px !important;
+            height: 26px !important;
+            padding-top: 1px !important;
+            padding-bottom: 1px !important;
+            font-size: 0.9rem !important;
         }
-        /* Μικρότερο ύψος και στα text areas */
         div.stTextArea textarea {
-            min-height: 50px !important;
-            height: 50px !important;
+            min-height: 40px !important;
+            height: 40px !important;
+            font-size: 0.9rem !important;
+        }
+        /* Μικρότερα περιθώρια στις φόρμες για να φαίνεται πάντα το κουμπί */
+        .stForm {
+            padding: 6px !important;
+            margin-bottom: 0px !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -37,7 +47,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     df_tr_items = load_tab_data("TrItems")
     df_tr_xalia = load_tab_data("TrXalia")
 
-    # Πεντακάθαρες καρτέλες σε όλο το πλάτος της οθόνης
+    # Πεντακάθαρες καρτέλες κολλημένες τέρματα πάνω
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📝 Νέα", 
         "📋 Ανοιχτά", 
@@ -107,7 +117,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     with tab3:
         r_col1, r_col2 = st.columns([0.38, 0.62])
         with r_col1:
-            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: 500; font-size: 0.9rem;'>Επιλογή Action:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='margin-top: 2px; margin-bottom: 0px; font-weight: 500; font-size: 0.85rem;'>Επιλογή Action:</p>", unsafe_allow_html=True)
         with r_col2:
             customer_mode = st.radio("Επιλογή Action:", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio", label_visibility="collapsed")
 
@@ -146,8 +156,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
             if df_customers.empty or name_col not in df_customers.columns:
                 st.warning("⚠️ Δεν βρέθηκαν καταχωρημένοι πελάτες.")
             else:
-                st.write("🔍 **Γράψτε όνομα ή κινητό για άμεση ανεύρεση:**")
-                search_query = st.text_input("Αναζήτηση πελάτη", placeholder="π.χ. Σταύρος ή 69...", label_visibility="collapsed")
+                search_query = st.text_input("Αναζήτηση πελάτη", placeholder="Γράψτε όνομα ή κινητό...", label_visibility="collapsed")
 
                 valid_customers = df_customers[df_customers[name_col].astype(str).str.strip() != ""]
 
@@ -164,7 +173,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                     filtered_df = pd.DataFrame()
 
                 if search_query.strip() == "":
-                    st.info("👆 Πληκτρολογήστε μερικά γράμματα από το όνομα ή το τηλέφωνο.")
+                    st.info("👆 Πληκτρολογήστε γράμματα για αναζήτηση.")
                 elif filtered_df.empty:
                     st.warning("❌ Δεν βρέθηκε πελάτης.")
                 else:
@@ -180,7 +189,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                         c_row_data = filtered_df[filtered_df[name_col] == c_name_val].iloc[0]
                         
                         with st.form("edit_customer_form"):
-                            st.write(f"✏️ Επεξεργασία πελάτη: **{c_name_val}**")
+                            st.write(f"✏️ Επεξεργασία: **{c_name_val}**")
                             e_name = st.text_input("Ονοματεπώνυμο", value=str(c_row_data.get('CuName', c_row_data.get('Name', ''))))
                             e_mobile1 = st.text_input("Κινητό-1", value=str(c_row_data.get('CuPhone', '')))
                             e_mobile2 = st.text_input("Κινητό-2", value=str(c_row_data.get('CuMobile', '')))
@@ -216,7 +225,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     with tab4:
         r_col1, r_col2 = st.columns([0.38, 0.62])
         with r_col1:
-            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: 500; font-size: 0.9rem;'>Επιλογή Action:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='margin-top: 2px; margin-bottom: 0px; font-weight: 500; font-size: 0.85rem;'>Επιλογή Action:</p>", unsafe_allow_html=True)
         with r_col2:
             item_mode = st.radio("Επιλογή Action:", ["Νέο Είδος", "Επεξεργασία"], horizontal=True, key="i_mode", label_visibility="collapsed")
             
@@ -224,7 +233,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
 
         if item_mode == "Νέο Είδος":
             with st.form("new_item_form", clear_on_submit=True):
-                it_name = st.text_input("Όνομα Είδους (π.χ. Μπουφάν, Κοστούμι)")
+                it_name = st.text_input("Όνομα Είδους (π.χ. Μπουφάν)")
                 it_desc = st.text_input("Περιγραφή / Κατηγορία")
                 if st.form_submit_button("Προσθήκη Είδους"):
                     if not it_name:

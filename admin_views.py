@@ -2,23 +2,6 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-st.markdown("""
-    <style>
-    /* Μικρότερο ύψος στα text inputs */
-    div.stTextInput input {
-        min-height: 32px !important;
-        height: 32px !important;
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-    }
-    /* Μικρότερο ύψος στα text areas (σημειώσεις) */
-    div.stTextArea textarea {
-        min-height: 60px !important;
-        height: 60px !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 STATUS_OPTIONS = [
     "Έτοιμος για παραλαβή",
     "Προς επεξεργασία",
@@ -27,37 +10,45 @@ STATUS_OPTIONS = [
 ]
 
 def render_admin_dashboard(load_tab_data, get_worksheet):
+    # Arxikopoiisi tab st session state an den yparxei
+    if "admin_tab" not in st.session_state:
+        st.session_state.admin_tab = "📝 Νέα Παράδοση"
+
+    # Pano meros: O titlos allazei dynamika analoga me to ti exeis epilexei + Exodos
     col1, col2 = st.columns([0.7, 0.3])
     with col1:
-        st.markdown("### 🛠️ Πίνακας Ελέγχου")
+        st.markdown(f"### {st.session_state.admin_tab}")
     with col2:
         if st.button("🚪 Έξοδος"):
             st.session_state.admin_logged_in = False
             st.cache_data.clear()
             st.rerun()
 
+    # Orizontio menoy (anti gia tabs) pou leitourgei san tabs stin korifi
+    tabs_list = ["📝 Νέα Παράδοση", "📋 Ανοιχτά", "👥 Διαχείριση Πελατών", "👕 Είδη", "🧺 Χαλιά"]
+    
+    selected_tab = st.radio(
+        "Menou", 
+        tabs_list, 
+        horizontal=True, 
+        key="admin_tab_radio",
+        label_visibility="collapsed"
+    )
+    st.session_state.admin_tab = selected_tab
+
     df_customers = load_tab_data("Customers")
     df_items = load_tab_data("Items")
     df_tr_items = load_tab_data("TrItems")
     df_tr_xalia = load_tab_data("TrXalia")
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📝 Νέα Παράδοση", 
-        "📋 Ανοιχτά", 
-        "👥 Πελάτες", 
-        "👕 Είδη", 
-        "🧺 Χαλιά"
-    ])
-
     # --- 1. ΝΕΑ ΠΑΡΑΔΟΣΗ ---
-    with tab1:
-        st.write("### 📝 Νέα Παράδοση / Συναλλαγή")
+    if selected_tab == "📝 Νέα Παράδοση":
         with st.form("new_transaction_form", clear_on_submit=True):
             category_type = st.selectbox("Κατηγορία", ["👕 Ρούχα (TrItems)", "🧺 Χαλιά (TrXalia)"])
 
             name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
             if df_customers.empty or name_col not in df_customers.columns:
-                st.warning("Πρώτα καταχωρήστε πελάτες στην καρτέλα 'Πελάτες'.")
+                st.warning("Πρώτα καταχωρήστε πελάτες στην καρτέλα 'Διαχείριση Πελατών'.")
                 st.stop()
             
             cust_choices = []
@@ -98,8 +89,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                 st.rerun()
 
     # --- 2. ΑΝΟΙΧΤΑ ---
-    with tab2:
-        st.write("### 📋 Εκκρεμή / Ανοιχτά προς παράδοση")
+    elif selected_tab == "📋 Ανοιχτά":
         sub_tab_c, sub_tab_x = st.tabs(["👕 Ρούχα", "🧺 Χαλιά"])
 
         with sub_tab_c:
@@ -108,27 +98,25 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
         with sub_tab_x:
             _render_active_list(df_tr_xalia, df_customers, "TrXalia", get_worksheet)
 
-  # --- 3. ΠΕΛΑΤΕΣ ---
-    with tab3:
-        st.write("### Διαχείριση Πελατών")
+    # --- 3. ΔΙΑΧΕΙΡΙΣΗ ΠΕΛΑΤΩΝ ---
+    elif selected_tab == "👥 Διαχείριση Πελατών":
         customer_mode = st.radio("Επιλογή:", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio")
         ws_customers = get_worksheet("Customers")
 
         if customer_mode == "Νέος Πελάτης":
             with st.form("new_customer_form", clear_on_submit=True):
                 n_name = st.text_input("Ονοματεπώνυμο *")
-                n_mobile1 = st.text_input("Κινητό-1 ")
-                n_mobile2 = st.text_input("Κινητό-2 ")
-                n_address = st.text_input("Διεύθυνση ")
-                n_email = st.text_input("Email ")
-                n_notes = st.text_area("Σημειώσεις ")
+                n_mobile1 = st.text_input("Κινητό-1 (CuPhone)")
+                n_mobile2 = st.text_input("Κινητό-2 (CuMobile)")
+                n_address = st.text_input("Διεύθυνση (CuAddress)")
+                n_email = st.text_input("Email (CuEmail)")
+                n_notes = st.text_area("Σημειώσεις (CuNotes)")
                 
                 if st.form_submit_button("💾 Αποθήκευση Νέου Πελάτη", type="primary"):
                     if not n_name.strip():
                         st.error("❌ Παρακαλώ συμπληρώστε Όνομα.")
                     else:
                         cust_id = 1 if df_customers.empty or 'CustomerID' not in df_customers.columns else int(pd.to_numeric(df_customers['CustomerID'], errors='coerce').max() or 0) + 1
-                        # Σειρά στηλών: CustomerID, CuName, CuAddress, CuCity, CuPhone(Κινητό-1), CuMobile(Κινητό-2), CuEmail, CuNotes
                         ws_customers.append_row([
                             cust_id, 
                             n_name.strip(), 
@@ -166,9 +154,9 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                     filtered_df = pd.DataFrame()
 
                 if search_query.strip() == "":
-                    st.info("👆 Πληκτρολογήστε μερικά γράμματα từ το όνομα ή το τηλέφωνο του πελάτη για να εμφανιστεί.")
+                    st.info("👆 Πληκτρολογήστε μερικά γράμματα από το όνομα ή το τηλέφωνο του πελάτη.")
                 elif filtered_df.empty:
-                    st.warning("❌ Δεν βρέθηκε πελάτης που να ταιριάζει με την αναζήτηση.")
+                    st.warning("❌ Δεν βρέθηκε πελάτης.")
                 else:
                     cust_options = []
                     for _, row in filtered_df.iterrows():
@@ -215,8 +203,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                                     st.error(f"❌ Σφάλμα: {e}")
 
     # --- 4. ΕΙΔΗ ---
-    with tab4:
-        st.write("### Διαχείριση Ειδών / Ρούχων (Items)")
+    elif selected_tab == "👕 Είδη":
         item_mode = st.radio("Επιλογή:", ["Νέο Είδος", "Επεξεργασία"], horizontal=True, key="i_mode")
         ws_items = get_worksheet("Items")
 
@@ -252,9 +239,8 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                             st.rerun()
 
     # --- 5. ΧΑΛΙΑ ---
-    with tab5:
-        st.write("### Διαχείριση Χαλιών")
-        st.info("Χρησιμοποιείται η κεντρική βάση είδών (Items) για καταχώρηση χαλιών.")
+    elif selected_tab == "🧺 Χαλιά":
+        st.info("Χρησιμοποιείται η κεντρική βάση ειδών (Items) για καταχώρηση χαλιών.")
 
 
 def _render_active_list(df_trans, df_cust, sheet_name, get_worksheet_fn):

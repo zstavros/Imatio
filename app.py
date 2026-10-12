@@ -1,4 +1,3 @@
-import json
 import streamlit as st
 import pandas as pd
 import gspread
@@ -9,10 +8,10 @@ st.set_page_config(
     page_title="ImatioApp", 
     page_icon="🧺", 
     layout="centered",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Κρύβει τα κουμπιά GitHub, Fork, Streamlit menu & Footer
+# Κρύβει τα περιττά στοιχεία του Streamlit
 hide_streamlit_style = """
     <style>
     [data-testid="stToolbar"] {visibility: hidden !important;}
@@ -21,7 +20,7 @@ hide_streamlit_style = """
     footer {visibility: hidden !important; display: none !important;}
     .stAppFooter {display: none !important;}
     .block-container {
-        padding-top: 1.5rem !important;
+        padding-top: 1rem !important;
     }
     </style>
 """
@@ -48,9 +47,7 @@ def get_gspread_client():
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     return gspread.authorize(creds)
 
-# Αντικαταστήστε το παλιό load_tab με αυτό το τμήμα κώδικα:
-
-@st.cache_data(ttl=60)  # Αποθηκεύει τα δεδομένα για 60 δευτερόλεπτα
+@st.cache_data(ttl=60)
 def load_tab_data(tab_name):
     client = get_gspread_client()
     sheet_url = st.secrets["spreadsheet_url"]
@@ -82,15 +79,21 @@ except Exception as e:
     st.error(f"Σφάλμα σύνδεσης με Google Sheets: {e}")
     st.stop()
 
-# --- SIDEBAR: ΕΠΙΛΟΓΗ ΡΟΛΟΥ ---
-st.sidebar.title("⚙️ Πλοήγηση")
-user_role = st.sidebar.radio("Είστε:", ["📱 Πελάτης", "🔒 Διαχειριστής"])
+# --- ΚΕΝΤΡΙΚΗ ΟΘΟΝΗ: ΕΠΙΛΟΓΗ ΡΟΛΟΥ ---
+st.title("🧺 ImatioApp")
+user_role = st.radio(
+    "Επιλέξτε ρόλο:", 
+    ["📱 Πελάτης", "🔒 Διαχειριστής"], 
+    horizontal=True
+)
+
+st.divider()
 
 # ==========================================
 # 📱 1. ΠΡΟΒΟΛΗ ΠΕΛΑΤΗ (CUSTOMER MODE)
 # ==========================================
 if user_role == "📱 Πελάτης":
-    st.title("🧺 ImatioApp - Παρακολούθηση")
+    st.subheader("🔍 Αναζήτηση Παραγγελίας")
     st.write("Εισάγετε τον αριθμό του κινητού σας για να δείτε τα ρούχα και τα χαλιά σας.")
 
     user_phone = st.text_input("📞 Αριθμός Κινητού Τηλεφώνου", placeholder="π.χ. 6912345678").strip()
@@ -130,7 +133,7 @@ if user_role == "📱 Πελάτης":
                             st.write(f"📅 **Ημερομηνία:** {row.get('DateIn', '-')}")
 
                 # Εμφάνιση Χαλιών (TrXalia)
-                st.subheader(" carpets Τα Χαλιά μου (TrXalia)")
+                st.subheader("ρ carpet Τα Χαλιά μου (TrXalia)")
                 if not df_tr_xalia.empty and 'CustomerID' in df_tr_xalia.columns:
                     user_carpets = df_tr_xalia[df_tr_xalia['CustomerID'] == cust_id]
                 else:
@@ -152,9 +155,6 @@ if user_role == "📱 Πελάτης":
 # 🔒 2. ΠΡΟΒΟΛΗ ΔΙΑΧΕΙΡΙΣΤΗ (ADMIN MODE)
 # ==========================================
 else:
-    st.sidebar.divider()
-    
-    # Session state για τον κωδικό διαχειριστή
     if "admin_logged_in" not in st.session_state:
         st.session_state.admin_logged_in = False
 
@@ -170,18 +170,18 @@ else:
             else:
                 st.error("❌ Λανθασμένος κωδικός πρόσβασης.")
     else:
-        if st.sidebar.button("🚪 Αποσύνδεση"):
+        if st.button("🚪 Αποσύνδεση"):
             st.session_state.admin_logged_in = False
             st.cache_data.clear()
             st.rerun()
 
-        st.title("🧺 ImatioApp - Διαχείριση (Admin)")
+        st.subheader("🛠️ Πίνακας Ελέγχου Διαχειριστή")
 
         # --- ΝΕΑ ΚΑΤΑΧΩΡΗΣΗ (ΡΟΥΧΑ Ή ΧΑΛΙΑ) ---
         with st.form("new_entry_form", clear_on_submit=True):
-            st.subheader("➕ Νέα Καταχώρηση (Ρούχα / Χαλιά)")
+            st.write("### ➕ Νέα Καταχώρηση")
 
-            category_type = st.selectbox("Κατηγορία", ["👕 Ρούχα (TrItems)", " carpets Χαλιά (TrXalia)"])
+            category_type = st.selectbox("Κατηγορία", ["👕 Ρούχα (TrItems)", "ρ carpet Χαλιά (TrXalia)"])
 
             customer_list = ["-- Νέος Πελάτης --"]
             if not df_customers.empty and 'Name' in df_customers.columns:
@@ -203,7 +203,6 @@ else:
             submit_entry = st.form_submit_button("Καταχώρηση")
 
             if submit_entry:
-                # Έλεγχος / Δημιουργία Πελάτη
                 if selected_customer == "-- Νέος Πελάτης --":
                     if not new_name or not new_phone:
                         st.error("Συμπληρώστε όνομα και τηλέφωνο.")
@@ -228,72 +227,4 @@ else:
                 st.cache_data.clear()
                 st.rerun()
 
-        # --- ΔΙΑΧΕΙΡΙΣΗ ΕΝΕΡΓΩΝ (ΡΟΥΧΑ & ΧΑΛΙΑ) ---
-        st.divider()
-        tab_clothes, tab_carpets = st.tabs(["👕 Ενεργά Ρούχα (TrItems)", " carpets Ενεργά Χαλιά (TrXalia)"])
-
-        with tab_clothes:
-            st.subheader("📋 Ρούχα σε εκκρεμότητα")
-            if not df_tr_items.empty and 'Status' in df_tr_items.columns:
-                active_clothes = df_tr_items[df_tr_items['Status'] != 'Παραδόθηκε']
-                if active_clothes.empty:
-                    st.info("Δεν υπάρχουν εκκρεμή ρούχα.")
-                else:
-                    for _, row in active_clothes.iterrows():
-                        cust_info = df_customers[df_customers['CustomerID'] == row['CustomerID']]
-                        c_name = cust_info['Name'].values[0] if not cust_info.empty else "Άγνωστος"
-                        
-                        with st.expander(f"#{int(row['TransactionID'])} - {c_name} | {row.get('ItName', '')} ({row.get('Status', '')})"):
-                            st.write(f"📍 **Θέση:** {row.get('Place', '-')}")
-                            st.write(f"💶 **Κόστος:** {row.get('TotalPrice', 0)}€")
-                            st.write(f"📅 **Ημερομηνία:** {row.get('DateIn', '-')}")
-
-                            curr_st = row.get('Status', 'Προς επεξεργασία')
-                            new_st = st.selectbox(
-                                "Αλλαγή Κατάστασης", STATUS_OPTIONS,
-                                index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 1,
-                                key=f"st_item_{row['TransactionID']}"
-                            )
-                            if new_st != curr_st:
-                                cell = ws_tr_items.find(str(row['TransactionID']))
-                                status_col_idx = df_tr_items.columns.get_loc("Status") + 1
-                                ws_tr_items.update_cell(cell.row, status_col_idx, new_st)
-                                if new_st == "Παραδόθηκε":
-                                    date_out_idx = df_tr_items.columns.get_loc("DateOut") + 1
-                                    ws_tr_items.update_cell(cell.row, date_out_idx, datetime.now().strftime("%Y-%m-%d %H:%M"))
-                                st.toast("Ενημερώθηκε!")
-                                st.cache_data.clear()
-                                st.rerun()
-
-        with tab_carpets:
-            st.subheader("📋 Χαλιά σε εκκρεμότητα")
-            if not df_tr_xalia.empty and 'Status' in df_tr_xalia.columns:
-                active_carpets = df_tr_xalia[df_tr_xalia['Status'] != 'Παραδόθηκε']
-                if active_carpets.empty:
-                    st.info("Δεν υπάρχουν εκκρεμή χαλιά.")
-                else:
-                    for _, row in active_carpets.iterrows():
-                        cust_info = df_customers[df_customers['CustomerID'] == row['CustomerID']]
-                        c_name = cust_info['Name'].values[0] if not cust_info.empty else "Άγνωστος"
-                        
-                        with st.expander(f"#{int(row['TransactionID'])} - {c_name} | {row.get('ItName', '')} ({row.get('Status', '')})"):
-                            st.write(f"📍 **Θέση:** {row.get('Place', '-')}")
-                            st.write(f"💶 **Κόστος:** {row.get('TotalPrice', 0)}€")
-                            st.write(f"📅 **Ημερομηνία:** {row.get('DateIn', '-')}")
-
-                            curr_st = row.get('Status', 'Προς επεξεργασία')
-                            new_st = st.selectbox(
-                                "Αλλαγή Κατάστασης", STATUS_OPTIONS,
-                                index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 1,
-                                key=f"st_xali_{row['TransactionID']}"
-                            )
-                            if new_st != curr_st:
-                                cell = ws_tr_xalia.find(str(row['TransactionID']))
-                                status_col_idx = df_tr_xalia.columns.get_loc("Status") + 1
-                                ws_tr_xalia.update_cell(cell.row, status_col_idx, new_st)
-                                if new_st == "Παραδόθηκε":
-                                    date_out_idx = df_tr_xalia.columns.get_loc("DateOut") + 1
-                                    ws_tr_xalia.update_cell(cell.row, date_out_idx, datetime.now().strftime("%Y-%m-%d %H:%M"))
-                                st.toast("Ενημερώθηκε!")
-                                st.cache_data.clear()
-                                st.rerun()
+        # --- ΔΙΑΧΕΙΡΙΣΗ ΕΝΕΡΓΩΝ (Ρ

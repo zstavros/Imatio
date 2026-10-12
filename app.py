@@ -13,16 +13,23 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    /* Κρύβει την πάνω μπάρα και το header του Streamlit */
-    header {visibility: hidden !important;}
+    /* Εξαφάνιση headers, toolbars και footer */
+    header {visibility: hidden !important; height: 0px !important;}
+    [data-testid="stHeader"] {display: none !important;}
     [data-testid="stToolbar"] {visibility: hidden !important;}
     [data-testid="stDecoration"] {display: none !important;}
     footer {visibility: hidden !important;}
     
-    /* Μηδενίζει το κενό στην κορυφή της σελίδας */
+    /* Μηδενισμός περιθωρίων στην κορυφή της σελίδας */
     .block-container { 
-        padding-top: 0.8rem !important; 
+        padding-top: 0rem !important; 
+        margin-top: 0rem !important;
         padding-bottom: 0rem !important;
+    }
+    
+    /* Αφαίρεση περιθωρίων από το κύριο wrapper */
+    .element-container {
+        margin-top: 0rem !important;
     }
     </style>
 """, unsafe_allow_html=True)

@@ -8,19 +8,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Kroyvei ta peritta stoicheia choris na kovei to periechomeno
 st.markdown("""
     <style>
     [data-testid="stToolbar"] {visibility: hidden !important;}
     [data-testid="stDecoration"] {display: none !important;}
     footer {visibility: hidden !important;}
-    .block-container { padding-top: 1rem !important; }
+    .block-container { padding-top: 2.5rem !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# Ελέγχουμε αν ο διαχειριστής είναι ήδη συνδεδεμένος
+# Elechoyme an o diacheiristis einai syndedemenos
 is_admin_logged_in = st.session_state.get("admin_logged_in", False)
 
-# Εμφανίζουμε τον τίτλο και την επιλογή ρόλου ΜΟΝΟ αν ΔΕΝ είναι συνδεδεμένος ο διαχειριστής
 if not is_admin_logged_in:
     st.title("🧺 ImatioApp")
     user_role = st.radio("Επιλέξτε ρόλο:", ["📱 Πελάτης", "🔒 Διαχειριστής"], horizontal=True)

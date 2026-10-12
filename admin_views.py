@@ -10,30 +10,22 @@ STATUS_OPTIONS = [
 ]
 
 def render_admin_dashboard(load_tab_data, get_worksheet):
-    # CSS για να ανέβουν όλα ψηλά και να κολλήσουν μεταξύ τους
+    # Διορθωμένο CSS: Χωρίς αρνητικά περιθώρια για να μην κόβεται τίποτα από πάνω
     st.markdown("""
         <style>
-        /* Μείωση κενών στην κορυφή */
         .block-container {
-            padding-top: 1rem !important;
+            padding-top: 1.5rem !important;
             padding-bottom: 0rem !important;
         }
-        /* Μικρότερα περιθώρια στους τίτλους */
         h3 {
             margin-top: 0rem !important;
-            margin-bottom: 0.2rem !important;
+            margin-bottom: 0rem !important;
             padding-top: 0rem !important;
             padding-bottom: 0rem !important;
         }
-        /* Μάζεμα των tabs προς τα πάνω */
         div[data-testid="stTabs"] {
-            margin-top: -0.5rem !important;
+            margin-top: 0.5rem !important;
         }
-        div[data-testid="stTabs"] button {
-            padding-top: 4px !important;
-            padding-bottom: 4px !important;
-        }
-        /* Μικρότερα ύψη στα πεδία */
         div.stTextInput input {
             min-height: 32px !important;
             height: 32px !important;
@@ -47,12 +39,11 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
         </style>
     """, unsafe_allow_html=True)
 
-    # Αρχικοποίηση ενεργής καρτέλας για δυναμικό τίτλο
     if "active_tab_title" not in st.session_state:
         st.session_state.active_tab_title = "📝 Nea Paradosi"
 
-    # Πάνω γραμμή: Δυναμικός τίτλος & Κουμπί Έξοδος στην ίδια ευθεία
-    col1, col2 = st.columns([0.75, 0.25])
+    # Πάνω γραμμή: Τίτλος καρτέλας & Κουμπί Έξοδος στην ίδια ευθεία
+    col1, col2 = st.columns([0.7, 0.3])
     with col1:
         st.markdown(f"### {st.session_state.active_tab_title}")
     with col2:
@@ -66,7 +57,6 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     df_tr_items = load_tab_data("TrItems")
     df_tr_xalia = load_tab_data("TrXalia")
 
-    # Καθαρά st.tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📝 Nea Paradosi", 
         "📋 Anoikta", 
@@ -137,6 +127,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     # --- 3. PELATES ---
     with tab3:
         st.session_state.active_tab_title = "👥 Diacheirisi Pelaton"
+        # Οριζόντια διάταξη για να είναι στην ίδια ευθεία
         customer_mode = st.radio("Epilogi:", ["Neos Pelatis", "Epexergasia Yparchontos"], horizontal=True, key="c_mode_radio")
         ws_customers = get_worksheet("Customers")
 

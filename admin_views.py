@@ -10,15 +10,15 @@ STATUS_OPTIONS = [
 ]
 
 def render_admin_dashboard(load_tab_data, get_worksheet):
-    # Μάζεμα κενών στην κορυφή μέσω CSS
+    # Ultra-compact CSS για ελαχιστοποίηση κενών
     st.markdown("""
         <style>
         .block-container {
-            padding-top: 0.5rem !important;
+            padding-top: 0.4rem !important;
             padding-bottom: 0rem !important;
         }
-        div[data-testid="stTabs"] {
-            margin-top: -0.2rem !important;
+        div[data-testid="stHorizontalBlock"] {
+            align-items: center !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -28,23 +28,28 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     df_tr_items = load_tab_data("TrItems")
     df_tr_xalia = load_tab_data("TrXalia")
 
-    # Μόνιμη πάνω γραμμή με Τίτλο & Κουμπί Έξοδος ψηλά-ψηλά
-    col_t1, col_t2 = st.columns([0.7, 0.3])
-    with col_t1:
-        st.markdown("<h4 style='margin:0; padding:0; line-height:1.2;'>🛠️ Διαχείριση</h4>", unsafe_allow_html=True)
-    with col_t2:
-        if st.button("🚪 Έξοδος", key="admin_global_logout"):
+    # Δημιουργία γραμμής: Αριστερά οι καρτέλες (μέσω st.columns) και δεξιά η Έξοδος στην ίδια ευθεία
+    # Επειδή το st.tabs δεν μπαίνει εύκολα σε στήλη, βάζουμε κουμπί εξόδου πάνω δεξιά σε ξεχωριστή μικρή γραμμή δίπλα στα tabs
+    # Ή ακόμα καλύτερα, ορίζουμε top header row για τα tabs και το κουμπί εξόδου.
+    
+    col_tabs, col_logout = st.columns([0.78, 0.22])
+    
+    with col_logout:
+        st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
+        if st.button("🚪 Έξοδος", key="admin_top_logout"):
             st.session_state.admin_logged_in = False
             st.cache_data.clear()
             st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📝 Νέα Παράδοση", 
-        "📋 Ανοιχτά", 
-        "👥 Πελάτες", 
-        "👕 Είδη", 
-        "🧺 Χαλιά"
-    ])
+    with col_tabs:
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+            "📝 Νέα", 
+            "📋 Ανοιχτά", 
+            "👥 Πελάτες", 
+            "👕 Είδη", 
+            "🧺 Χαλιά"
+        ])
 
     # --- 1. ΝΕΑ ΠΑΡΑΔΟΣΗ ---
     with tab1:
@@ -105,10 +110,9 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
 
     # --- 3. ΠΕΛΑΤΕΣ ---
     with tab3:
-        # Οριζόντια διάταξη ακριβώς στην ίδια ευθεία για το label και τα radio buttons
         r_col1, r_col2 = st.columns([0.38, 0.62])
         with r_col1:
-            st.markdown("<p style='margin-top: 6px; margin-bottom: 0px; font-weight: 500; font-size: 0.9rem;'>Επιλογή Action:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: 500; font-size: 0.9rem;'>Επιλογή Action:</p>", unsafe_allow_html=True)
         with r_col2:
             customer_mode = st.radio("Επιλογή Action:", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio", label_visibility="collapsed")
 
@@ -217,7 +221,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     with tab4:
         r_col1, r_col2 = st.columns([0.38, 0.62])
         with r_col1:
-            st.markdown("<p style='margin-top: 6px; margin-bottom: 0px; font-weight: 500; font-size: 0.9rem;'>Επιλογή Action:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='margin-top: 4px; margin-bottom: 0px; font-weight: 500; font-size: 0.9rem;'>Επιλογή Action:</p>", unsafe_allow_html=True)
         with r_col2:
             item_mode = st.radio("Επιλογή Action:", ["Νέο Είδος", "Επεξεργασία"], horizontal=True, key="i_mode", label_visibility="collapsed")
             

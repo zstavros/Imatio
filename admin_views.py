@@ -10,15 +10,12 @@ STATUS_OPTIONS = [
 ]
 
 def render_admin_dashboard(load_tab_data, get_worksheet):
-    # Ultra-compact CSS για ελαχιστοποίηση κενών
+    # Μάζεμα κενών στην κορυφή
     st.markdown("""
         <style>
         .block-container {
-            padding-top: 0.4rem !important;
+            padding-top: 0.3rem !important;
             padding-bottom: 0rem !important;
-        }
-        div[data-testid="stHorizontalBlock"] {
-            align-items: center !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -28,21 +25,10 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     df_tr_items = load_tab_data("TrItems")
     df_tr_xalia = load_tab_data("TrXalia")
 
-    # Δημιουργία γραμμής: Αριστερά οι καρτέλες (μέσω st.columns) και δεξιά η Έξοδος στην ίδια ευθεία
-    # Επειδή το st.tabs δεν μπαίνει εύκολα σε στήλη, βάζουμε κουμπί εξόδου πάνω δεξιά σε ξεχωριστή μικρή γραμμή δίπλα στα tabs
-    # Ή ακόμα καλύτερα, ορίζουμε top header row για τα tabs και το κουμπί εξόδου.
-    
-    col_tabs, col_logout = st.columns([0.78, 0.22])
-    
-    with col_logout:
-        st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
-        if st.button("🚪 Έξοδος", key="admin_top_logout"):
-            st.session_state.admin_logged_in = False
-            st.cache_data.clear()
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+    # Γραμμή με τις καρτέλες αριστερά και το κουμπί Έξοδος δεξιά στην ίδια ακριβώς ευθεία
+    top_col1, top_col2 = st.columns([0.82, 0.18])
 
-    with col_tabs:
+    with top_col1:
         tab1, tab2, tab3, tab4, tab5 = st.tabs([
             "📝 Νέα", 
             "📋 Ανοιχτά", 
@@ -50,6 +36,14 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
             "👕 Είδη", 
             "🧺 Χαλιά"
         ])
+
+    with top_col2:
+        # Μικρό κενό για να ευθυγραμμιστεί τέλεια με το ύψος των tabs
+        st.markdown("<div style='margin-top: 4px;'></div>", unsafe_allow_html=True)
+        if st.button("🚪 Έξοδος", key="admin_inline_logout", use_container_width=True):
+            st.session_state.admin_logged_in = False
+            st.cache_data.clear()
+            st.rerun()
 
     # --- 1. ΝΕΑ ΠΑΡΑΔΟΣΗ ---
     with tab1:

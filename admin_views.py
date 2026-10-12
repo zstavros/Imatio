@@ -167,7 +167,6 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                     phone = row.get('CuPhone') if pd.notnull(row.get('CuPhone')) and str(row.get('CuPhone')).strip() != '' else row.get('CuMobile', '')
                     cust_options.append(f"{row[name_col]} ({phone})")
 
-                # Άμεση αναζήτηση καθώς πληκτρολογείς μέσα στο κουμπί
                 selected_c = st.selectbox("Αναζήτηση Πελάτη", cust_options, label_visibility="collapsed")
 
                 if selected_c and selected_c != "-- Πληκτρολογήστε ή επιλέξτε πελάτη --":
@@ -236,18 +235,30 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
             if df_items.empty or col_name_key not in df_items.columns:
                 st.info("Δεν υπάρχουν αποθηκευμένα είδη.")
             else:
-                item_list = df_items[col_name_key].dropna().tolist()
-                selected_it = st.selectbox("Επιλέξτε Είδος", item_list)
-                if selected_it:
+                valid_items = df_items[df_items[col_name_key].astype(str).str.strip() != ""]
+                
+                item_options = ["-- Πληκτρολογήστε ή επιλέξτε είδος --"]
+                for _, row in valid_items.iterrows():
+                    item_options.append(str(row[col_name_key]))
+
+                # Γρήγορη αναζήτηση ειδών με πληκτρολόγηση
+                selected_it = st.selectbox("Αναζήτηση Είδους", item_options, label_visibility="collapsed", key="search_item_selectbox")
+
+                if selected_it and selected_it != "-- Πληκτρολογήστε ή επιλέξτε είδος --":
                     with st.form("edit_item_form"):
+                        st.write(f"✏️ Επεξεργασία: **{selected_it}**")
                         new_it_name = st.text_input("Όνομα Είδους", value=selected_it)
+                        
                         if st.form_submit_button("Αποθήκευση Αλλαγών"):
-                            cell = ws_items.find(selected_it)
-                            col_idx = df_items.columns.get_loc(col_name_key) + 1
-                            ws_items.update_cell(cell.row, col_idx, new_it_name)
-                            st.success("Ενημερώθηκε!")
-                            st.cache_data.clear()
-                            st.rerun()
+                            try:
+                                cell = ws_items.find(selected_it)
+                                col_idx = df_items.columns.get_loc(col_name_key) + 1
+                                ws_items.update_cell(cell.row, col_idx, new_it_name)
+                                st.success("✅ Το είδος ενημερώθηκε!")
+                                st.cache_data.clear()
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ Σφάλμα: {e}")
 
     # --- 5. ΧΑΛΙΑ ---
     with tab5:

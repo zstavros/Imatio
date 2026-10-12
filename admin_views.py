@@ -10,16 +10,6 @@ STATUS_OPTIONS = [
 ]
 
 def render_admin_dashboard(load_tab_data, get_worksheet):
-    # Statheri, kathari korifi gia ola ta tabs
-    col1, col2 = st.columns([0.7, 0.3])
-    with col1:
-        st.markdown("### 🧺 ImatioApp - Διαχείριση")
-    with col2:
-        if st.button("🚪 Έξοδος", key="admin_logout_btn"):
-            st.session_state.admin_logged_in = False
-            st.cache_data.clear()
-            st.rerun()
-
     df_customers = load_tab_data("Customers")
     df_items = load_tab_data("Items")
     df_tr_items = load_tab_data("TrItems")
@@ -33,8 +23,17 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
         "🧺 Χαλιά"
     ])
 
-    # --- 1. NEA PARADOSI ---
+    # --- 1. ΝΕΑ ΠΑΡΑΔΟΣΗ ---
     with tab1:
+        col1, col2 = st.columns([0.7, 0.3])
+        with col1:
+            st.markdown("### 📝 Νέα Παράδοση")
+        with col2:
+            if st.button("🚪 Έξοδος", key="ex_t1"):
+                st.session_state.admin_logged_in = False
+                st.cache_data.clear()
+                st.rerun()
+
         with st.form("new_transaction_form", clear_on_submit=True):
             category_type = st.selectbox("Κατηγορία", ["👕 Ρούχα (TrItems)", "🧺 Χαλιά (TrXalia)"])
 
@@ -80,8 +79,17 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                 st.cache_data.clear()
                 st.rerun()
 
-    # --- 2. ANOIXTA ---
+    # --- 2. ΑΝΟΙΧΤΑ ---
     with tab2:
+        col1, col2 = st.columns([0.7, 0.3])
+        with col1:
+            st.markdown("### 📋 Ανοιχτά")
+        with col2:
+            if st.button("🚪 Έξοδος", key="ex_t2"):
+                st.session_state.admin_logged_in = False
+                st.cache_data.clear()
+                st.rerun()
+
         sub_tab_c, sub_tab_x = st.tabs(["👕 Ρούχα", "🧺 Χαλιά"])
 
         with sub_tab_c:
@@ -90,8 +98,17 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
         with sub_tab_x:
             _render_active_list(df_tr_xalia, df_customers, "TrXalia", get_worksheet)
 
-    # --- 3. PELATES ---
+    # --- 3. ΠΕΛΑΤΕΣ ---
     with tab3:
+        col1, col2 = st.columns([0.7, 0.3])
+        with col1:
+            st.markdown("### 👥 Πελάτες")
+        with col2:
+            if st.button("🚪 Έξοδος", key="ex_t3"):
+                st.session_state.admin_logged_in = False
+                st.cache_data.clear()
+                st.rerun()
+
         customer_mode = st.radio("Επιλογή Action:", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio")
         ws_customers = get_worksheet("Customers")
 
@@ -194,8 +211,17 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                                 except Exception as e:
                                     st.error(f"❌ Σφάλμα: {e}")
 
-    # --- 4. EIDI ---
+    # --- 4. ΕΙΔΗ ---
     with tab4:
+        col1, col2 = st.columns([0.7, 0.3])
+        with col1:
+            st.markdown("### 👕 Είδη")
+        with col2:
+            if st.button("🚪 Έξοδος", key="ex_t4"):
+                st.session_state.admin_logged_in = False
+                st.cache_data.clear()
+                st.rerun()
+
         item_mode = st.radio("Επιλογή Action:", ["Νέο Είδος", "Επεξεργασία"], horizontal=True, key="i_mode")
         ws_items = get_worksheet("Items")
 
@@ -230,8 +256,17 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                             st.cache_data.clear()
                             st.rerun()
 
-    # --- 5. XALIA ---
+    # --- 5. ΧΑΛΙΑ ---
     with tab5:
+        col1, col2 = st.columns([0.7, 0.3])
+        with col1:
+            st.markdown("### 🧺 Χαλιά")
+        with col2:
+            if st.button("🚪 Έξοδος", key="ex_t5"):
+                st.session_state.admin_logged_in = False
+                st.cache_data.clear()
+                st.rerun()
+
         st.info("ℹ️ Χρησιμοποιείται η κεντρική βάση ειδών (Items) για καταχώρηση χαλιών.")
 
 

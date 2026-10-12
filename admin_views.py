@@ -47,10 +47,20 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
         </style>
     """, unsafe_allow_html=True)
 
-    df_customers = load_tab_data("Customers")
-    df_items = load_tab_data("Items")
-    df_tr_items = load_tab_data("TrItems")
-    df_tr_xalia = load_tab_data("TrXalia")
+    # Φόρτωση δεδομένων (αποθήκευση στη μνήμη για μηδενική καθυστέρηση)
+    if "cached_customers" not in st.session_state:
+        st.session_state.cached_customers = load_tab_data("Customers")
+    if "cached_items" not in st.session_state:
+        st.session_state.cached_items = load_tab_data("Items")
+    if "cached_tr_items" not in st.session_state:
+        st.session_state.cached_tr_items = load_tab_data("TrItems")
+    if "cached_tr_xalia" not in st.session_state:
+        st.session_state.cached_tr_xalia = load_tab_data("TrXalia")
+
+    df_customers = st.session_state.cached_customers
+    df_items = st.session_state.cached_items
+    df_tr_items = st.session_state.cached_tr_items
+    df_tr_xalia = st.session_state.cached_tr_xalia
 
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📝 Νέα", 
@@ -104,7 +114,9 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                     ws_tr.append_row([trans_id, cust_id, item_name_input, place_val, today_str, "", price, initial_status])
 
                 st.success("✅ Η συναλλαγή καταχωρήθηκε επιτυχώς!")
-                st.cache_data.clear()
+                for k in list(st.session_state.keys()):
+                    if k.startswith("cached_"):
+                        del st.session_state[k]
                 st.rerun()
 
     # --- 2. ΑΝΟΙΧΤΑ ---
@@ -152,7 +164,9 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                             n_notes.strip()
                         ])
                         st.success(f"✅ Ο πελάτης **{n_name}** αποθηκεύτηκε επιτυχώς!")
-                        st.cache_data.clear()
+                        for k in list(st.session_state.keys()):
+                            if k.startswith("cached_"):
+                                del st.session_state[k]
                         st.rerun()
 
         else:
@@ -163,24 +177,13 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                 if "selected_edit_customer" not in st.session_state:
                     st.session_state.selected_edit_customer = None
 
-                # Χρήση session state για ακαριαία απόκριση
-                if "fast_search" not in st.session_state:
-                    st.session_state.fast_search = ""
-
-                def update_search():
-                    st.session_state.fast_search = st.session_state.get("fast_input_box", "")
-                    st.session_state.selected_edit_customer = None
-
-                st.text_input(
+                # Αστραπιαία αναζήτηση τοπικά στη μνήμη
+                search_query = st.text_input(
                     "Αναζήτηση πελάτη", 
-                    placeholder="Πληκτρολογήστε όνομα ή κινητό...", 
+                    placeholder="Πληκτρολογήστε γράμμα (π.χ. ΣΤ)...", 
                     label_visibility="collapsed", 
-                    key="fast_input_box",
-                    on_change=update_search
+                    key="instant_search_input"
                 )
-                
-                # Συγχρονισμός τιμής
-                search_query = st.session_state.get("fast_input_box", "")
 
                 valid_customers = df_customers[df_customers[name_col].astype(str).str.strip() != ""]
 
@@ -188,7 +191,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                     q = search_query.strip().lower()
                     phone_col = 'CuMobile' if 'CuMobile' in df_customers.columns else ('CuPhone' if 'CuPhone' in df_customers.columns else '')
                     
-                    mask = valid_customers[name_col].astype(str).str.lower().str.contains(q)
+                    mask = valid_customers[name_col].astype(str).str.lower().str.startswith(q) | valid_customers[name_col].astype(str).str.lower().str.contains(q)
                     if phone_col and phone_col in valid_customers.columns:
                         mask = mask | valid_customers[phone_col].astype(str).str.lower().str.contains(q)
                     
@@ -197,7 +200,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                     filtered_df = pd.DataFrame()
 
                 if search_query.strip() == "":
-                    st.info("👆 Πληκτρολογήστε γράμματα για άμεση εμφάνιση αποτελεσμάτων.")
+                    st.info("👆 Πληκτρολογήστε γράμμα για άμεση εμφάνιση.")
                     st.session_state.selected_edit_customer = None
                 elif filtered_df.empty:
                     st.warning("❌ Δεν βρέθηκε πελάτης.")
@@ -209,10 +212,10 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                         phone = row.get('CuPhone') if pd.notnull(row.get('CuPhone')) and str(row.get('CuPhone')).strip() != '' else row.get('CuMobile', '')
                         c_display_str = f"{row[name_col]} ({phone})"
                         
-                        if st.button(f"👤 {c_display_str}", key=f"fast_btn_{row.get('CustomerID', row[name_col])}", use_container_width=True):
+                        if st.button(f"👤 {c_display_str}", key=f"inst_btn_{row.get('CustomerID', row[name_col])}", use_container_width=True):
                             st.session_state.selected_edit_customer = row[name_col]
 
-                # Αν έχει πατηθεί κάποιος πελάτης, ανοίγει η φόρμα επεξεργασίας από κάτω
+                # Φόρμα επεξεργασίας
                 if st.session_state.selected_edit_customer:
                     c_name_val = st.session_state.selected_edit_customer
                     c_row_data = valid_customers[valid_customers[name_col] == c_name_val].iloc[0]
@@ -247,7 +250,9 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                                 
                                 st.success("✅ Τα στοιχεία ενημερώθηκαν επιτυχώς!")
                                 st.session_state.selected_edit_customer = None
-                                st.cache_data.clear()
+                                for k in list(st.session_state.keys()):
+                                    if k.startswith("cached_"):
+                                        del st.session_state[k]
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ Σφάλμα: {e}")
@@ -273,7 +278,9 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                         item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(df_items['ItemID'].max()) + 1
                         ws_items.append_row([item_id, it_name, it_desc])
                         st.success("Το είδος προστέθηκε!")
-                        st.cache_data.clear()
+                        for k in list(st.session_state.keys()):
+                            if k.startswith("cached_"):
+                                del st.session_state[k]
                         st.rerun()
         else:
             col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
@@ -290,7 +297,9 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                             col_idx = df_items.columns.get_loc(col_name_key) + 1
                             ws_items.update_cell(cell.row, col_idx, new_it_name)
                             st.success("Ενημερώθηκε!")
-                            st.cache_data.clear()
+                            for k in list(st.session_state.keys()):
+                                if k.startswith("cached_"):
+                                    del st.session_state[k]
                             st.rerun()
 
     # --- 5. ΧΑΛΙΑ ---
@@ -333,5 +342,7 @@ def _render_active_list(df_trans, df_cust, sheet_name, get_worksheet_fn):
                     date_out_idx = df_trans.columns.get_loc("DateOut") + 1
                     ws.update_cell(cell.row, date_out_idx, datetime.now().strftime("%Y-%m-%d %H:%M"))
                 st.toast("Ενημερώθηκε!")
-                st.cache_data.clear()
+                for k in list(st.session_state.keys()):
+                    if k.startswith("cached_"):
+                        del st.session_state[k]
                 st.rerun()

@@ -13,10 +13,17 @@ st.set_page_config(
 
 st.markdown("""
     <style>
+    /* Κρύβει την πάνω μπάρα και το header του Streamlit */
+    header {visibility: hidden !important;}
     [data-testid="stToolbar"] {visibility: hidden !important;}
     [data-testid="stDecoration"] {display: none !important;}
     footer {visibility: hidden !important;}
-    .block-container { padding-top: 2.5rem !important; }
+    
+    /* Μηδενίζει το κενό στην κορυφή της σελίδας */
+    .block-container { 
+        padding-top: 0.8rem !important; 
+        padding-bottom: 0rem !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 

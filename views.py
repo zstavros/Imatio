@@ -67,7 +67,7 @@ def render_admin_view():
 
     if not st.session_state.admin_logged_in:
         st.subheader("🔒 Περιοχή Διαχειριστή")
-        entered_pass = st.text_input("Εισάγετε Κωδικό Διαχειριστή (#G1orgos#)", type="password")
+        entered_pass = st.text_input("Εισάγετε Κωδικό Διαχειριστή", type="password")
         
         if st.button("🔑 Σύνδεση", type="primary"):
             if entered_pass == "#G1orgos#":

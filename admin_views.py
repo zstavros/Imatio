@@ -10,34 +10,44 @@ STATUS_OPTIONS = [
 ]
 
 def render_admin_dashboard(load_tab_data, get_worksheet):
-    # Επιθετικό CSS για μηδενισμό κενών στην κορυφή και συμπύκνωση φόρμας
+    # ΕΠΙΘΕΤΙΚΟ CSS: Μηδενισμός κάθε κενου από πάνω και συμπύκνωση φόρμας για να φαίνεται το κουμπί
     st.markdown("""
         <style>
-        /* Κρύψιμο header Streamlit και μηδενισμός margins */
-        header {visibility: hidden !important; height: 0px !important;}
+        header {display: none !important;}
         [data-testid="stHeader"] {display: none !important; height: 0px !important;}
+        [data-testid="stToolbar"] {display: none !important;}
+        footer {display: none !important;}
+        
+        /* Τέρμα πάνω η σελίδα, μηδενικά περιθώρια */
         .block-container {
             padding-top: 0rem !important;
-            margin-top: -2rem !important;
+            margin-top: 0rem !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
             padding-bottom: 0rem !important;
         }
-        /* Στενά πεδία κειμένου για εξοικονόμηση χώρου */
+        
+        /* Πολύ κοντά πεδία κειμένου */
         div.stTextInput input {
-            min-height: 26px !important;
-            height: 26px !important;
-            padding-top: 1px !important;
-            padding-bottom: 1px !important;
-            font-size: 0.9rem !important;
+            min-height: 24px !important;
+            height: 24px !important;
+            padding-top: 0px !important;
+            padding-bottom: 0px !important;
+            font-size: 0.85rem !important;
         }
         div.stTextArea textarea {
-            min-height: 40px !important;
-            height: 40px !important;
-            font-size: 0.9rem !important;
+            min-height: 35px !important;
+            height: 35px !important;
+            font-size: 0.85rem !important;
         }
-        /* Μικρότερα περιθώρια στις φόρμες για να φαίνεται πάντα το κουμπί */
+        
+        /* Συμπύκνωση φόρμας για να μην κόβεται το κουμπί αποθήκευσης */
         .stForm {
-            padding: 6px !important;
+            padding: 2px !important;
             margin-bottom: 0px !important;
+        }
+        div[data-testid="stFormSubmitButton"] {
+            margin-top: -5px !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -47,7 +57,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     df_tr_items = load_tab_data("TrItems")
     df_tr_xalia = load_tab_data("TrXalia")
 
-    # Πεντακάθαρες καρτέλες κολλημένες τέρματα πάνω
+    # Καρτέλες κολλημένες τέρματα στην κορυφή
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📝 Νέα", 
         "📋 Ανοιχτά", 

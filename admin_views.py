@@ -2,6 +2,23 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+st.markdown("""
+    <style>
+    /* Μικρότερο ύψος στα text inputs */
+    div.stTextInput input {
+        min-height: 32px !important;
+        height: 32px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+    }
+    /* Μικρότερο ύψος στα text areas (σημειώσεις) */
+    div.stTextArea textarea {
+        min-height: 60px !important;
+        height: 60px !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 STATUS_OPTIONS = [
     "Έτοιμος για παραλαβή",
     "Προς επεξεργασία",

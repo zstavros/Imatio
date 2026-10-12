@@ -1,19 +1,53 @@
-# --- 1. NEA PARADOSI ---
+import streamlit as st
+import pandas as pd
+from datetime import datetime
+
+STATUS_OPTIONS = [
+    "Έτοιμος για παραλαβή",
+    "Προς επεξεργασία",
+    "Προς φύλαξη",
+    "Παραδόθηκε"
+]
+
+def render_admin_dashboard(load_tab_data, get_worksheet):
+    col1, col2 = st.columns([0.7, 0.3])
+    with col1:
+        st.markdown("### 🛠️ Πίνακας Ελέγχου")
+    with col2:
+        if st.button("🚪 Έξοδος"):
+            st.session_state.admin_logged_in = False
+            st.cache_data.clear()
+            st.rerun()
+
+    df_customers = load_tab_data("Customers")
+    df_items = load_tab_data("Items")
+    df_tr_items = load_tab_data("TrItems")
+    df_tr_xalia = load_tab_data("TrXalia")
+
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "📝 Νέα Παράδοση", 
+        "📋 Ανοιχτά", 
+        "👥 Πελάτες", 
+        "👕 Είδη", 
+        "🧺 Χαλιά"
+    ])
+
+    # --- 1. ΝΕΑ ΠΑΡΑΔΟΣΗ ---
     with tab1:
         st.write("### 📝 Νέα Παράδοση / Συναλλαγή")
         with st.form("new_transaction_form", clear_on_submit=True):
             category_type = st.selectbox("Κατηγορία", ["👕 Ρούχα (TrItems)", "🧺 Χαλιά (TrXalia)"])
 
-            if df_customers.empty or 'CuName' not in df_customers.columns:
+            name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
+            if df_customers.empty or name_col not in df_customers.columns:
                 st.warning("Πρώτα καταχωρήστε πελάτες στην καρτέλα 'Πελάτες'.")
                 st.stop()
             
-            # Xrisimopoiei tis στήλες CuName, CuPhone, CuMobile
             cust_choices = []
             for _, row in df_customers.iterrows():
-                if pd.notnull(row.get('CuName')) and str(row.get('CuName')).strip() != '':
+                if pd.notnull(row.get(name_col)) and str(row.get(name_col)).strip() != '':
                     phone = row.get('CuMobile') if pd.notnull(row.get('CuMobile')) and str(row.get('CuMobile')).strip() != '' else row.get('CuPhone', '')
-                    cust_choices.append(f"{row['CuName']} ({phone})")
+                    cust_choices.append(f"{row[name_col]} ({phone})")
 
             selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices)
 
@@ -30,7 +64,7 @@
 
             if st.form_submit_button("Καταχώρηση Νέας Παραλαβής"):
                 cust_name_clean = selected_customer_str.split(" (")[0]
-                cust_id = int(df_customers[df_customers['CuName'] == cust_name_clean]['CustomerID'].values[0])
+                cust_id = int(df_customers[df_customers[name_col] == cust_name_clean]['CustomerID'].values[0])
                 today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
 
                 if "Ρούχα" in category_type:
@@ -46,7 +80,18 @@
                 st.cache_data.clear()
                 st.rerun()
 
-    # --- 3. PELATES ---
+    # --- 2. ΑΝΟΙΧΤΑ ---
+    with tab2:
+        st.write("### 📋 Εκκρεμή / Ανοιχτά προς παράδοση")
+        sub_tab_c, sub_tab_x = st.tabs(["👕 Ρούχα", "🧺 Χαλιά"])
+
+        with sub_tab_c:
+            _render_active_list(df_tr_items, df_customers, "TrItems", get_worksheet)
+
+        with sub_tab_x:
+            _render_active_list(df_tr_xalia, df_customers, "TrXalia", get_worksheet)
+
+    # --- 3. ΠΕΛΑΤΕΣ ---
     with tab3:
         st.write("### Διαχείριση Πελατών")
         customer_mode = st.radio("Επιλογή:", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio")
@@ -55,7 +100,7 @@
         if customer_mode == "Νέος Πελάτης":
             with st.form("new_customer_form", clear_on_submit=True):
                 n_name = st.text_input("Ονοματεπώνυμο *")
-                n_phone = st.text_input("Τηλέφωνο (CuPhone) *")
+                n_phone = st.text_input("Τηλέφωνο (CuPhone)")
                 n_mobile = st.text_input("Κινητό (CuMobile)")
                 n_address = st.text_input("Διεύθυνση (CuAddress)")
                 
@@ -64,54 +109,10 @@
                         st.error("❌ Παρακαλώ συμπληρώστε Όνομα.")
                     else:
                         cust_id = 1 if df_customers.empty or 'CustomerID' not in df_customers.columns else int(pd.to_numeric(df_customers['CustomerID'], errors='coerce').max() or 0) + 1
-                        # Katachorisi me tis σωστή σειρά των στηλών: CustomerID, CuName, CuAddress, CuCity, CuPhone, CuMobile, CuEmail, CuNotes
                         ws_customers.append_row([cust_id, n_name.strip(), n_address.strip(), "", str(n_phone).strip(), str(n_mobile).strip(), "", ""])
                         st.success(f"✅ Ο πελάτης **{n_name}** αποθηκεύτηκε επιτυχώς!")
                         st.cache_data.clear()
                         st.rerun()
 
         else:
-            if df_customers.empty or 'CuName' not in df_customers.columns:
-                st.warning("⚠️ Δεν βρέθηκαν καταχωρημένοι πελάτες.")
-            else:
-                valid_customers = df_customers[df_customers['CuName'].astype(str).str.strip() != ""]
-                
-                if valid_customers.empty:
-                    st.info("ℹ️ Δεν υπάρχουν πελάτες.")
-                else:
-                    cust_options = []
-                    for _, row in valid_customers.iterrows():
-                        phone = row.get('CuMobile') if pd.notnull(row.get('CuMobile')) and str(row.get('CuMobile')).strip() != '' else row.get('CuPhone', '')
-                        cust_options.append(f"{row['CuName']} ({phone})")
-
-                    selected_c = st.selectbox("🔍 Επιλέξτε πελάτη για επεξεργασία", cust_options)
-                    
-                    if selected_c:
-                        c_name_val = selected_c.split(" (")[0]
-                        c_row_data = valid_customers[valid_customers['CuName'] == c_name_val].iloc[0]
-                        
-                        with st.form("edit_customer_form"):
-                            e_name = st.text_input("Ονοματεπώνυμο", value=str(c_row_data.get('CuName', '')))
-                            e_phone = st.text_input("Τηλέφωνο", value=str(c_row_data.get('CuPhone', '')))
-                            e_mobile = st.text_input("Κινητό", value=str(c_row_data.get('CuMobile', '')))
-                            e_address = st.text_input("Διεύθυνση", value=str(c_row_data.get('CuAddress', '')))
-                            
-                            if st.form_submit_button("🔄 Ενημέρωση Στοιχείων"):
-                                try:
-                                    cell = ws_customers.find(c_name_val)
-                                    
-                                    name_col_idx = df_customers.columns.get_loc("CuName") + 1
-                                    phone_col_idx = df_customers.columns.get_loc("CuPhone") + 1
-                                    mobile_col_idx = df_customers.columns.get_loc("CuMobile") + 1
-                                    address_col_idx = df_customers.columns.get_loc("CuAddress") + 1
-                                    
-                                    ws_customers.update_cell(cell.row, name_col_idx, e_name)
-                                    ws_customers.update_cell(cell.row, phone_col_idx, e_phone)
-                                    ws_customers.update_cell(cell.row, mobile_col_idx, e_mobile)
-                                    ws_customers.update_cell(cell.row, address_col_idx, e_address)
-                                    
-                                    st.success("✅ Τα στοιχεία ενημερώθηκαν επιτυχώς!")
-                                    st.cache_data.clear()
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"❌ Σφάλμα: {e}")
+            name_col = 'CuName

@@ -17,9 +17,16 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🧺 ImatioApp")
-user_role = st.radio("Επιλέξτε ρόλο:", ["📱 Πελάτης", "🔒 Διαχειριστής"], horizontal=True)
-st.divider()
+# Ελέγχουμε αν ο διαχειριστής είναι ήδη συνδεδεμένος
+is_admin_logged_in = st.session_state.get("admin_logged_in", False)
+
+# Εμφανίζουμε τον τίτλο και την επιλογή ρόλου ΜΟΝΟ αν ΔΕΝ είναι συνδεδεμένος ο διαχειριστής
+if not is_admin_logged_in:
+    st.title("🧺 ImatioApp")
+    user_role = st.radio("Επιλέξτε ρόλο:", ["📱 Πελάτης", "🔒 Διαχειριστής"], horizontal=True)
+    st.divider()
+else:
+    user_role = "🔒 Διαχειριστής"
 
 if user_role == "📱 Πελάτης":
     render_customer_view()

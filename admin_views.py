@@ -163,13 +163,24 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                 if "selected_edit_customer" not in st.session_state:
                     st.session_state.selected_edit_customer = None
 
-                # Απευθείας ανάγνωση τιμής από session state για άμεσο φιλτράρισμα
-                search_query = st.text_input(
+                # Χρήση session state για ακαριαία απόκριση
+                if "fast_search" not in st.session_state:
+                    st.session_state.fast_search = ""
+
+                def update_search():
+                    st.session_state.fast_search = st.session_state.get("fast_input_box", "")
+                    st.session_state.selected_edit_customer = None
+
+                st.text_input(
                     "Αναζήτηση πελάτη", 
                     placeholder="Πληκτρολογήστε όνομα ή κινητό...", 
                     label_visibility="collapsed", 
-                    key="cust_search_live_box"
+                    key="fast_input_box",
+                    on_change=update_search
                 )
+                
+                # Συγχρονισμός τιμής
+                search_query = st.session_state.get("fast_input_box", "")
 
                 valid_customers = df_customers[df_customers[name_col].astype(str).str.strip() != ""]
 
@@ -192,15 +203,14 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                     st.warning("❌ Δεν βρέθηκε πελάτης.")
                     st.session_state.selected_edit_customer = None
                 else:
-                    st.markdown(f"<p style='font-size: 0.85rem; color: #0288d1; margin: 4px 0px; font-weight: 500;'>Ζωντανά αποτελέσματα ({len(filtered_df)}): Επιλέξτε:</p>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='font-size: 0.85rem; color: #0288d1; margin: 4px 0px; font-weight: 500;'>Αποτελέσματα ({len(filtered_df)}): Επιλέξτε:</p>", unsafe_allow_html=True)
                     
                     for _, row in filtered_df.iterrows():
                         phone = row.get('CuPhone') if pd.notnull(row.get('CuPhone')) and str(row.get('CuPhone')).strip() != '' else row.get('CuMobile', '')
                         c_display_str = f"{row[name_col]} ({phone})"
                         
-                        if st.button(f"👤 {c_display_str}", key=f"live_btn_{row.get('CustomerID', row[name_col])}", use_container_width=True):
+                        if st.button(f"👤 {c_display_str}", key=f"fast_btn_{row.get('CustomerID', row[name_col])}", use_container_width=True):
                             st.session_state.selected_edit_customer = row[name_col]
-                            st.rerun()
 
                 # Αν έχει πατηθεί κάποιος πελάτης, ανοίγει η φόρμα επεξεργασίας από κάτω
                 if st.session_state.selected_edit_customer:

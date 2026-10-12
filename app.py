@@ -48,20 +48,36 @@ def get_gspread_client():
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     return gspread.authorize(creds)
 
-def load_tab(tab_name):
+# Αντικαταστήστε το παλιό load_tab με αυτό το τμήμα κώδικα:
+
+@st.cache_data(ttl=60)  # Αποθηκεύει τα δεδομένα για 60 δευτερόλεπτα
+def load_tab_data(tab_name):
     client = get_gspread_client()
     sheet_url = st.secrets["spreadsheet_url"]
     sh = client.open_by_url(sheet_url)
     worksheet = sh.worksheet(tab_name)
     data = worksheet.get_all_records()
-    return pd.DataFrame(data), worksheet
+    return pd.DataFrame(data)
 
-# Φόρτωση Δεδομένων (Customers, Items, TrItems, TrXalia)
+def get_worksheet(tab_name):
+    client = get_gspread_client()
+    sheet_url = st.secrets["spreadsheet_url"]
+    sh = client.open_by_url(sheet_url)
+    return sh.worksheet(tab_name)
+
+# Φόρτωση Δεδομένων
 try:
-    df_customers, ws_customers = load_tab("Customers")
-    df_items, ws_items = load_tab("Items")
-    df_tr_items, ws_tr_items = load_tab("TrItems")
-    df_tr_xalia, ws_tr_xalia = load_tab("TrXalia")
+    df_customers = load_tab_data("Customers")
+    ws_customers = get_worksheet("Customers")
+
+    df_items = load_tab_data("Items")
+    ws_items = get_worksheet("Items")
+
+    df_tr_items = load_tab_data("TrItems")
+    ws_tr_items = get_worksheet("TrItems")
+
+    df_tr_xalia = load_tab_data("TrXalia")
+    ws_tr_xalia = get_worksheet("TrXalia")
 except Exception as e:
     st.error(f"Σφάλμα σύνδεσης με Google Sheets: {e}")
     st.stop()

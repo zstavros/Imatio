@@ -10,7 +10,7 @@ STATUS_OPTIONS = [
 ]
 
 def render_admin_dashboard(load_tab_data, get_worksheet):
-    # Μάζεμα κενών στην κορυφή
+    # Ultra-compact CSS για μηδενισμό κενών στην κορυφή
     st.markdown("""
         <style>
         .block-container {
@@ -25,25 +25,14 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
     df_tr_items = load_tab_data("TrItems")
     df_tr_xalia = load_tab_data("TrXalia")
 
-    # Γραμμή με τις καρτέλες αριστερά και το κουμπί Έξοδος δεξιά στην ίδια ακριβώς ευθεία
-    top_col1, top_col2 = st.columns([0.82, 0.18])
-
-    with top_col1:
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "📝 Νέα", 
-            "📋 Ανοιχτά", 
-            "👥 Πελάτες", 
-            "👕 Είδη", 
-            "🧺 Χαλιά"
-        ])
-
-    with top_col2:
-        # Μικρό κενό για να ευθυγραμμιστεί τέλεια με το ύψος των tabs
-        st.markdown("<div style='margin-top: 4px;'></div>", unsafe_allow_html=True)
-        if st.button("🚪 Έξοδος", key="admin_inline_logout", use_container_width=True):
-            st.session_state.admin_logged_in = False
-            st.cache_data.clear()
-            st.rerun()
+    # Πεντακάθαρες καρτέλες σε όλο το πλάτος της οθόνης
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "📝 Νέα", 
+        "📋 Ανοιχτά", 
+        "👥 Πελάτες", 
+        "👕 Είδη", 
+        "🧺 Χαλιά"
+    ])
 
     # --- 1. ΝΕΑ ΠΑΡΑΔΟΣΗ ---
     with tab1:

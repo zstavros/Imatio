@@ -25,9 +25,9 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
 
     # --- 1. ΝΕΑ ΠΑΡΑΔΟΣΗ ---
     with tab1:
-        col1, col2 = st.columns([0.7, 0.3])
+        col1, col2 = st.columns([0.75, 0.25])
         with col1:
-            st.markdown("### 📝 Νέα Παράδοση")
+            st.markdown("<h4 style='margin:0; padding:0;'>📝 Νέα Παράδοση</h4>", unsafe_allow_html=True)
         with col2:
             if st.button("🚪 Έξοδος", key="ex_t1"):
                 st.session_state.admin_logged_in = False
@@ -81,9 +81,9 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
 
     # --- 2. ΑΝΟΙΧΤΑ ---
     with tab2:
-        col1, col2 = st.columns([0.7, 0.3])
+        col1, col2 = st.columns([0.75, 0.25])
         with col1:
-            st.markdown("### 📋 Ανοιχτά")
+            st.markdown("<h4 style='margin:0; padding:0;'>📋 Ανοιχτά</h4>", unsafe_allow_html=True)
         with col2:
             if st.button("🚪 Έξοδος", key="ex_t2"):
                 st.session_state.admin_logged_in = False
@@ -100,16 +100,22 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
 
     # --- 3. ΠΕΛΑΤΕΣ ---
     with tab3:
-        col1, col2 = st.columns([0.7, 0.3])
+        col1, col2 = st.columns([0.75, 0.25])
         with col1:
-            st.markdown("### 👥 Πελάτες")
+            st.markdown("<h4 style='margin:0; padding:0;'>👥 Πελάτες</h4>", unsafe_allow_html=True)
         with col2:
             if st.button("🚪 Έξοδος", key="ex_t3"):
                 st.session_state.admin_logged_in = False
                 st.cache_data.clear()
                 st.rerun()
 
-        customer_mode = st.radio("Επιλογή Action:", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio")
+        # Οριζόντια διάταξη για να έρθει η ετικέτα δίπλα στα radio buttons
+        r_col1, r_col2 = st.columns([0.35, 0.65])
+        with r_col1:
+            st.markdown("<p style='margin-top: 8px; font-weight: 500;'>Επιλογή Action:</p>", unsafe_allow_html=True)
+        with r_col2:
+            customer_mode = st.radio("Επιλογή Action:", ["Νέος Πελάτης", "Επεξεργασία Υπάρχοντος"], horizontal=True, key="c_mode_radio", label_visibility="collapsed")
+
         ws_customers = get_worksheet("Customers")
 
         if customer_mode == "Νέος Πελάτης":
@@ -213,16 +219,21 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
 
     # --- 4. ΕΙΔΗ ---
     with tab4:
-        col1, col2 = st.columns([0.7, 0.3])
+        col1, col2 = st.columns([0.75, 0.25])
         with col1:
-            st.markdown("### 👕 Είδη")
+            st.markdown("<h4 style='margin:0; padding:0;'>👕 Είδη</h4>", unsafe_allow_html=True)
         with col2:
             if st.button("🚪 Έξοδος", key="ex_t4"):
                 st.session_state.admin_logged_in = False
                 st.cache_data.clear()
                 st.rerun()
 
-        item_mode = st.radio("Επιλογή Action:", ["Νέο Είδος", "Επεξεργασία"], horizontal=True, key="i_mode")
+        r_col1, r_col2 = st.columns([0.35, 0.65])
+        with r_col1:
+            st.markdown("<p style='margin-top: 8px; font-weight: 500;'>Επιλογή Action:</p>", unsafe_allow_html=True)
+        with r_col2:
+            item_mode = st.radio("Επιλογή Action:", ["Νέο Είδος", "Επεξεργασία"], horizontal=True, key="i_mode", label_visibility="collapsed")
+            
         ws_items = get_worksheet("Items")
 
         if item_mode == "Νέο Είδος":
@@ -231,7 +242,7 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                 it_desc = st.text_input("Περιγραφή / Κατηγορία")
                 if st.form_submit_button("Προσθήκη Είδους"):
                     if not it_name:
-                        st.error("Βάλτε όνομα είδους.")
+                        st.error("Βάλτε όνομα είδous.")
                     else:
                         item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(df_items['ItemID'].max()) + 1
                         ws_items.append_row([item_id, it_name, it_desc])
@@ -258,9 +269,9 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
 
     # --- 5. ΧΑΛΙΑ ---
     with tab5:
-        col1, col2 = st.columns([0.7, 0.3])
+        col1, col2 = st.columns([0.75, 0.25])
         with col1:
-            st.markdown("### 🧺 Χαλιά")
+            st.markdown("<h4 style='margin:0; padding:0;'>🧺 Χαλιά</h4>", unsafe_allow_html=True)
         with col2:
             if st.button("🚪 Έξοδος", key="ex_t5"):
                 st.session_state.admin_logged_in = False

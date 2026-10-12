@@ -10,12 +10,24 @@ STATUS_OPTIONS = [
 ]
 
 def render_admin_dashboard(load_tab_data, get_worksheet):
-    # Ultra-compact CSS για μηδενισμό κενών στην κορυφή
+    # Ultra-compact CSS για μηδενισμό κενών και στενά πεδία κειμένου (input fields)
     st.markdown("""
         <style>
         .block-container {
             padding-top: 0.3rem !important;
             padding-bottom: 0rem !important;
+        }
+        /* Μίκρυνσέ το ύψος σε όλα τα πεδία εισαγωγής κειμένου (inputs) */
+        div.stTextInput input {
+            min-height: 28px !important;
+            height: 28px !important;
+            padding-top: 2px !important;
+            padding-bottom: 2px !important;
+        }
+        /* Μικρότερο ύψος και στα text areas */
+        div.stTextArea textarea {
+            min-height: 50px !important;
+            height: 50px !important;
         }
         </style>
     """, unsafe_allow_html=True)

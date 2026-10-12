@@ -58,7 +58,7 @@ else:
     user_role = "🔒 Διαχειριστής"
 
 # ==========================================
-# 📱 OTHONI PELATI
+# 📱 ΟΘΟΝΗ ΠΕΛΑΤΗ
 # ==========================================
 if user_role == "📱 Πελάτης":
     st.subheader("🔍 Αναζήτηση Παραγγελίας")
@@ -74,7 +74,7 @@ if user_role == "📱 Πελάτης":
             df_tr_items = load_tab_data("TrItems")
             df_tr_xalia = load_tab_data("TrXalia")
 
-            phone_col = 'Mobile' if 'Mobile' in df_customers.columns else 'Phone'
+            phone_col = 'CuMobile' if 'CuMobile' in df_customers.columns else ('CuPhone' if 'CuPhone' in df_customers.columns else df_customers.columns[-1])
             df_customers[phone_col] = df_customers[phone_col].astype(str).str.strip()
             matched_customer = df_customers[df_customers[phone_col] == user_phone]
 
@@ -82,7 +82,7 @@ if user_role == "📱 Πελάτης":
                 st.error("❌ Δεν βρέθηκε πελάτης με αυτό το τηλέφωνο.")
             else:
                 cust_id = matched_customer['CustomerID'].values[0]
-                cust_name = matched_customer['Name'].values[0]
+                cust_name = matched_customer.get('CuName', matched_customer.get('Name')).values[0]
                 st.success(f"Γεια σας, **{cust_name}**! 👋")
 
                 st.subheader("👕 Τα Ρούχα μου (TrItems)")
@@ -108,7 +108,7 @@ if user_role == "📱 Πελάτης":
                             st.write(f"💶 **Κόστος:** {row.get('TotalPrice', 0)}€")
 
 # ==========================================
-# 🔒 OTHONI DIACHEIRISTI (LOGIN & DASHBOARD)
+# 🔒 ΟΘΟΝΗ ΔΙΑΧΕΙΡΙΣΤΗ (LOGIN & DASHBOARD)
 # ==========================================
 else:
     if "admin_logged_in" not in st.session_state:
@@ -126,5 +126,4 @@ else:
             else:
                 st.error("❌ Λανθασμένος κωδικός πρόσβασης.")
     else:
-        # Kalei tin logiki apo to admin_views.py
         render_admin_dashboard(load_tab_data, get_worksheet)

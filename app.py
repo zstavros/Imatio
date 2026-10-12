@@ -3,6 +3,7 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 from admin_views import render_admin_dashboard
+from admin_eidi import render_admin_eidi_dashboard
 
 st.set_page_config(
     page_title="ImatioApp", 
@@ -140,4 +141,4 @@ else:
             else:
                 st.error("❌ Λανθασμένος κωδικός πρόσβασης.")
     else:
-        render_admin_dashboard(load_tab_data, get_worksheet)
+       render_admin_eidi_dashboard(load_tab_data, get_worksheet)

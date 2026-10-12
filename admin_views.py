@@ -10,7 +10,7 @@ STATUS_OPTIONS = [
 ]
 
 def render_admin_dashboard(load_tab_data, get_worksheet):
-    # CSS: Μηδενισμός περιθωρίων κορυφής
+    # CSS: Μεγάλα γράμματα ΜΟΝΟ στις καρτέλες (tabs) και μηδενισμός περιθωρίων
     st.markdown("""
         <style>
         header {display: none !important;}
@@ -26,18 +26,27 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
             padding-bottom: 0rem !important;
         }
         
+        /* Μεγαλύτερα γράμματα ΜΟΝΟ στις καρτέλες (tabs) */
+        [data-baseweb="tab"] p {
+            font-size: 1.2rem !important;
+            font-weight: 600 !important;
+        }
+        [data-baseweb="tab"] {
+            font-size: 1.2rem !important;
+        }
+        
         div.stTextInput input {
-            min-height: 26px !important;
-            height: 26px !important;
+            min-height: 28px !important;
+            height: 28px !important;
             padding-top: 1px !important;
             padding-bottom: 1px !important;
-            font-size: 0.9rem !important;
+            font-size: 0.95rem !important;
         }
         
         div.stTextArea textarea {
-            min-height: 80px !important;
-            height: 80px !important;
-            font-size: 0.9rem !important;
+            min-height: 85px !important;
+            height: 85px !important;
+            font-size: 0.95rem !important;
         }
         
         .stForm {
@@ -241,7 +250,6 @@ def render_admin_dashboard(load_tab_data, get_worksheet):
                 for _, row in valid_items.iterrows():
                     item_options.append(str(row[col_name_key]))
 
-                # Γρήγορη αναζήτηση ειδών με πληκτρολόγηση
                 selected_it = st.selectbox("Αναζήτηση Είδους", item_options, label_visibility="collapsed", key="search_item_selectbox")
 
                 if selected_it and selected_it != "-- Πληκτρολογήστε ή επιλέξτε είδος --":

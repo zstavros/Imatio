@@ -165,12 +165,14 @@ else:
         if st.button("🔑 Σύνδεση", type="primary"):
             if entered_pass == "#G1orgos#":
                 st.session_state.admin_logged_in = True
+                st.cache_data.clear()
                 st.rerun()
             else:
                 st.error("❌ Λανθασμένος κωδικός πρόσβασης.")
     else:
         if st.sidebar.button("🚪 Αποσύνδεση"):
             st.session_state.admin_logged_in = False
+            st.cache_data.clear()
             st.rerun()
 
         st.title("🧺 ImatioApp - Διαχείριση (Admin)")
@@ -223,6 +225,7 @@ else:
                     ws_tr_xalia.append_row([trans_id, cust_id, item_name, place_val, today_str, "", price, initial_status])
                     st.success(f"✅ Καταχωρήθηκε στα Χαλιά (ID: #{trans_id})!")
                 
+                st.cache_data.clear()
                 st.rerun()
 
         # --- ΔΙΑΧΕΙΡΙΣΗ ΕΝΕΡΓΩΝ (ΡΟΥΧΑ & ΧΑΛΙΑ) ---
@@ -259,6 +262,7 @@ else:
                                     date_out_idx = df_tr_items.columns.get_loc("DateOut") + 1
                                     ws_tr_items.update_cell(cell.row, date_out_idx, datetime.now().strftime("%Y-%m-%d %H:%M"))
                                 st.toast("Ενημερώθηκε!")
+                                st.cache_data.clear()
                                 st.rerun()
 
         with tab_carpets:
@@ -291,4 +295,5 @@ else:
                                     date_out_idx = df_tr_xalia.columns.get_loc("DateOut") + 1
                                     ws_tr_xalia.update_cell(cell.row, date_out_idx, datetime.now().strftime("%Y-%m-%d %H:%M"))
                                 st.toast("Ενημερώθηκε!")
+                                st.cache_data.clear()
                                 st.rerun()

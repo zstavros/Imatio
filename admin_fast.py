@@ -86,7 +86,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                     ws_xalia.append_rows(rows_to_append)
 
                 st.success(f"✅ Φορτώθηκαν επιτυχώς {added_count} τεμάχια (Κωδικοί από {from_code} έως {to_code})!")
-                #st.cache_data.clear()
+                st.session_state['df_tr_xalia'] = pd.DataFrame()
                 st.rerun()
                 
             except Exception as e:

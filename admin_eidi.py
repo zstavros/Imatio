@@ -2,20 +2,33 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+# Οι νέες ακριβείς καταστάσεις που ζητήσατε
 STATUS_OPTIONS = [
-    "Έτοιμος για παραλαβή",
-    "Προς επεξεργασία",
-    "Προς φύλαξη",
+    "Προς φύλαξη (φορτηγό)",
+    "Προς πλύσιμο (φορτηγό)",
+    "Πλύσιμο",
+    "Σε φύλαξη",
+    "Έτοιμο",
     "Παραδόθηκε"
 ]
 
 def render_new_transaction_tab(df_customers, df_items, df_tr_items, df_tr_xalia, get_worksheet):
-    category_type = st.selectbox("Κατηγορία", ["👕 Ρούχα (TrItems)", "🧺 Χαλιά (TrXalia)"], key="new_trans_category")
+    st.subheader("📝 Νέα Καταχώρηση")
+    
+    # Επιλογή τύπου εργασίας / παραλαβής
+    job_type = st.radio(
+        "Επιλέξτε Τύπο Εργασίας:",
+        ["🚛 Φόρτωση επί αυτοκινήτου (Χαλιά)", "🏪 Παραλαβή στο μαγαζί (Ρούχα)"],
+        horizontal=True,
+        key="job_type_selector"
+    )
+    st.divider()
 
+    # 1. Επιλογή Πελάτη
     name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
     if df_customers.empty or name_col not in df_customers.columns:
-        st.warning("⚠️ Δεν βρέθηκαν πελάτες. Παρακαλώ καταχωρήστε πελάτες από το κεντρικό μενού.")
-        st.stop()
+        st.warning("⚠️ Δεν βρέθηκαν πελάτες. Καταχωρήστε πρώτα πελάτες από την καρτέλα 'Πελάτες'.")
+        return
     
     cust_choices = ["-- Επιλέξτε Πελάτη --"]
     for _, row in df_customers.iterrows():
@@ -23,71 +36,129 @@ def render_new_transaction_tab(df_customers, df_items, df_tr_items, df_tr_xalia,
             phone = row.get('CuMobile') if pd.notnull(row.get('CuMobile')) and str(row.get('CuMobile')).strip() != '' else row.get('CuPhone', '')
             cust_choices.append(f"{row[name_col]} ({phone})")
 
-    selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="sel_cust_new")
+    selected_customer_str = st.selectbox("👤 Επιλογή Πελάτη", cust_choices, key="sel_cust_entry")
 
-    col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
-    raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key in df_items.columns else ["Παντελόνι", "Πουκάμισο", "Μπλούζα", "Μπουφάν"]
-    item_choices = ["-- Επιλέξτε Είδος --"] + raw_items
+    # =========================================================
+    # 🚛 ΕΡΓΑΣΙΑ 1: ΦΟΡΤΩΣΗ ΕΠΙ ΑΥΤΟΚΙΝΗΤΟΥ (ΧΑΛΙΑ -> TrXalia)
+    # =========================================================
+    if "Φόρτωση" in job_type:
+        st.markdown("##### 🚛 Στοιχεία Χαλιού (Φόρτωση)")
+        
+        col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
+        raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key in df_items.columns else ["Χαλί Μηχανής", "Χαλί Χειροποίητο"]
+        selected_item = st.selectbox("🏷️ Είδος Χαλιού", ["-- Επιλέξτε Είδος --"] + raw_items, key="truck_item")
 
-    st.markdown("<p style='font-size: 0.95rem; font-weight: bold; margin-bottom: 2px;'>Καταχώρηση Ειδών & Θέσεων (Προσθέστε γραμμές +):</p>", unsafe_allow_html=True)
+        default_price_m2 = 0.0
+        if selected_item != "-- Επιλέξτε Είδος --" and not df_items.empty:
+            matched_item = df_items[df_items[col_name_key] == selected_item]
+            if not matched_item.empty and 'Price m2' in matched_item.columns:
+                default_price_m2 = float(matched_item['Price m2'].values[0] or 0.0)
 
-    if "editor_df" not in st.session_state:
-        st.session_state.editor_df = pd.DataFrame(columns=["Είδος", "Θέση / Ράφι", "Κόστος (€)"])
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            length = st.number_input("📏 Μήκος (m)", min_value=0.0, step=0.10, value=0.0, key="carpet_len")
+        with col2:
+            height = st.number_input("📐 Ύψος (m)", min_value=0.0, step=0.10, value=0.0, key="carpet_hgt")
+        with col3:
+            sqm = round(length * height, 2)
+            st.number_input("🔳 Τετραγωνικά (m²)", value=sqm, disabled=True, key="carpet_sqm")
 
-    edited_df = st.data_editor(
-        st.session_state.editor_df,
-        num_rows="dynamic",
-        column_config={
-            "Είδος": st.column_config.SelectboxColumn("Είδος", options=item_choices, required=True, default="-- Επιλέξτε Είδος --"),
-            "Θέση / Ράφι": st.column_config.TextColumn("Θέση / Ράφι", required=False),
-            "Κόστος (€)": st.column_config.NumberColumn("Κόστος (€)", min_value=0.0, step=0.5, default=0.0)
-        },
-        key="multi_items_editor",
-        use_container_width=True
-    )
+        col4, col5 = st.columns(2)
+        with col4:
+            price_m2 = st.number_input("💶 Τιμή Τετραγωνικού (€/m²)", min_value=0.0, step=0.5, value=default_price_m2, key="carpet_pm2")
+        with col5:
+            total_price = round(sqm * price_m2, 2)
+            st.number_input("💰 Τελική Τιμή (€)", value=total_price, disabled=True, key="carpet_total")
 
-    initial_status = st.selectbox("Αρχική Κατάσταση για όλα", STATUS_OPTIONS, index=1, key="init_status_multi")
+        col6, col7 = st.columns(2)
+        with col6:
+            shelf = st.text_input("📍 Ράφι / Θέση", value="Αποθήκη (Φορτηγό)", key="carpet_shelf")
+        with col7:
+            # Προεπιλογή "Προς πλύσιμο (φορτηγό)" ή "Προς φύλαξη (φορτηγό)"
+            status = st.selectbox("🔄 Κατάσταση", STATUS_OPTIONS, index=1, key="carpet_status")
 
-    if st.button("💾 Καταχώρηση Όλων των Ειδών", type="primary"):
-        if selected_customer_str == "-- Επιλέξτε Πελάτη --":
-            st.error("❌ Επιλέξτε πελάτη πρώτα!")
-        elif edited_df.empty:
-            st.error("❌ Δεν έχετε προσθέσει κανένα είδος στον πίνακα!")
-        else:
-            cust_name_clean = selected_customer_str.split(" (")[0]
-            cust_id = int(df_customers[df_customers[name_col] == cust_name_clean]['CustomerID'].values[0])
-            today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        if st.button("💾 Καταχώρηση Χαλιού στο Φορτηγό", type="primary"):
+            if selected_customer_str == "-- Επιλέξτε Πελάτη --":
+                st.error("❌ Επιλέξτε πελάτη!")
+            elif selected_item == "-- Επιλέξτε Είδος --":
+                st.error("❌ Επιλέξτε είδος χαλιού!")
+            else:
+                cust_name_clean = selected_customer_str.split(" (")[0]
+                today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-            ws_tr = get_worksheet("TrItems" if "Ρούχα" in category_type else "TrXalia")
-            current_tr_df = df_tr_items if "Ρούχα" in category_type else df_tr_xalia
-            next_trans_id = 1 if current_tr_df.empty or 'TransactionID' not in current_tr_df.columns else int(current_tr_df['TransactionID'].max()) + 1
+                ws_trxalia = get_worksheet("TrXalia")
+                next_id = 1 if df_tr_xalia.empty or 'TransactionID' not in df_tr_xalia.columns else int(df_tr_xalia['TransactionID'].max()) + 1
 
-            added_count = 0
-            for _, row in edited_df.iterrows():
-                item_name = row.get("Είδος", "")
-                place = row.get("Θέση / Ράφι", "")
-                cost = float(row.get("Κόστος (€)", 0.0))
-
-                if str(item_name).strip() != "" and item_name != "-- Επιλέξτε Είδος --":
-                    ws_tr.append_row([next_trans_id, cust_id, item_name, place, today_str, "", cost, initial_status])
-                    next_trans_id += 1
-                    added_count += 1
-
-            if added_count > 0:
-                st.success(f"✅ Καταχωρήθηκαν επιτυχώς {added_count} είδη με ημερομηνία {today_str}!")
+                # Σειρά στηλών TrXalia: A: TransactionID, B: CustomerName, C: ItName, D: Length, E: Height, F: m2, G: PriceM2, H: Place, I: DateIn, J: DateOut, K: TotalPrice, L: Status
+                ws_trxalia.append_row([
+                    next_id,          # A
+                    cust_name_clean,  # B
+                    selected_item,    # C
+                    length,           # D
+                    height,           # E
+                    sqm,              # F
+                    price_m2,         # G
+                    shelf,            # H
+                    today_str,        # I
+                    "",               # J (DateOut)
+                    total_price,      # K
+                    status            # L
+                ])
+                st.success(f"✅ Το χαλί για τον πελάτη **{cust_name_clean}** καταχωρήθηκε με συνολικό κόστος **{total_price}€**!")
                 st.cache_data.clear()
                 st.rerun()
+
+    # =========================================================
+    # 🏪 ΕΡΓΑΣΙΑ 2: ΠΑΡΑΔΟΣΗ ΡΟΥΧΩΝ ΣΤΟ ΜΑΓΑΖΙ (Ρούχα -> TrItems)
+    # =========================================================
+    else:
+        st.markdown("##### 🏪 Στοιχεία Ρούχου / Είδους (Μαγαζί)")
+
+        col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
+        raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key in df_items.columns else ["Παντελόνι", "Πουκάμισο"]
+        selected_item = st.selectbox("🏷️ Είδος Ρούχου", ["-- Επιλέξτε Είδος --"] + raw_items, key="shop_item")
+
+        default_price = 0.0
+        if selected_item != "-- Επιλέξτε Είδος --" and not df_items.empty:
+            matched_item = df_items[df_items[col_name_key] == selected_item]
+            if not matched_item.empty and 'Price' in matched_item.columns:
+                default_price = float(matched_item['Price'].values[0] or 0.0)
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            total_price = st.number_input("💰 Τελική Τιμή (€)", min_value=0.0, step=0.5, value=default_price, key="shop_total")
+        with col2:
+            shelf = st.text_input("📍 Ράφι / Θέση", value="Ράφι Μαγαζιού", key="shop_shelf")
+        with col3:
+            status = st.selectbox("🔄 Κατάσταση", STATUS_OPTIONS, index=2, key="shop_status") # Προεπιλογή "Πλύσιμο"
+
+        if st.button("💾 Καταχώρηση Ρούχου στο Μαγαζί", type="primary"):
+            if selected_customer_str == "-- Επιλέξτε Πελάτη --":
+                st.error("❌ Επιλέξτε πελάτη!")
+            elif selected_item == "-- Επιλέξτε Είδος --":
+                st.error("❌ Επιλέξτε είδος!")
             else:
-                st.error("❌ Παρακαλώ επιλέξτε έγκυρο είδος στις γραμμές του πίνακα!")
+                cust_name_clean = selected_customer_str.split(" (")[0]
+                today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+                ws_tritems = get_worksheet("TrItems")
+                next_id = 1 if df_tr_items.empty or 'TransactionID' not in df_tr_items.columns else int(df_tr_items['TransactionID'].max()) + 1
+
+                ws_tritems.append_row([
+                    next_id, cust_name_clean, selected_item, shelf, today_str, "", total_price, status
+                ])
+                st.success(f"✅ Το ρούχο για τον πελάτη **{cust_name_clean}** καταχωρήθηκε με τιμή **{total_price}€**!")
+                st.cache_data.clear()
+                st.rerun()
 
 def render_active_transactions_tab(df_tr_items, df_tr_xalia, df_customers, get_worksheet):
-    sub_tab_c, sub_tab_x = st.tabs(["👕 Ρούχα", "🧺 Χαλιά"])
-    with sub_tab_c:
-        _render_active_list(df_tr_items, df_customers, "TrItems", get_worksheet)
+    sub_tab_x, sub_tab_c = st.tabs(["🚛 Χαλιά (Φορτηγό/Αποθήκη)", "🏪 Ρούχα (Μαγαζί)"])
     with sub_tab_x:
-        _render_active_list(df_tr_xalia, df_customers, "TrXalia", get_worksheet)
+        _render_active_list(df_tr_xalia, "TrXalia", get_worksheet)
+    with sub_tab_c:
+        _render_active_list(df_tr_items, "TrItems", get_worksheet)
 
-def _render_active_list(df_trans, df_cust, sheet_name, get_worksheet_fn):
+def _render_active_list(df_trans, sheet_name, get_worksheet_fn):
     if df_trans.empty or 'Status' not in df_trans.columns:
         st.info("Δεν υπάρχουν εγγραφές.")
         return
@@ -98,20 +169,18 @@ def _render_active_list(df_trans, df_cust, sheet_name, get_worksheet_fn):
         return
 
     ws = get_worksheet_fn(sheet_name)
-    name_col = 'CuName' if 'CuName' in df_cust.columns else 'Name'
 
     for _, row in active_data.iterrows():
-        cust_info = df_cust[df_cust['CustomerID'] == row['CustomerID']]
-        c_name = cust_info[name_col].values[0] if not cust_info.empty else "Άγνωστος"
+        c_name = row.get('CustomerName', row.get('CustomerID', 'Άγνωστος'))
 
         with st.expander(f"#{int(row['TransactionID'])} - {c_name} | {row.get('ItName', '')}"):
-            st.write(f"📍 **Θέση:** {row.get('Place', '-')}")
-            st.write(f"💶 **Κόστος:** {row.get('TotalPrice', 0)}€")
+            st.write(f"📍 **Θέση/Ράφι:** {row.get('Place', '-')}")
+            st.write(f"💶 **Τελική Τιμή:** {row.get('TotalPrice', 0)}€")
 
-            curr_st = row.get('Status', 'Προς επεξεργασία')
+            curr_st = row.get('Status', STATUS_OPTIONS[0])
             new_st = st.selectbox(
                 "Αλλαγή Κατάστασης", STATUS_OPTIONS,
-                index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 1,
+                index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 0,
                 key=f"st_{sheet_name}_{row['TransactionID']}"
             )
             if new_st != curr_st:

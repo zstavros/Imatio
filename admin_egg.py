@@ -74,33 +74,59 @@ def render_items_tab(df_items, get_worksheet):
         item_mode = st.radio("👕 ΕΙΔΗ", ["Νέο Είδος", "Επεξεργασία"], horizontal=True, key="i_mode", label_visibility="collapsed")
         
     ws_items = get_worksheet("Items")
+    
+    col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
+
     if item_mode == "Νέο Είδος":
         with st.form("new_item_form", clear_on_submit=True):
             it_name = st.text_input("Όνομα Είδους (π.χ. Μπουφάν)")
             it_desc = st.text_input("Περιγραφή / Κατηγορία")
+            it_price = st.number_input("ΤΙΜΗ (€)", min_value=0.0, step=0.5)
+            it_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", min_value=0.0, step=0.5)
+            
             if st.form_submit_button("Προσθήκη Είδους"):
                 if not it_name:
-                    st.error("Βάλτε όνομα.")
+                    st.error("Βάλτε όνομα είδους.")
                 else:
-                    item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(df_items['ItemID'].max()) + 1
-                    ws_items.append_row([item_id, it_name, it_desc])
-                    st.success("Προστέθηκε!")
+                    item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(pd.to_numeric(df_items['ItemID'], errors='coerce').max() or 0) + 1
+                    # Αντιστοίχιση με τις στήλες: ItemID(A), ItName(B), Price(C), Price m2(D)
+                    ws_items.append_row([item_id, it_name, it_desc, it_price, it_price_m2])
+                    st.success("Το είδος προστέθηκε επιτυχώς!")
                     st.cache_data.clear()
                     st.rerun()
     else:
-        col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
-        if not df_items.empty and col_name_key in df_items.columns:
+        if df_items.empty or col_name_key not in df_items.columns:
+            st.info("Δεν υπάρχουν αποθηκευμένα είδη.")
+        else:
             valid_items = df_items[df_items[col_name_key].astype(str).str.strip() != ""]
             item_options = ["-- Επιλέξτε είδος --"] + valid_items[col_name_key].dropna().tolist()
             selected_it = st.selectbox("Αναζήτηση Είδους", item_options, label_visibility="collapsed", key="search_item_selectbox")
 
             if selected_it and selected_it != "-- Επιλέξτε είδος --":
+                row_data = valid_items[valid_items[col_name_key] == selected_it].iloc[0]
+                
+                # Παίρνουμε τις υπάρχουσες τιμές από το DataFrame αν υπάρχουν οι στήλες
+                curr_price = float(row_data.get('Price', 0.0) or 0.0) if 'Price' in df_items.columns else 0.0
+                curr_price_m2 = float(row_data.get('Price m2', row_data.get('Price_m2', 0.0)) or 0.0)
+
                 with st.form("edit_item_form"):
                     st.write(f"✏️ Επεξεργασία: **{selected_it}**")
                     new_it_name = st.text_input("Όνομα Είδους", value=selected_it)
+                    new_price = st.number_input("ΤΙΜΗ (€)", value=curr_price, min_value=0.0, step=0.5)
+                    new_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", value=curr_price_m2, min_value=0.0, step=0.5)
+                    
                     if st.form_submit_button("Αποθήκευση Αλλαγών"):
-                        cell = ws_items.find(selected_it)
-                        ws_items.update_cell(cell.row, df_items.columns.get_loc(col_name_key) + 1, new_it_name)
-                        st.success("Ενημερώθηκε!")
-                        st.cache_data.clear()
-                        st.rerun()
+                        try:
+                            cell = ws_items.find(selected_it)
+                            # Ενημερώνουμε το Όνομα (Στήλη Β -> index 2)
+                            ws_items.update_cell(cell.row, 2, new_it_name)
+                            # Ενημερώνουμε την ΤΙΜΗ (Στήλη C -> index 3)
+                            ws_items.update_cell(cell.row, 3, new_price)
+                            # Ενημερώνουμε την ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (Στήλη D -> index 4)
+                            ws_items.update_cell(cell.row, 4, new_price_m2)
+                            
+                            st.success("✅ Το είδος ενημερώθηκε επιτυχώς!")
+                            st.cache_data.clear()
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Σφάλμα: {e}")

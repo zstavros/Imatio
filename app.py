@@ -1,165 +1,124 @@
 import streamlit as st
 import pandas as pd
-import gspread
-from google.oauth2.service_account import Credentials
-from admin_eidi import render_admin_eidi_dashboard
-from admin_egg import render_admin_egg_dashboard
+from datetime import datetime
 
-st.set_page_config(
-    page_title="ImatioApp", 
-    page_icon="🧺", 
-    layout="centered",
-    initial_sidebar_state="collapsed"
-)
-
-st.markdown("""
-    <style>
-    header {visibility: hidden !important; height: 0px !important;}
-    [data-testid="stHeader"] {display: none !important;}
-    [data-testid="stToolbar"] {visibility: hidden !important;}
-    [data-testid="stDecoration"] {display: none !important;}
-    footer {visibility: hidden !important;}
-    
-    .block-container { 
-        padding-top: 0rem !important; 
-        margin-top: 0rem !important;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
-        padding-bottom: 0rem !important;
-    }
-    
-    [data-baseweb="tab"] p {
-        font-size: 1.15rem !important;
-        font-weight: 600 !important;
-    }
-    [data-baseweb="tab"] {
-        font-size: 1.15rem !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
+STATUS_OPTIONS = [
+    "Έτοιμος για παραλαβή",
+    "Προς επεξεργασία",
+    "Προς φύλαξη",
+    "Παραδόθηκε"
 ]
 
-@st.cache_resource(ttl=300)
-def get_gspread_client():
-    creds_dict = dict(st.secrets["gcp_service_account"])
-    if "private_key" in creds_dict:
-        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
-    return gspread.authorize(creds)
+def render_new_transaction_tab(df_customers, df_items, df_tr_items, df_tr_xalia, get_worksheet):
+    category_type = st.selectbox("Κατηγορία", ["👕 Ρούχα (TrItems)", "🧺 Χαλιά (TrXalia)"], key="new_trans_category")
 
-@st.cache_data(ttl=60)
-def load_tab_data(tab_name):
-    client = get_gspread_client()
-    sheet_url = st.secrets["spreadsheet_url"]
-    sh = client.open_by_url(sheet_url)
-    worksheet = sh.worksheet(tab_name)
-    data = worksheet.get_all_records()
-    return pd.DataFrame(data)
+    name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
+    if df_customers.empty or name_col not in df_customers.columns:
+        st.warning("⚠️ Δεν βρέθηκαν πελάτες. Παρακαλώ καταχωρήστε πελάτες από το κεντρικό μενού.")
+        st.stop()
+    
+    cust_choices = ["-- Επιλέξτε Πελάτη --"]
+    for _, row in df_customers.iterrows():
+        if pd.notnull(row.get(name_col)) and str(row.get(name_col)).strip() != '':
+            phone = row.get('CuMobile') if pd.notnull(row.get('CuMobile')) and str(row.get('CuMobile')).strip() != '' else row.get('CuPhone', '')
+            cust_choices.append(f"{row[name_col]} ({phone})")
 
-def get_worksheet(tab_name):
-    client = get_gspread_client()
-    sheet_url = st.secrets["spreadsheet_url"]
-    sh = client.open_by_url(sheet_url)
-    return sh.worksheet(tab_name)
+    selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="sel_cust_new")
 
-is_admin_logged_in = st.session_state.get("admin_logged_in", False)
+    col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
+    raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key in df_items.columns else ["Παντελόνι", "Πουκάμισο", "Μπλούζα", "Μπουφάν"]
+    item_choices = ["-- Επιλέξτε Είδος --"] + raw_items
 
-if not is_admin_logged_in:
-    st.title("🧺 ImatioApp")
-    user_role = st.radio("Επιλέξτε ρόλο:", ["📱 Πελάτης", "🔒 Διαχειριστής"], horizontal=True)
-    st.divider()
-else:
-    user_role = "🔒 Διαχειριστής"
+    st.markdown("<p style='font-size: 0.95rem; font-weight: bold; margin-bottom: 2px;'>Καταχώρηση Ειδών & Θέσεων (Προσθέστε γραμμές +):</p>", unsafe_allow_html=True)
 
-# ==========================================
-# 📱 ΟΘΟΝΗ ΠΕΛΑΤΗ
-# ==========================================
-if user_role == "📱 Πελάτης":
-    st.subheader("🔍 Αναζήτηση Παραγγελίας")
-    st.write("Εισάγετε τον αριθμό του κινητού σας για να δείτε τα ρούχα και τα χαλιά σας.")
+    if "editor_df" not in st.session_state:
+        st.session_state.editor_df = pd.DataFrame(columns=["Είδος", "Θέση / Ράφι", "Κόστος (€)"])
 
-    user_phone = st.text_input("📞 Αριθμός Κινητού Τηλεφώνου", placeholder="π.χ. 6912345678").strip()
+    edited_df = st.data_editor(
+        st.session_state.editor_df,
+        num_rows="dynamic",
+        column_config={
+            "Είδος": st.column_config.SelectboxColumn("Είδος", options=item_choices, required=True, default="-- Επιλέξτε Είδος --"),
+            "Θέση / Ράφι": st.column_config.TextColumn("Θέση / Ράφι", required=False),
+            "Κόστος (€)": st.column_config.NumberColumn("Κόστος (€)", min_value=0.0, step=0.5, default=0.0)
+        },
+        key="multi_items_editor",
+        use_container_width=True
+    )
 
-    if st.button("🔎 Αναζήτηση", type="primary"):
-        if not user_phone:
-            st.warning("Παρακαλώ εισάγετε έναν αριθμό τηλεφώνου.")
+    initial_status = st.selectbox("Αρχική Κατάσταση για όλα", STATUS_OPTIONS, index=1, key="init_status_multi")
+
+    if st.button("💾 Καταχώρηση Όλων των Ειδών", type="primary"):
+        if selected_customer_str == "-- Επιλέξτε Πελάτη --":
+            st.error("❌ Επιλέξτε πελάτη πρώτα!")
+        elif edited_df.empty:
+            st.error("❌ Δεν έχετε προσθέσει κανένα είδος στον πίνακα!")
         else:
-            df_customers = load_tab_data("Customers")
-            df_tr_items = load_tab_data("TrItems")
-            df_tr_xalia = load_tab_data("TrXalia")
+            cust_name_clean = selected_customer_str.split(" (")[0]
+            cust_id = int(df_customers[df_customers[name_col] == cust_name_clean]['CustomerID'].values[0])
+            today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-            phone_col = 'CuMobile' if 'CuMobile' in df_customers.columns else ('CuPhone' if 'CuPhone' in df_customers.columns else df_customers.columns[-1])
-            df_customers[phone_col] = df_customers[phone_col].astype(str).str.strip()
-            matched_customer = df_customers[df_customers[phone_col] == user_phone]
+            ws_tr = get_worksheet("TrItems" if "Ρούχα" in category_type else "TrXalia")
+            current_tr_df = df_tr_items if "Ρούχα" in category_type else df_tr_xalia
+            next_trans_id = 1 if current_tr_df.empty or 'TransactionID' not in current_tr_df.columns else int(current_tr_df['TransactionID'].max()) + 1
 
-            if matched_customer.empty:
-                st.error("❌ Δεν βρέθηκε πελάτης με αυτό το τηλέφωνο.")
-            else:
-                cust_id = matched_customer['CustomerID'].values[0]
-                cust_name = matched_customer.get('CuName', matched_customer.get('Name')).values[0]
-                st.success(f"Γεια σας, **{cust_name}**! 👋")
+            added_count = 0
+            for _, row in edited_df.iterrows():
+                item_name = row.get("Είδος", "")
+                place = row.get("Θέση / Ράφι", "")
+                cost = float(row.get("Κόστος (€)", 0.0))
 
-                st.subheader("👕 Τα Ρούχα μου (TrItems)")
-                user_clothes = df_tr_items[df_tr_items['CustomerID'] == cust_id] if not df_tr_items.empty and 'CustomerID' in df_tr_items.columns else pd.DataFrame()
-                if user_clothes.empty:
-                    st.info("Δεν υπάρχουν καταχωρημένα ρούχα.")
-                else:
-                    for _, row in user_clothes.iterrows():
-                        with st.expander(f"Ρούχο #{int(row.get('TransactionID', 0))} - Κατάσταση: {row.get('Status', '-')}"):
-                            st.write(f"🏷️ **Είδος:** {row.get('ItName', '-')}")
-                            st.write(f"📍 **Θέση/Ράφι:** {row.get('Place', '-')}")
-                            st.write(f"💶 **Κόστος:** {row.get('TotalPrice', 0)}€")
+                if str(item_name).strip() != "" and item_name != "-- Επιλέξτε Είδος --":
+                    ws_tr.append_row([next_trans_id, cust_id, item_name, place, today_str, "", cost, initial_status])
+                    next_trans_id += 1
+                    added_count += 1
 
-                st.subheader("🧺 Τα Χαλιά μου (TrXalia)")
-                user_carpets = df_tr_xalia[df_tr_xalia['CustomerID'] == cust_id] if not df_tr_xalia.empty and 'CustomerID' in df_tr_xalia.columns else pd.DataFrame()
-                if user_carpets.empty:
-                    st.info("Δεν υπάρχουν καταχωρημένα χαλιά.")
-                else:
-                    for _, row in user_carpets.iterrows():
-                        with st.expander(f"Χαλί #{int(row.get('TransactionID', 0))} - Κατάσταση: {row.get('Status', '-')}"):
-                            st.write(f"🏷️ **Είδος:** {row.get('ItName', '-')}")
-                            st.write(f"📍 **Θέση/Ράφι:** {row.get('Place', '-')}")
-                            st.write(f"💶 **Κόστος:** {row.get('TotalPrice', 0)}€")
-
-# ==========================================
-# 🔒 ΟΘΟΝΗ ΔΙΑΧΕΙΡΙΣΤΗ (LOGIN & DASHBOARD)
-# ==========================================
-else:
-    if "admin_logged_in" not in st.session_state:
-        st.session_state.admin_logged_in = False
-
-    if not st.session_state.admin_logged_in:
-        st.subheader("🔒 Περιοχή Διαχειριστή")
-        entered_pass = st.text_input("Εισάγετε Κωδικό Διαχειριστή", type="password")
-        
-        if st.button("🔑 Σύνδεση", type="primary"):
-            if entered_pass == "#G1orgos#":
-                st.session_state.admin_logged_in = True
+            if added_count > 0:
+                st.success(f"✅ Καταχωρήθηκαν επιτυχώς {added_count} είδη με ημερομηνία {today_str}!")
                 st.cache_data.clear()
                 st.rerun()
             else:
-                st.error("❌ Λανθασμένος κωδικός πρόσβασης.")
-    else:
-        # Δημιουργία των 5 κεντρικών καρτελών στην κορυφή
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "📝 Νέα", 
-            "📋 Ανοιχτά", 
-            "👥 Πελάτες", 
-            "👕 Είδη", 
-            "🧺 Χαλιά"
-        ])
+                st.error("❌ Παρακαλώ επιλέξτε έγκυρο είδος στις γραμμές του πίνακα!")
 
-        with tab1:
-            render_admin_eidi_dashboard(load_tab_data, get_worksheet)
-        with tab2:
-            render_admin_eidi_dashboard(load_tab_data, get_worksheet)
-        with tab3:
-            render_admin_egg_dashboard(load_tab_data, get_worksheet)
-        with tab4:
-            render_admin_egg_dashboard(load_tab_data, get_worksheet)
-        with tab5:
-            st.info("ℹ️ Χρησιμοποιείται η κεντρική βάση ειδών (Items) για καταχώρηση χαλιών.")
+def render_active_transactions_tab(df_tr_items, df_tr_xalia, df_customers, get_worksheet):
+    sub_tab_c, sub_tab_x = st.tabs(["👕 Ρούχα", "🧺 Χαλιά"])
+    with sub_tab_c:
+        _render_active_list(df_tr_items, df_customers, "TrItems", get_worksheet)
+    with sub_tab_x:
+        _render_active_list(df_tr_xalia, df_customers, "TrXalia", get_worksheet)
+
+def _render_active_list(df_trans, df_cust, sheet_name, get_worksheet_fn):
+    if df_trans.empty or 'Status' not in df_trans.columns:
+        st.info("Δεν υπάρχουν εγγραφές.")
+        return
+
+    active_data = df_trans[df_trans['Status'] != 'Παραδόθηκε']
+    if active_data.empty:
+        st.info("Δεν υπάρχουν εκκρεμότητες.")
+        return
+
+    ws = get_worksheet_fn(sheet_name)
+    name_col = 'CuName' if 'CuName' in df_cust.columns else 'Name'
+
+    for _, row in active_data.iterrows():
+        cust_info = df_cust[df_cust['CustomerID'] == row['CustomerID']]
+        c_name = cust_info[name_col].values[0] if not cust_info.empty else "Άγνωστος"
+
+        with st.expander(f"#{int(row['TransactionID'])} - {c_name} | {row.get('ItName', '')}"):
+            st.write(f"📍 **Θέση:** {row.get('Place', '-')}")
+            st.write(f"💶 **Κόστος:** {row.get('TotalPrice', 0)}€")
+
+            curr_st = row.get('Status', 'Προς επεξεργασία')
+            new_st = st.selectbox(
+                "Αλλαγή Κατάστασης", STATUS_OPTIONS,
+                index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 1,
+                key=f"st_{sheet_name}_{row['TransactionID']}"
+            )
+            if new_st != curr_st:
+                cell = ws.find(str(row['TransactionID']))
+                ws.update_cell(cell.row, df_trans.columns.get_loc("Status") + 1, new_st)
+                if new_st == "Παραδόθηκε":
+                    ws.update_cell(cell.row, df_trans.columns.get_loc("DateOut") + 1, datetime.now().strftime("%Y-%m-%d %H:%M"))
+                st.toast("Ενημερώθηκε!")
+                st.cache_data.clear()
+                st.rerun()

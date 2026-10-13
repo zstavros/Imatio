@@ -17,7 +17,7 @@ st.set_page_config(
 
 # Αντικαταστήστε με το δικό σας Google Sheet ID αν προτιμάτε open_by_key, 
 # ή κρατήστε το client.open αν χρησιμοποιείτε το όνομα αρχείου (με ενεργοποιημένο Drive API).
-SPREADSHEET_ID = "ΒΑΛΕ_ΕΔΩ_TO_ID_TOY_GOOGLE_SHEET_ΣΟΥ"
+SPREADSHEET_ID = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
 
 # --- ΣΥΝΔΕΣΗ ΜΕ GOOGLE SHEETS ---
 @st.cache_resource

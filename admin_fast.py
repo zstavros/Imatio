@@ -1,4 +1,5 @@
-import streamlit as pd
+import streamlit as st
+import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):

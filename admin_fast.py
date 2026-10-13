@@ -1,5 +1,4 @@
-import streamlit as st
-import pandas as pd
+import streamlit as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
@@ -34,7 +33,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     
     selected_item = st.selectbox("Είδος Χαλιού", item_choices, key="fast_load_item")
 
-    # 4. Εργασία (Με menu που ανοίγει και διαλέγει: Πλύσιμο ή Φύλαξη)
+    # 4. Εργασία
     job_type = st.selectbox("Εργασία", ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη"], key="fast_load_job")
 
     # 5. Κμπυί Μαζικής Καταχώρησης
@@ -47,36 +46,34 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
             st.error("❌ Ο 'Από Κωδικός' δεν μπορεί να είναι μεγαλύτερος από τον 'Έως Κωδικό'!")
         else:
             cust_name_clean = selected_customer_str.split(" (")[0]
-            cust_id = int(df_customers[df_customers[name_col] == cust_name_clean]['CustomerID'].values[0])
             today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-            # Συνδεόμαστε στο Google Sheet που θα αποθηκεύονται (π.χ. TrEidi ή TrXalia)
-            ws_treidi = get_worksheet("TrXalia") # Αποθήκευση στο TrXalia
+            # Σύνδεση στο TrXalia
+            ws_xalia = get_worksheet("TrXalia")
             
-            # Παίρνουμε τα τρέχοντα δεδομένα για να βρούμε το επόμενο TransactionID
-            existing_data = ws_treidi.get_all_records()
-            df_treidi = pd.DataFrame(existing_data)
-            next_trans_id = 1 if df_treidi.empty or 'TransactionID' not in df_treidi.columns else int(df_treidi['TransactionID'].max()) + 1
+            existing_data = ws_xalia.get_all_records()
+            df_xalia = pd.DataFrame(existing_data)
+            next_trans_id = 1 if df_xalia.empty or 'TransactionID' not in df_xalia.columns else int(df_xalia['TransactionID'].max()) + 1
 
             added_count = 0
-            # Δημιουργία βρόχου για το εύρος από -> έως
             for current_code in range(int(from_code), int(to_code) + 1):
-                # Δομή εγγραφής: [TransactionID, CustomerID, ItemName, Code/A/A, JobType, DateIn, Place, Price, Status]
-                # Η κατάσταση ορίζεται αυτόματα ως "Στην Αποθήκη"
-                ws_treidi.append_row([
-                    next_trans_id, 
-                    cust_id, 
-                    selected_item, 
-                    str(current_code), # Ο κωδικός χαλιού (π.χ. 1, 2, 3...)
-                    job_type, 
-                    today_str, 
-                    "Αποθήκη (Προσωρινό)", # Ράφι/Θέση αρχικά στην αποθήκη
-                    0.0, # Κόστος (θα υπολογιστεί ή θα μπει αργότερα όταν μετρηθεί)
-                    "Στην Αποθήκη"
+                # Αντιστοιχία στηλών βάσει της εικόνας σου:
+                # A: TransactionID, B: CustomerName, C: ItName, D: Code, E, F, G, H: (κενά), I: Place, J: DateIn, K: DateOut, L: TotalPrice, M: Status
+                ws_xalia.append_row([
+                    next_trans_id,                  # A: TransactionID
+                    cust_name_clean,                # B: CustomerName
+                    selected_item,                  # C: ItName
+                    str(current_code),              # D: Code (πήγε στη σωστή στήλη D)
+                    "", "", "", "",                 # E, F, G, H: Κενά για length, height, m2, pricem2
+                    "Αποθήκη (Προσωρινό)",          # I: Place (πήγε στη σωστή στήλη I)
+                    today_str,                      # J: DateIn (πήγε στη σωστή στήλη J)
+                    "",                             # K: DateOut
+                    0.0,                            # L: TotalPrice
+                    job_type                        # M: Status (ή "Προς φύλαξη (φορτηγό)")
                 ])
                 next_trans_id += 1
                 added_count += 1
 
-            st.success(f"✅ Φορτώθηκαν επιτυχώς {added_count} τεμάχια (Κωδικοί από {from_code} έως {to_code}) με κατάσταση **'Στην Αποθήκη'**!")
+            st.success(f"✅ Φορτώθηκαν επιτυχώς {added_count} τεμάχια (Κωδικοί από {from_code} έως {to_code}) στις σωστές στήλες!")
             st.cache_data.clear()
             st.rerun()

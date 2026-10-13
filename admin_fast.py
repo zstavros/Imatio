@@ -3,12 +3,28 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-   # Katharismos ton stilon apo kena
+    # Έλεγχος και καθαρισμός στηλών πελατών
     if not df_customers.empty:
         df_customers.columns = df_customers.columns.str.strip()
-    
+
     st.markdown("<p style='font-weight: bold; font-size: 1.15rem;'>🚛 Γρήγορη Φόρτωση / Παραλαβή Χαλιών</p>", unsafe_allow_html=True)
     st.write("Καταχωρήστε μαζικά χαλιά από το φορτηγό με εύρος κωδικών (π.χ. από 1 έως 5).")
+
+    # Αν για κάποιο λόγο το df_customers έρθει προσωρινά κενό, ξαναδιαβάζουμε απευθείας από το Sheet για ασφάλεια
+    if df_customers.empty:
+        try:
+            ws_cust = get_worksheet("Customers")
+            df_customers = pd.DataFrame(ws_cust.get_all_records())
+            if not df_customers.empty:
+                df_customers.columns = df_customers.columns.str.strip()
+        except Exception:
+            pass
+
+    name_col = 'CuName' if 'CuName' in df_customers.columns else ('Name' if 'Name' in df_customers.columns else (df_customers.columns[1] if len(df_customers.columns) > 1 else None))
+    
+    if df_customers.empty or not name_col:
+        st.warning("⚠️ Φόρτωση πελατών σε εξέλιξη ή δεν βρέθηκαν δεδομένα. Παρακαλώ ανανεώστε τη σελίδα.")
+        return
 
     # 1. Επιλογή Πελάτη
     name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'

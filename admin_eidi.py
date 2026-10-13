@@ -92,6 +92,7 @@ def render_new_transaction_tab(df_customers, df_items, df_tr_items, df_tr_xalia,
                     next_id, cust_name_clean, selected_item, length, height, sqm, price_m2, shelf, today_str, "", total_price, status
                 ])
                 st.success(f"✅ Το χαλί για τον πελάτη **{cust_name_clean}** καταχωρήθηκε!")
+                st.session_state['df_tr_xalia'] = pd.DataFrame()
                 st.rerun()
 
     # =========================================================

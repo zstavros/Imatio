@@ -18,15 +18,14 @@ st.set_page_config(
 @st.cache_resource
 def init_connection():
     scope = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
+        "https://www.googleapis.com/auth/spreadsheets"
     ]
     # Διάβαστρα των credentials από τα secrets του Streamlit
     creds_dict = dict(st.secrets["gcp_service_account"])
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     client = gspread.authorize(creds)
     
-    # Άνοιγμα του Google Sheet (αλλάξτε το όνομα αν χρειάζεται)
+    # Άνοιγμα του Google Sheet με το όνομά του
     spreadsheet_name = "DryCleaningDB" # Βάλτε ακριβώς το όνομα του Google Sheet σας
     return client.open(spreadsheet_name)
 

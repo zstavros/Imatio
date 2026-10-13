@@ -135,6 +135,7 @@ def render_new_transaction_tab(df_customers, df_items, df_tr_items, df_tr_xalia,
                     next_id, cust_name_clean, selected_item, shelf, today_str, "", total_price, status
                 ])
                 st.success(f"✅ Το ρούχο για τον πελάτη **{cust_name_clean}** καταχωρήθηκε!")
+                st.session_state['df_tr_items'] = pd.DataFrame()
                 st.rerun()
 
 def render_active_transactions_tab(df_tr_items, df_tr_xalia, df_customers, get_worksheet):

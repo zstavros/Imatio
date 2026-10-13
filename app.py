@@ -10,7 +10,7 @@ import admin_fast
 
 # --- RHYTHMISI SELIDAS STREAMLIT ---
 st.set_page_config(
-    page_title="ImatioApp - Diacheirisi Katharistiriou",
+    page_title="Imatio",
     page_icon="🧺",
     layout="wide"
 )

@@ -1,44 +1,60 @@
 import streamlit as st
 import pandas as pd
 import gspread
+import base64
 from google.oauth2.service_account import Credentials
 
-# Eisagogi ton ypoloipon archeion logikis
+# Εισαγωγή των υπόλοιπων αρχείων λογικής
 import admin_egg
 import admin_eidi
 import admin_fast
 
-# --- RHYTHMISI SELIDAS STREAMLIT ---
+# --- ΡΥΘΜΙΣΗ ΣΕΛΙΔΑΣ STREAMLIT ---
 st.set_page_config(
-    page_title="Imatio",
+    page_title="IMATIO ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ",
     page_icon="🧺",
     layout="wide"
 )
 
-# --- CSS GIA AFALRESI KENOU APO THN KORYFH ---
+# --- CSS ΓΙΑ ΑΦΑΙΡΕΣΗ ΚΕΝΟΥ ΚΑΙ ΔΙΑΜΟΡΦΩΣΗ ΕΠΙΚΕΦΑΛΙΔΑΣ ---
 hide_streamlit_style = """
     <style>
-    /* Apokrypsi stoicheion Streamlit */
+    /* Απόκρυψη στοιχείων Streamlit */
     [data-testid="stToolbar"] {visibility: hidden !important;}
     [data-testid="stDecoration"] {display: none !important;}
     [data-testid="stStatusWidget"] {display: none !important;}
     footer {visibility: hidden !important; display: none !important;}
     .stAppFooter {display: none !important;}
     
-    /* Midenismos perithorion stin koryfi gia na anevei terma pano */
+    /* Μηδενισμός περιθωρίων στην κορυφή */
     .block-container {
-        padding-top: 0rem !important;
+        padding-top: 0.5rem !important;
         margin-top: 0rem !important;
     }
     header {
         visibility: hidden !important;
         height: 0px !important;
     }
+    
+    /* Διαμόρφωση επικεφαλίδας με λογότυπο */
+    .header-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 1rem;
+    }
+    .header-title {
+        font-size: 1.6rem !important;
+        font-weight: 700;
+        color: #1E1E1E;
+        margin: 0;
+        line-height: 1.2;
+    }
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# --- SYNDESI ME GOOGLE SHEETS ---
+# --- ΣΥΝΔΕΣΗ ΜΕ GOOGLE SHEETS ---
 @st.cache_resource
 def init_connection():
     scope = [
@@ -59,14 +75,14 @@ def init_connection():
 try:
     gc = init_connection()
 except Exception as e:
-    st.error(f"❌ Sfalma syndesis me to Google Sheets: {e}")
+    st.error(f"❌ Σφάλμα σύνδεσης με το Google Sheets: {e}")
     st.stop()
 
-# Synartisi anaktisis fyllou (worksheet)
+# Συνάρτηση ανάκτησης φύλλου (worksheet)
 def get_worksheet(sheet_name):
     return gc.worksheet(sheet_name)
 
-# --- FORTOSI DEDOMENON ---
+# --- ΦΟΡΤΩΣΗ ΔΕΔΟΜΕΝΩΝ ---
 @st.cache_data(ttl=60)
 def load_all_data():
     try:
@@ -93,37 +109,56 @@ def load_all_data():
 
 df_customers, df_items, df_tr_items, df_tr_xalia = load_all_data()
 
-# --- KENTRIKO MENU / NAVIGATION ---
-st.title("🧺 ImatioApp - Logistics & Diacheirisi")
+# --- ΕΜΦΑΝΙΣΗ ΛΟΓΟΤΥΠΟΥ ΚΑΙ ΕΠΙΚΕΦΑΛΙΔΑΣ ---
+def render_custom_header():
+    try:
+        with open("logo.png", "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+        img_html = f'<img src="data:image/png;base64,{encoded_string}" width="65" height="65" style="border-radius: 50%; object-fit: cover;">'
+    except Exception:
+        img_html = '🧺'
 
+    st.markdown(
+        f'''
+        <div class="header-container">
+            {img_html}
+            <h1 class="header-title">IMATIO ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</h1>
+        </div>
+        ''',
+        unsafe_allow_html=True
+    )
+
+render_custom_header()
+
+# --- ΚΕΝΤΡΙΚΟ MENU / NAVIGATION ---
 tabs = st.tabs([
-    "🚛 Grigori Fortosi", 
-    "📝 Nea Katachorisi", 
-    "📊 Energes Synallages", 
-    "👥 Pelates", 
-    "🏷️ Eidi & Timokatalogos"
+    "🚛 Γρήγορη Φόρτωση", 
+    "📝 Νέα Καταχώρηση", 
+    "📊 Ενεργές Συναλλαγές", 
+    "👥 Πελάτες", 
+    "🏷️ Είδη & Τιμοκατάλογος"
 ])
 
-# 1i Kartela: Grigori Fortosi
+# 1η Καρτέλα: Γρήγορη Φόρτωση
 with tabs[0]:
     admin_fast.render_fast_loading_tab(df_customers, df_items, get_worksheet)
 
-# 2i Kartela: Nea Katachorisi
+# 2η Καρτέλα: Νέα Καταχώρηση
 with tabs[1]:
     admin_eidi.render_new_transaction_tab(
         df_customers, df_items, df_tr_items, df_tr_xalia, get_worksheet
     )
 
-# 3i Kartela: Energes Synallages
+# 3η Καρτέλα: Ενεργές Συναλλαγές
 with tabs[2]:
     admin_eidi.render_active_transactions_tab(
         df_tr_items, df_tr_xalia, df_customers, get_worksheet
     )
 
-# 4i Kartela: Pelates
+# 4η Καρτέλα: Πελάτες
 with tabs[3]:
     admin_egg.render_customers_tab(df_customers, get_worksheet)
 
-# 5i Kartela: Eidi
+# 5η Καρτέλα: Είδη
 with tabs[4]:
     admin_egg.render_items_tab(df_items, get_worksheet)

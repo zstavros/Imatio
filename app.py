@@ -78,41 +78,47 @@ except Exception as e:
     st.error(f"❌ Σφάλμα σύνδεσης με το Google Sheets: {e}")
     st.stop()
 
-# CACHE ΤΩΝ WORKSHEETS ΓΙΑ ΝΑ ΜΗΝ ΧΤΥΠΑΕΙ ΤΟ GOOGLE API RATE LIMIT!
+# Cache του worksheet για να μην χτυπάει το Google API rate limit
 @st.cache_resource
 def get_worksheet(sheet_name):
     return gc.worksheet(sheet_name)
-    
-# Συνάρτηση ανάκτησης φύλλου (worksheet)
-def get_worksheet(sheet_name):
-    return gc.worksheet(sheet_name)
 
-# --- ΦΟΡΤΩΣΗ ΔΕΔΟΜΕΝΩΝ ---
-@st.cache_data(ttl=60)
-def load_all_data():
-    try:
-        df_cust = pd.DataFrame(gc.worksheet("Customers").get_all_records())
-    except Exception:
-        df_cust = pd.DataFrame()
-        
-    try:
-        df_it = pd.DataFrame(gc.worksheet("Items").get_all_records())
-    except Exception:
-        df_it = pd.DataFrame()
-        
-    try:
-        df_tr_items = pd.DataFrame(gc.worksheet("TrItems").get_all_records())
-    except Exception:
-        df_tr_items = pd.DataFrame()
-        
-    try:
-        df_tr_xalia = pd.DataFrame(gc.worksheet("TrXalia").get_all_records())
-    except Exception:
-        df_tr_xalia = pd.DataFrame()
-        
-    return df_cust, df_it, df_tr_items, df_tr_xalia
+# --- ΔΙΑΧΕΙΡΙΣΗ SESSION STATE ΓΙΑ ΑΠΟΦΥΓΗ RE-LOADING ---
+if 'initialized' not in st.session_state:
+    st.session_state['initialized'] = True
+    st.session_state['df_cust'] = pd.DataFrame()
+    st.session_state['df_it'] = pd.DataFrame()
+    st.session_state['df_tr_items'] = pd.DataFrame()
+    st.session_state['df_tr_xalia'] = pd.DataFrame()
 
-df_customers, df_items, df_tr_items, df_tr_xalia = load_all_data()
+# Συνάρτηση φόρτωσης δεδομένων στη μνήμη (Session State)
+def load_data_to_session(force_reload=False):
+    if force_reload or st.session_state.get('df_cust').empty:
+        try:
+            st.session_state['df_cust'] = pd.DataFrame(get_worksheet("Customers").get_all_records())
+        except Exception:
+            st.session_state['df_cust'] = pd.DataFrame()
+            
+    if force_reload or st.session_state.get('df_it').empty:
+        try:
+            st.session_state['df_it'] = pd.DataFrame(get_worksheet("Items").get_all_records())
+        except Exception:
+            st.session_state['df_it'] = pd.DataFrame()
+            
+    if force_reload or st.session_state.get('df_tr_items').empty:
+        try:
+            st.session_state['df_tr_items'] = pd.DataFrame(get_worksheet("TrItems").get_all_records())
+        except Exception:
+            st.session_state['df_tr_items'] = pd.DataFrame()
+            
+    if force_reload or st.session_state.get('df_tr_xalia').empty:
+        try:
+            st.session_state['df_tr_xalia'] = pd.DataFrame(get_worksheet("TrXalia").get_all_records())
+        except Exception:
+            st.session_state['df_tr_xalia'] = pd.DataFrame()
+
+# Φόρτωση δεδομένων κατά την εκκίνηση
+load_data_to_session()
 
 # --- ΕΜΦΑΝΙΣΗ ΛΟΓΟΤΥΠΟΥ ΚΑΙ ΕΠΙΚΕΦΑΛΙΔΑΣ ---
 def render_custom_header():
@@ -146,24 +152,41 @@ tabs = st.tabs([
 
 # 1η Καρτέλα: Γρήγορη Φόρτωση
 with tabs[0]:
-    admin_fast.render_fast_loading_tab(df_customers, df_items, get_worksheet)
+    admin_fast.render_fast_loading_tab(
+        st.session_state['df_cust'], 
+        st.session_state['df_it'], 
+        get_worksheet
+    )
 
 # 2η Καρτέλα: Νέα Καταχώρηση
 with tabs[1]:
     admin_eidi.render_new_transaction_tab(
-        df_customers, df_items, df_tr_items, df_tr_xalia, get_worksheet
+        st.session_state['df_cust'], 
+        st.session_state['df_it'], 
+        st.session_state['df_tr_items'], 
+        st.session_state['df_tr_xalia'], 
+        get_worksheet
     )
 
 # 3η Καρτέλα: Ενεργές Συναλλαγές
 with tabs[2]:
     admin_eidi.render_active_transactions_tab(
-        df_tr_items, df_tr_xalia, df_customers, get_worksheet
+        st.session_state['df_tr_items'], 
+        st.session_state['df_tr_xalia'], 
+        st.session_state['df_cust'], 
+        get_worksheet
     )
 
 # 4η Καρτέλα: Πελάτες
 with tabs[3]:
-    admin_egg.render_customers_tab(df_customers, get_worksheet)
+    admin_egg.render_customers_tab(
+        st.session_state['df_cust'], 
+        get_worksheet
+    )
 
 # 5η Καρτέλα: Είδη
 with tabs[4]:
-    admin_egg.render_items_tab(df_items, get_worksheet)
+    admin_egg.render_items_tab(
+        st.session_state['df_it'], 
+        get_worksheet
+    )

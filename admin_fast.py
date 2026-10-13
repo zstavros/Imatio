@@ -51,7 +51,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
             today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
 
             # Συνδεόμαστε στο Google Sheet που θα αποθηκεύονται (π.χ. TrEidi ή TrXalia)
-            ws_treidi = get_worksheet("TrEidi") # Μπορείς να χρησιμοποιήσεις και TrXalia αν θες
+            ws_treidi = get_worksheet("TrXalia") # Αποθήκευση στο TrXalia
             
             # Παίρνουμε τα τρέχοντα δεδομένα για να βρούμε το επόμενο TransactionID
             existing_data = ws_treidi.get_all_records()

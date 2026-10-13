@@ -74,7 +74,6 @@ def render_new_transaction_tab(df_customers, df_items, df_tr_items, df_tr_xalia,
         with col6:
             shelf = st.text_input("📍 Ράφι / Θέση", value="Αποθήκη (Φορτηγό)", key="carpet_shelf")
         with col7:
-            # Προεπιλογή "Προς πλύσιμο (φορτηγό)" ή "Προς φύλαξη (φορτηγό)"
             status = st.selectbox("🔄 Κατάσταση", STATUS_OPTIONS, index=1, key="carpet_status")
 
         if st.button("💾 Καταχώρηση Χαλιού στο Φορτηγό", type="primary"):
@@ -89,23 +88,10 @@ def render_new_transaction_tab(df_customers, df_items, df_tr_items, df_tr_xalia,
                 ws_trxalia = get_worksheet("TrXalia")
                 next_id = 1 if df_tr_xalia.empty or 'TransactionID' not in df_tr_xalia.columns else int(df_tr_xalia['TransactionID'].max()) + 1
 
-                # Σειρά στηλών TrXalia: A: TransactionID, B: CustomerName, C: ItName, D: Length, E: Height, F: m2, G: PriceM2, H: Place, I: DateIn, J: DateOut, K: TotalPrice, L: Status
                 ws_trxalia.append_row([
-                    next_id,          # A
-                    cust_name_clean,  # B
-                    selected_item,    # C
-                    length,           # D
-                    height,           # E
-                    sqm,              # F
-                    price_m2,         # G
-                    shelf,            # H
-                    today_str,        # I
-                    "",               # J (DateOut)
-                    total_price,      # K
-                    status            # L
+                    next_id, cust_name_clean, selected_item, length, height, sqm, price_m2, shelf, today_str, "", total_price, status
                 ])
-                st.success(f"✅ Το χαλί για τον πελάτη **{cust_name_clean}** καταχωρήθηκε με συνολικό κόστος **{total_price}€**!")
-                st.cache_data.clear()
+                st.success(f"✅ Το χαλί για τον πελάτη **{cust_name_clean}** καταχωρήθηκε!")
                 st.rerun()
 
     # =========================================================
@@ -130,7 +116,7 @@ def render_new_transaction_tab(df_customers, df_items, df_tr_items, df_tr_xalia,
         with col2:
             shelf = st.text_input("📍 Ράφι / Θέση", value="Ράφι Μαγαζιού", key="shop_shelf")
         with col3:
-            status = st.selectbox("🔄 Κατάσταση", STATUS_OPTIONS, index=2, key="shop_status") # Προεπιλογή "Πλύσιμο"
+            status = st.selectbox("🔄 Κατάσταση", STATUS_OPTIONS, index=2, key="shop_status")
 
         if st.button("💾 Καταχώρηση Ρούχου στο Μαγαζί", type="primary"):
             if selected_customer_str == "-- Επιλέξτε Πελάτη --":
@@ -147,8 +133,7 @@ def render_new_transaction_tab(df_customers, df_items, df_tr_items, df_tr_xalia,
                 ws_tritems.append_row([
                     next_id, cust_name_clean, selected_item, shelf, today_str, "", total_price, status
                 ])
-                st.success(f"✅ Το ρούχο για τον πελάτη **{cust_name_clean}** καταχωρήθηκε με τιμή **{total_price}€**!")
-                st.cache_data.clear()
+                st.success(f"✅ Το ρούχο για τον πελάτη **{cust_name_clean}** καταχωρήθηκε!")
                 st.rerun()
 
 def render_active_transactions_tab(df_tr_items, df_tr_xalia, df_customers, get_worksheet):
@@ -170,7 +155,7 @@ def _render_active_list(df_trans, sheet_name, get_worksheet_fn):
 
     ws = get_worksheet_fn(sheet_name)
 
-    for _, row in active_data.iterrows():
+    for idx, row in active_data.iterrows():
         c_name = row.get('CustomerName', row.get('CustomerID', 'Άγνωστος'))
 
         with st.expander(f"#{int(row['TransactionID'])} - {c_name} | {row.get('ItName', '')}"):
@@ -183,11 +168,17 @@ def _render_active_list(df_trans, sheet_name, get_worksheet_fn):
                 index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 0,
                 key=f"st_{sheet_name}_{row['TransactionID']}"
             )
+            
             if new_st != curr_st:
-                cell = ws.find(str(row['TransactionID']))
-                ws.update_cell(cell.row, df_trans.columns.get_loc("Status") + 1, new_st)
-                if new_st == "Παραδόθηκε":
-                    ws.update_cell(cell.row, df_trans.columns.get_loc("DateOut") + 1, datetime.now().strftime("%Y-%m-%d %H:%M"))
-                st.toast("Ενημερώθηκε!")
-                st.cache_data.clear()
+                # Υπολογισμός ακριβούς γραμμής στο Google Sheet (idx + 2) - Τέλεια απόδοση ακόμα και με 60.000+ γραμμές
+                sheet_row_number = idx + 2
+                
+                status_col_idx = df_trans.columns.get_loc("Status") + 1
+                ws.update_cell(sheet_row_number, status_col_idx, new_st)
+                
+                if new_st == "Παραδόθηκε" and 'DateOut' in df_trans.columns:
+                    dateout_col_idx = df_trans.columns.get_loc("DateOut") + 1
+                    ws.update_cell(sheet_row_number, dateout_col_idx, datetime.now().strftime("%Y-%m-%d %H:%M"))
+                
+                st.success("✅ Ενημερώθηκε επιτυχώς!")
                 st.rerun()

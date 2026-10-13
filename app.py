@@ -78,6 +78,11 @@ except Exception as e:
     st.error(f"❌ Σφάλμα σύνδεσης με το Google Sheets: {e}")
     st.stop()
 
+# CACHE ΤΩΝ WORKSHEETS ΓΙΑ ΝΑ ΜΗΝ ΧΤΥΠΑΕΙ ΤΟ GOOGLE API RATE LIMIT!
+@st.cache_resource
+def get_worksheet(sheet_name):
+    return gc.worksheet(sheet_name)
+    
 # Συνάρτηση ανάκτησης φύλλου (worksheet)
 def get_worksheet(sheet_name):
     return gc.worksheet(sheet_name)

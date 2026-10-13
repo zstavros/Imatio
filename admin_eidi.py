@@ -168,7 +168,7 @@ def _render_active_list(df_trans, sheet_name, get_worksheet_fn):
             new_st = st.selectbox(
                 "Αλλαγή Κατάστασης", STATUS_OPTIONS,
                 index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 0,
-                key=f"st_{sheet_name}_{row['TransactionID']}"
+                key=f"st_{sheet_name}_{row['TransactionID']}_{idx}"
             )
             
             if new_st != curr_st:

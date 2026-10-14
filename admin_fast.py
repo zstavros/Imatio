@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΓΙΑ ΣΤΑΘΕΡΗ ΟΡΙΖΟΝΤΙΑ ΓΡΑΜΜΗ ΣΕ ΟΛΕΣ ΤΙΣ ΟΘΟΝΕΣ ---
+    # --- CSS ΓΙΑ ΣΤΑΘΕΡΗ ΟΡΙΖΟΝΤΙΑ ΓΡΑΜΜΗ ΣΕ ΚΙΝΗΤΑ & ΚΑΘΑΡΑ ΠΕΔΙΑ ---
     st.markdown("""
         <style>
             div[data-testid="stColumn"] {
@@ -11,7 +11,6 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 box-shadow: none !important;
                 padding: 0px 2px !important;
             }
-            /* Διατήρηση της οριζόντιας διάταξης ακόμα και σε κινητά */
             @media (max-width: 768px) {
                 div[data-testid="stHorizontalBlock"] {
                     display: flex !important;
@@ -42,6 +41,13 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 margin: 0;
                 white-space: nowrap;
                 font-family: "Source Sans Pro", sans-serif;
+            }
+            .field-label {
+                font-weight: 600;
+                font-size: 0.9rem;
+                color: #ffffff;
+                margin-bottom: 4px;
+                margin-top: 10px;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -87,7 +93,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
     item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
 
-    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΑΡΧΙΚΗ | ΠΑΡΑΛΑΒΗ | ΑΠΟΘΗΚΕΥΣΗ ---
+    # --- ΠΑΝΩ ΓΡΑΜΜΗ ---
     col_nav, col_title, col_btn = st.columns([1, 1, 1])
 
     with col_nav:
@@ -108,16 +114,18 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     with col_btn:
         submitted = st.button("ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
 
-    st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
-    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ---
+    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ΜΕ ΞΕΚΑΘΑΡΟΥΣ ΤΙΤΛΟΥΣ ---
     selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
 
     c1, c2 = st.columns(2)
     with c1:
-        from_code = st.number_input("Από Κωδικό (From Code)", min_value=1, value=1, step=1, key="fast_from_code")
+        st.markdown('<p class="field-label">Από Κωδικό</p>', unsafe_allow_html=True)
+        from_code = st.number_input("Από Κωδικό", min_value=1, value=1, step=1, key="fast_from_code", label_visibility="collapsed")
     with c2:
-        to_code = st.number_input("Έως Κωδικό (To Code)", min_value=1, value=5, step=1, key="fast_to_code")
+        st.markdown('<p class="field-label">Έως Κωδικό</p>', unsafe_allow_html=True)
+        to_code = st.number_input("Έως Κωδικό", min_value=1, value=5, step=1, key="fast_to_code", label_visibility="collapsed")
 
     selected_item = st.selectbox("Είδος Χαλιού", item_choices, key="fast_load_item")
     job_type = st.selectbox("Εργασία", ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη"], key="fast_load_job")

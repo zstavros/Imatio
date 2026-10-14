@@ -26,13 +26,13 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 background-color: #ffffff;
                 border: 2px solid #2b3e50;
                 border-radius: 4px;
-                padding: 0px 5px;
+                padding: 0px;
                 text-align: center;
                 height: 42px;
                 min-height: 42px;
                 display: flex !important;
-                align-items: center !important;     /* Κεντράρισμα σε ύψος */
-                justify-content: center !important; /* Κεντράρισμα σε μήκος */
+                align-items: center !important;     /* Απόλυτο κεντράρισμα σε ύψος */
+                justify-content: center !important; /* Απόλυτο κεντράρισμα σε πλάτος */
                 box-shadow: 0px 1px 3px rgba(0,0,0,0.04);
                 box-sizing: border-box !important;
             }
@@ -42,9 +42,11 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 color: #2b3e50;
                 margin: 0 !important;
                 padding: 0 !important;
+                width: 100%;
+                text-align: center;
+                line-height: 42px !important; /* Εξαναγκάζει το κείμενο να κεντραριστεί κατακόρυφα στο ύψος του κουτιού */
                 white-space: wrap;
                 font-family: "Source Sans Pro", sans-serif;
-                line-height: normal !important;
             }
         </style>
     """, unsafe_allow_html=True)

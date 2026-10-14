@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΓΙΑ WRAP, BOLD ΚΑΙ ΚΑΤΑΚΟΡΥΦΗ ΜΕΤΑΚΙΝΗΣΗ ΤΟΥ ΤΙΤΛΟΥ ---
+    # --- CSS ΓΙΑ ΣΤΑΘΕΡΗ ΟΡΙΖΟΝΤΙΑ ΓΡΑΜΜΗ ΣΕ ΚΙΝΗΤΑ ---
     st.markdown("""
         <style>
             div[data-testid="stColumn"] {
@@ -11,13 +11,13 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 box-shadow: none !important;
                 padding: 0px 2px !important;
             }
-            /* Στοιχίζουμε τη μεσαία στήλη και προσθέτουμε top margin για να κατέβει πιο χαμηλά */
+            /* Στοιχίζουμε τη μεσαία στήλη και την κατεβάζουμε λίγο πιο κάτω */
             div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: center !important;
                 align-items: center !important;
-                margin-top: 4px !important; /* Ρύθμιση για να κατέβει λίγο πιο κάτω */
+                margin-top: 6px !important; 
             }
             @media (max-width: 768px) {
                 div[data-testid="stHorizontalBlock"] {
@@ -29,19 +29,6 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                     flex: 1 1 0% !important;
                     min-width: 0 !important;
                 }
-            }
-            /* Στυλ για bold, wrap και κέντρωμα */
-            .header-title-only {
-                font-weight: 800 !important;
-                font-size: 0.85rem !important;
-                color: #2b3e50;
-                margin: 0 !important;
-                padding: 0 !important;
-                text-align: center;
-                line-height: 1.15 !important;
-                white-space: normal !important; /* Επιτρέπει το wrap (σπάσιμο σε γραμμές) */
-                word-break: break-word;
-                font-family: "Source Sans Pro", sans-serif;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -87,7 +74,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
     item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
 
-    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΑΡΧΙΚΗ | ΤΙΤΛΟΣ ΜΕ WRAP & BOLD | ΑΠΟΘΗΚΕΥΣΗ ---
+    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΑΡΧΙΚΗ | ΤΙΤΛΟΣ ΜΕ INLINE BOLD & WRAP | ΑΠΟΘΗΚΕΥΣΗ ---
     col_nav, col_title, col_btn = st.columns([1, 1, 1])
 
     with col_nav:
@@ -99,7 +86,9 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         st.markdown(
             """
             <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
-                <p class="header-title-only">ΠΑΡΑΛΑΒΗ<br>ΧΑΛΙΩΝ</p>
+                <p style="font-weight: 900 !important; font-size: 0.85rem !important; color: #ffffff !important; margin: 0 !important; padding: 0 !important; text-align: center; line-height: 1.15 !important; white-space: normal !important; word-break: break-word; font-family: 'Source Sans Pro', sans-serif;">
+                    ΠΑΡΑΛΑΒΗ<br>ΧΑΛΙΩΝ
+                </p>
             </div>
             """, 
             unsafe_allow_html=True

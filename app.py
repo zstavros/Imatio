@@ -11,16 +11,16 @@ import admin_eidi
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
-# --- CUSTOM STYLING ΜΕ ΤΑ ΧΡΩΜΑΤΑ ΣΟΥ ΚΑΙ ΜΑΥΡΑ ΓΡΑΜΜΑΤΑ ---
+# --- CUSTOM STYLING ΓΙΑ ΤΙΣ ΑΛΛΑΓΕΣ ΠΟΥ ΖΗΤΗΣΕΣ ---
 st.markdown("""
     <style>
         .block-container {
-            padding-top: 3.5rem !important; /* Αυξήσαμε το κενό από πάνω για να μην κόβεται τίποτα */
+            padding-top: 3.5rem !important;
             padding-bottom: 2rem !important;
             max-width: 1200px;
         }
 
-        /* Header Bar (Πράσινο) */
+        /* Header Bar */
         .brand-header {
             display: flex;
             align-items: center;
@@ -38,7 +38,7 @@ st.markdown("""
             margin: 0 !important;
         }
 
-        /* Τα μεγάλα Boxes (Μπλε φόντο) */
+        /* Τα μεγάλα Boxes */
         div[data-testid="stColumn"] {
             background-color: #6c8ebf !important;
             border-radius: 14px;
@@ -46,35 +46,43 @@ st.markdown("""
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* Μαύρα και καθαρά γράμματα για όλους τους τίτλους & περιγραφές */
+        /* 1. Επικεφαλίδες στα boxes: Μικρότερη γραμματοσειρά */
         div[data-testid="stColumn"] h3, 
-        div[data-testid="stColumn"] h4, 
+        div[data-testid="stColumn"] h4 {
+            font-size: 1.15rem !important;
+            font-weight: 700 !important;
+            color: #000000 !important;
+            margin-bottom: 4px !important; /* Μικρότερο κενό από κάτω */
+        }
+
+        /* 2. Δεύτερη γραμμή (περιγραφή): Χωρίς bold, κανονικό βάρος */
         div[data-testid="stColumn"] p, 
         div[data-testid="stColumn"] span,
         div[data-testid="stColumn"] .stCaption {
-            color: #000000 !important;
-            font-weight: 700 !important;
+            font-size: 0.9rem !important;
+            color: #111111 !important;
+            font-weight: 400 !important; /* Χωρίς bold */
+            margin-bottom: 15px !important;
         }
 
-        /* Ρυθμίσεις για τα Κουμπιά μέσα στα boxes */
+        /* 3. Κουμπιά: Μεγαλύτερη γραμματοσειρά, χωρίς bold, πιο ευανάγνωστο χρώμα */
         .stButton > button {
             border-radius: 8px !important;
-            font-weight: 700 !important;
-            padding: 0.6rem 1rem !important;
+            font-size: 1.05rem !important; /* Μεγαλύτερη γραμματοσειρά */
+            font-weight: 400 !important;  /* Χωρίς bold */
+            padding: 0.65rem 1rem !important;
             color: #ffffff !important;
-        }
-
-        /* Πράσινα κουμπιά (Τροποποιήσεις) */
-        div[data-testid="stColumn"] .stButton:nth-child(2) > button,
-        div[data-testid="stColumn"] .stButton:last-child > button {
-            background-color: #1b6338 !important;
             border: none !important;
         }
 
-        /* Μπλε κουμπιά (Παραλαβή/Παράδοση & Νέες Εγγραφές) */
-        div[data-testid="stColumn"] .stButton:first-child > button {
-            background-color: #3b42c4 !important;
-            border: none !important;
+        /* Πιο απαλό, ευανάγνωστο σκούρο μπλε/μοβ για τα κουμπιά */
+        div[data-testid="stColumn"] .stButton > button {
+            background-color: #36456b !important; 
+        }
+        
+        /* Hover εφέ για τα κουμπιά */
+        .stButton > button:hover {
+            background-color: #28334f !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -166,7 +174,6 @@ if st.session_state['active_subview'] == 'menu':
     with col1:
         st.markdown("### 🚚 Τμήμα Χαλιών")
         st.write("Παραλαβή, παράδοση & επεξεργασία στοιχείων χαλιών")
-        st.write("")
         
         if st.button("🚚 ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΧΑΛΙΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'fast_loading'
@@ -180,7 +187,6 @@ if st.session_state['active_subview'] == 'menu':
     with col2:
         st.markdown("### 👕 Τμήμα Ρούχων & Ειδών")
         st.write("Παραλαβή, παράδοση & διαχείριση ραφιών/τιμών")
-        st.write("")
         
         if st.button("👕 ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΕΙΔΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'item_loading'
@@ -199,7 +205,6 @@ if st.session_state['active_subview'] == 'menu':
     with col_c1:
         st.markdown("### 👤 Διαχείριση Πελατών")
         st.write("Καταχώρηση νέων πελατών & τροποποίηση στοιχείων")
-        st.write("")
         
         if st.button("➕/✏️ Διαχείριση Πελατών (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_new'
@@ -213,7 +218,6 @@ if st.session_state['active_subview'] == 'menu':
     with col_c2:
         st.markdown("### 📦 Διαχείριση Καταλόγου Ειδών & Χαλιών")
         st.write("Δημιουργία νέων ειδών/χαλιών & τροποποίηση καταλόγου")
-        st.write("")
         
         if st.button("📦/✏️ Διαχείριση Καταλόγου (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_catalog_new'

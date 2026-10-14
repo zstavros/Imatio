@@ -10,7 +10,7 @@ import admin_eidi
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
-# --- STYLING ME MIKROTERA KENA, MEGALYTERES EPIKEFALIDES KAI MIKROTERA KOUMPIA ---
+# --- CUSTOM STYLING GIA TO KENTRARISMA, MEGALYTERES EPIKEFALIDES KAI MIKROTERA KENA ---
 st.markdown("""
     <style>
         .block-container {
@@ -36,7 +36,7 @@ st.markdown("""
             margin: 0 !important;
         }
 
-        /* Ta megala Boxes me pio sympakto padding */
+        /* Ta megala Boxes */
         div[data-testid="stColumn"] {
             background-color: #6c8ebf !important;
             border-radius: 14px;
@@ -44,10 +44,10 @@ st.markdown("""
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* 1. Epikefalides sta boxes: Pio megali grammatoseira kai elaxisto keno kato */
+        /* 1. Pio megala grammata stis epikefalides kai elaxisto keno kato */
         div[data-testid="stColumn"] h3, 
         div[data-testid="stColumn"] h4 {
-            font-size: 1.35rem !important;
+            font-size: 1.5rem !important;
             font-weight: 700 !important;
             color: #000000 !important;
             margin-top: 0px !important;
@@ -58,28 +58,32 @@ st.markdown("""
         div[data-testid="stColumn"] p, 
         div[data-testid="stColumn"] span,
         div[data-testid="stColumn"] .stCaption {
-            font-size: 0.9rem !important;
+            font-size: 0.95rem !important;
             color: #111111 !important;
             font-weight: 400 !important;
-            margin-bottom: 10px !important;
+            margin-bottom: 12px !important;
         }
 
-        /* 3. Koumpia: Mikrotero ypsos (padding) kai omorfo xroma */
+        /* 3. Kentrarisma sto kentro gia ta koumpia kai eikonidia */
         .stButton > button {
             border-radius: 8px !important;
-            font-size: 0.95rem !important;
+            font-size: 1rem !important;
             font-weight: 400 !important;
-            padding: 0.35rem 0.8rem !important; /* Mikrotero ypsos koumpiou */
+            padding: 0.4rem 1rem !important;
             color: #ffffff !important;
             border: none !important;
             background-color: #36456b !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+            text-align: center !important;
         }
 
         .stButton > button:hover {
             background-color: #28334f !important;
         }
 
-        /* Afairesi perittouvertical space stinarxiki tou st.write */
         div[data-testid="stColumn"] div.stMarkdown {
             margin-bottom: 0px !important;
         }

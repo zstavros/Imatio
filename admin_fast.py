@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- RESET COLUMN STYLING & CUSTOM FORM LOOK ---
+    # --- CSS ΓΙΑ ΝΑ ΦΥΓΟΥΝ ΤΑ ΜΠΛΕ ΚΟΥΤΙΑ ΚΑΙ ΝΑ ΕΙΝΑΙ ΣΥΜΜΑΖΕΜΕΝΑ ---
     st.markdown("""
         <style>
             div[data-testid="stColumn"] {
@@ -55,16 +55,28 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
     item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
 
-    # --- ΠΡΩΤΗ ΓΡΑΜΜΗ: ΤΙΤΛΟΣ ΑΡΙΣΤΕΡΑ - ΚΟΥΜΠΙ ΑΠΟΘΗΚΕΥΣΗΣ ΔΕΞΙΑ ---
-    top_c1, top_c2 = st.columns([3.2, 1.8])
-    with top_c1:
-        st.markdown("<p style='font-weight: 800; font-size: 1.3rem; color: #1b6338; margin: 0;'>🚛 Γρήγορη Φόρτωση / Παραλαβή Χαλιών</p>", unsafe_allow_html=True)
-    with top_c2:
+    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΕΠΙΣΤΡΟΦΗ (ΑΡΙΣΤΕΡΑ) | ΤΙΤΛΟΣ (ΚΕΝΤΡΟ) | ΑΠΟΘΗΚΕΥΣΗ (ΔΕΞΙΑ) ---
+    col_nav, col_title, col_btn = st.columns([1.5, 2.5, 1.8])
+
+    with col_nav:
+        if st.button("⬅️ Επιστροφή στο Κεντρικό Μενού", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
+
+    with col_title:
+        st.markdown(
+            "<div style='text-align: center; font-weight: 800; font-size: 1.15rem; color: #1b6338; margin-top: 6px;'>"
+            "🚛 Γρήγορη Φόρτωση / Παραλαβή Χαλιών"
+            "</div>", 
+            unsafe_allow_html=True
+        )
+
+    with col_btn:
         submitted = st.button("🚀 Μαζική Φόρτωση & Αποθήκευση", type="primary", use_container_width=True)
 
-    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
-    # --- ΦΟΡΜΑ ΕΙΣΑΓΩΓΗΣ (ΣΥΜΜΑΖΕΜΕΝΗ) ---
+    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ---
     selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
 
     c1, c2 = st.columns(2)

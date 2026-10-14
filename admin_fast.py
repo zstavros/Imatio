@@ -12,24 +12,24 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 padding: 0px !important;
             }
             .header-card {
-                background-color: #ffffff;
-                border: 1px solid #d1d8e0;
-                border-left: 5px solid #2b3e50;
-                border-radius: 6px;
-                padding: 6px 10px;
+                background-color: #2b3e50; /* Ίδιο σκούρο μπλε χρώμα με τα κουμπιά */
+                border: 1px solid #2b3e50;
+                border-radius: 4px; /* Στρογγύλεψη ίδια με τα κουμπιά */
+                padding: 0px 10px;
                 text-align: center;
-                height: 42px; /* Ίδιο ύψος περίπου με τα κουμπιά του Streamlit */
+                height: 42px; 
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0px 1px 3px rgba(0,0,0,0.04);
+                box-shadow: 0px 1px 3px rgba(0,0,0,0.1);
             }
             .header-card-title {
-                font-weight: 800;
-                font-size: 1.25rem;
-                color: #1b6338;
+                font-weight: 600;
+                font-size: 0.95rem; /* Ίδιο μέγεθος με τα κουμπιά του Streamlit */
+                color: #ffffff; /* Λευκά γράμματα όπως τα κουμπιά */
                 margin: 0;
                 white-space: nowrap;
+                font-family: "Source Sans Pro", sans-serif;
             }
         </style>
     """, unsafe_allow_html=True)

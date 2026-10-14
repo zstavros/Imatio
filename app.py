@@ -10,7 +10,7 @@ import admin_eidi
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="expanded")
 
-# Meiosi tou kenou psila
+# Meiosi tou kenou psila stin othoni
 st.markdown("""
     <style>
         .block-container {
@@ -63,44 +63,53 @@ if 'df_tr_items' not in st.session_state or st.session_state['df_tr_items'].empt
 
 
 # --- ROUTING & MENU ---
-# --- EPIKEFALIDA ME LOGO KAI KEIMENO STH IDIA GRAMMI ---
-st.markdown("""
-    <div style='display: flex; align-items: center; gap: 12px; margin-bottom: 20px;'>
-        <img src='app/static/logo.png' style='height: 40px; object-fit: contain;' onerror="this.style.display='none'">
-        <span style='font-size: 1.15rem; font-weight: 600; color: inherit;'>IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
-    </div>
-""", unsafe_allow_html=True)
+if 'active_subview' not in st.session_state:
+    st.session_state['active_subview'] = 'menu'
+
+# --- EPIKEFALIDA ME LOGO.PNG KAI KATHARA GRAMMATA ---
+col_logo, col_title = st.columns([0.08, 0.92])
+
+with col_logo:
+    if os.path.exists("logo.png"):
+        st.image("logo.png", width=38)
+
+with col_title:
+    st.markdown("""
+        <div style='padding-top: 6px; font-size: 1.1rem; font-weight: 600;'>
+            IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ
+        </div>
+    """, unsafe_allow_html=True)
 
 # Koumpi epistrofis an eimaste se ypo-selida
 if st.session_state['active_subview'] != 'menu':
-    if st.button("⬅️ Επιστροφή στο Κεντρικό Μενού"):
+    if st.button("⬅️ Epistrofi sto Kentriko Menu"):
         st.session_state['active_subview'] = 'menu'
         st.rerun()
     st.markdown("---")
 
 # 1. KENTRIKO MENU
 if st.session_state['active_subview'] == 'menu':
-    st.markdown("### 🎛️ Επιλέξτε Ενέργεια")
+    st.markdown("### 🎛️ Epilexte Energeia")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.info("🚚 **Διαχείριση Χαλιών**")
-        if st.button("🚛 ΓΡΗΓΟΡΗ ΦΟΡΤΩΣΗ (Χαλιά)", use_container_width=True, type="primary"):
+        st.info("🚚 **Diacheirisi Chalion**")
+        if st.button("🚛 GRIGORI FORTOSI (Xalia)", use_container_width=True, type="primary"):
             st.session_state['active_subview'] = 'fast_loading'
             st.rerun()
             
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΕΓΓΡΑΦΩΝ ΧΑΛΙΩΝ", use_container_width=True):
+        if st.button("✏️ TROPOPOIISI EGGRAFON XALION", use_container_width=True):
             st.session_state['active_subview'] = 'edit_xalia'
             st.rerun()
 
     with col2:
-        st.info("👕 **Διαχείριση Ρούχων & Ειδών**")
-        if st.button("👕 ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ", use_container_width=True, type="primary"):
+        st.info("👕 **Diacheirisi Rouchon & Eidon**")
+        if st.button("👕 KATAXORISI ROUXON / EIDON", use_container_width=True, type="primary"):
             st.session_state['active_subview'] = 'item_loading'
             st.rerun()
             
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ (Ράφι, Τιμή, Status)", use_container_width=True):
+        if st.button("✏️ TROPOPOIISI ROUXON (Rafi, Timi, Status)", use_container_width=True):
             st.session_state['active_subview'] = 'edit_items'
             st.rerun()
 

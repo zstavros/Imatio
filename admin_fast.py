@@ -99,7 +99,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         st.markdown(
             """
             <div class="header-card">
-                <p class="header-card-title">🚛 ΠΑΡΑΛΑΒΗ</p>
+                <p class="header-card-title">ΠΑΡΑΛΑΒΗ</p>
             </div>
             """, 
             unsafe_allow_html=True

@@ -10,7 +10,7 @@ import admin_eidi
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
-# --- ΑΥΣΤΗΡΟ (STRICT) CUSTOM STYLING ΓΙΑ ΣΤΑΘΕΡΕΣ ΔΙΑΣΤΑΣΕΙΣ ---
+# --- STRICT CUSTOM STYLING ---
 st.markdown("""
     <style>
         .block-container {
@@ -19,7 +19,6 @@ st.markdown("""
             max-width: 1200px;
         }
 
-        /* Header Bar */
         .brand-header {
             display: flex;
             align-items: center;
@@ -37,7 +36,6 @@ st.markdown("""
             margin: 0 !important;
         }
 
-        /* Τα μεγάλα Boxes */
         div[data-testid="stColumn"] {
             background-color: #6c8ebf !important;
             border-radius: 14px;
@@ -45,7 +43,6 @@ st.markdown("""
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* 1. Επικεφαλίδες στα boxes */
         div[data-testid="stColumn"] h3, 
         div[data-testid="stColumn"] h4 {
             font-size: 1.15rem !important;
@@ -56,7 +53,6 @@ st.markdown("""
             padding-bottom: 0px !important;
         }
 
-        /* 2. Περιγραφή */
         div[data-testid="stColumn"] p {
             font-size: 0.88rem !important;
             color: #111111 !important;
@@ -66,7 +62,6 @@ st.markdown("""
             line-height: 1.2 !important;
         }
 
-        /* 3. Κουμπιά: Απόλυτο κεντράρισμα & σταθερό ύψος */
         div[data-testid="stColumn"] .stButton > button {
             border-radius: 8px !important;
             height: 42px !important;
@@ -101,7 +96,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- ΣΥΝΔΕΣΗ ΜΕ GOOGLE SHEETS ---
+# --- GOOGLE SHEETS CONNECTION (Διόρθωση ονόματος βάσης σε "ImatioDB") ---
 @st.cache_resource
 def get_gspread_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -110,32 +105,36 @@ def get_gspread_client():
 
 def get_worksheet(sheet_name):
     client = get_gspread_client()
-    sh = client.open("ImatioAppDB")
+    sh = client.open("ImatioDB")  # <-- Διόρθωση εδώ από ImatioAppDB σε ImatioDB
     return sh.worksheet(sheet_name)
 
-# --- ΦΟΡΤΩΣΗ ΔΕΔΟΜΕΝΩΝ ---
+# --- ROBUST DATA LOADING ---
 def load_all_data():
     try:
         ws_c = get_worksheet("Customers")
-        st.session_state['df_customers'] = pd.DataFrame(ws_c.get_all_records())
-    except:
-        st.session_state['df_customers'] = pd.DataFrame()
+        data_c = ws_c.get_all_records()
+        st.session_state['df_customers'] = pd.DataFrame(data_c) if data_c else pd.DataFrame(columns=["CustomerID", "CuName", "CuPhone", "CuAddress"])
+    except Exception as e:
+        st.session_state['df_customers'] = pd.DataFrame(columns=["CustomerID", "CuName", "CuPhone", "CuAddress"])
 
     try:
         ws_i = get_worksheet("Items")
-        st.session_state['df_items'] = pd.DataFrame(ws_i.get_all_records())
+        data_i = ws_i.get_all_records()
+        st.session_state['df_items'] = pd.DataFrame(data_i) if data_i else pd.DataFrame()
     except:
         st.session_state['df_items'] = pd.DataFrame()
 
     try:
         ws_tx = get_worksheet("TrXalia")
-        st.session_state['df_tr_xalia'] = pd.DataFrame(ws_tx.get_all_records())
+        data_tx = ws_tx.get_all_records()
+        st.session_state['df_tr_xalia'] = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
     except:
         st.session_state['df_tr_xalia'] = pd.DataFrame()
 
     try:
         ws_ti = get_worksheet("TrEidi")
-        st.session_state['df_tr_items'] = pd.DataFrame(ws_ti.get_all_records())
+        data_ti = ws_ti.get_all_records()
+        st.session_state['df_tr_items'] = pd.DataFrame(data_ti) if data_ti else pd.DataFrame()
     except:
         st.session_state['df_tr_items'] = pd.DataFrame()
 
@@ -267,7 +266,34 @@ elif st.session_state['active_subview'] == 'edit_items':
         get_worksheet
     )
 
-# 6. ΔΙΑΧΕΙΡΙΣΗ ΠΕΛΑΤΩΝ / ΚΑΤΑΛΟΓΟΥ
-elif st.session_state['active_subview'] in ['manage_customers_new', 'manage_customers_edit', 'manage_catalog_new', 'manage_catalog_edit']:
+# 6. ΝΕΑ ΕΓΓΡΑΦΗ ΠΕΛΑΤΗ
+elif st.session_state['active_subview'] == 'manage_customers_new':
+    st.markdown("### ➕ Νέα Εγγραφή Πελάτη")
+    with st.form("new_customer_form"):
+        c_name = st.text_input("Ονοματεπώνυμο Πελάτη (CuName)")
+        c_phone = st.text_input("Τηλέφωνο (CuPhone)")
+        c_mobile = st.text_input("Κινητό (CuMobile)")
+        c_address = st.text_input("Διεύθυνση (CuAddress)")
+        c_city = st.text_input("Πόλη (CuCity)")
+        c_email = st.text_input("Email (CuEmail)")
+        submit_cust = st.form_submit_button("Αποθήκευση Πελάτη", type="primary")
+        
+        if submit_cust:
+            if c_name:
+                try:
+                    ws_c = get_worksheet("Customers")
+                    next_id = len(st.session_state['df_customers']) + 1
+                    # Αντιστοίχιση ακριβώς στις στήλες του Sheet: CustomerID, CuName, CuAddress, CuCity, CuPhone, CuMobile, CuEmail
+                    row_data = [next_id, c_name, c_address, c_city, c_phone, c_mobile, c_email]
+                    ws_c.append_row(row_data)
+                    load_all_data()
+                    st.success(f"Ο πελάτης '{c_name}' αποθηκεύτηκε επιτυχώς!")
+                except Exception as ex:
+                    st.error(f"Σφάλμα αποθήκευσης: {ex}")
+            else:
+                st.warning("Παρακαλώ συμπληρώστε τουλάχιστον το όνομα του πελάτη.")
+
+# 7. ΛΟΙΠΕΣ ΦΟΡΜΕΣ
+elif st.session_state['active_subview'] in ['manage_customers_edit', 'manage_catalog_new', 'manage_catalog_edit']:
     st.markdown("### ⚙️ Διαχείριση Ενότητας")
-    st.info("Η φόρμα είναι έτοιμη για προσθήκη της αντίστοιχης λειτουργίας.")
+    st.info("Η συγκεκριμένη φόρμα είναι έτοιμη για υλοποίηση.")

@@ -3,26 +3,6 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- STYLING ---
-    st.markdown("""
-        <style>
-            .fast-title {
-                color: #1b6338;
-                font-size: 1.4rem;
-                font-weight: 800;
-                margin: 0;
-                padding-top: 5px;
-            }
-            div[data-testid="stForm"] {
-                background-color: #f4f6f9;
-                border: 1px solid #d1d8e0;
-                border-radius: 12px;
-                padding: 20px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
     if not df_customers.empty:
         df_customers.columns = df_customers.columns.str.strip()
 
@@ -36,10 +16,10 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         name_col = df_customers.columns[1]
 
     if df_customers.empty or not name_col:
-        st.warning("⚠️ Δεν βρέθηκαν πελάτες. Καταχωρίστε πρώτα πελάτες.")
+        st.warning("⚠️ Den vrethikan pelates. Kataxoriste proti pelates.")
         return
     
-    cust_choices = ["-- Επιλέξτε Πελάτη --"]
+    cust_choices = ["-- Epilexte Pelati --"]
     for _, row in df_customers.iterrows():
         val = row.get(name_col)
         if pd.notnull(val) and str(val).strip() != '':
@@ -61,44 +41,37 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 col_name_key = ik
                 break
 
-    raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
-    item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
-
-    # --- TOP ROW: TITLE & SUBMIT BUTTON ---
-    top_col1, top_col2 = st.columns([3, 1])
-    with top_col1:
-        st.markdown('<p class="fast-title">🚛 Γρήγορη Φόρτωση / Παραλαβή Χαλιών</p>', unsafe_allow_html=True)
+    raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Halike Michanis", "Halike Cheiropoiito", "Moketa"]
+    item_choices = ["-- Epilexte Eidos Chaliou --"] + raw_items
 
     with st.form("fast_loading_form", clear_on_submit=True):
-        # Το κουμπί αποθήκευσης μπαίνει μέσα στη φόρμα αλλά το τοποθετούμε έξυπνα δεξιά
-        # (ή το πατάει ο χρήστης από κάτω/πάνω ανάλογα με τη δομή της φόρμες)
-        # Για να είναι το κουμπί ακριβώς δίπλα στον τίτλο πανω δεξιά:
-        
-        # Σημείωση: Στο Streamlit το st.form_submit_button πρέπει να είναι μέσα στο with st.form.
-        # Οπότε βάζουμε μια γραμμή εσωτερικά για το κουμπί πάνω δεξιά.
-        
-        col_btn1, col_btn2 = st.columns([4, 1.2])
-        with col_btn2:
-            submitted = st.form_submit_button("🚀 Αποθήκευση", type="primary", use_container_width=True)
+        # 1. Epano grammi mesa sti forma me Titlo aristera kai Koumpi dexia
+        top_c1, top_c2 = st.columns([3, 1])
+        with top_c1:
+            st.markdown("<h3 style='color: #1b6338; margin: 0; padding-top: 5px;'>🚛 Grigori Fortosi / Paralavi Chalion</h3>", unsafe_allow_html=True)
+        with top_c2:
+            submitted = st.form_submit_button("🚀 Apothikeysi", type="primary", use_container_width=True)
 
-        selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
+        st.markdown("---")
+
+        selected_customer_str = st.selectbox("Epilogi Pelati", cust_choices, key="fast_load_cust")
 
         c1, c2 = st.columns(2)
         with c1:
-            from_code = st.number_input("Από Κωδικό (From Code)", min_value=1, value=1, step=1, key="fast_from_code")
+            from_code = st.number_input("Apo Kodiko (From Code)", min_value=1, value=1, step=1, key="fast_from_code")
         with c2:
-            to_code = st.number_input("Έως Κωδικό (To Code)", min_value=1, value=5, step=1, key="fast_to_code")
+            to_code = st.number_input("Eos Kodiko (To Code)", min_value=1, value=5, step=1, key="fast_to_code")
 
-        selected_item = st.selectbox("Είδος Χαλιού", item_choices, key="fast_load_item")
-        job_type = st.selectbox("Εργασία", ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη"], key="fast_load_job")
+        selected_item = st.selectbox("Eidos Chaliou", item_choices, key="fast_load_item")
+        job_type = st.selectbox("Ergasia", ["Plysimo", "Fylaxi", "Plysimo & Fylaxi"], key="fast_load_job")
 
     if submitted:
-        if selected_customer_str == "-- Επιλέξτε Πελάτη --":
-            st.error("❌ Παρακαλώ επιλέξτε πελάτη!")
-        elif selected_item == "-- Επιλέξτε Είδος Χαλιού --":
-            st.error("❌ Παρακαλώ επιλέξτε είδος χαλιού!")
+        if selected_customer_str == "-- Epilexte Pelati --":
+            st.error("❌ Parakalo epilexte pelati!")
+        elif selected_item == "-- Epilexte Eidos Chaliou --":
+            st.error("❌ Parakalo epilexte eidos chaliou!")
         elif from_code > to_code:
-            st.error("❌ Ο 'Από Κωδικός' δεν μπορεί να είναι μεγαλύτερος από τον 'Έως Κωδικό'!")
+            st.error("❌ O 'Apo Kodikos' den borei na einai megaliteros apo ton 'Eos Kodiko'!")
         else:
             cust_name_clean = selected_customer_str.split(" (")[0]
             today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -118,25 +91,25 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 added_count = 0
                 for current_code in range(int(from_code), int(to_code) + 1):
                     rows_to_append.append([
-                        next_trans_id,            # A: TransactionID
-                        cust_name_clean,          # B: CustomerName
-                        selected_item,            # C: ItName
-                        str(current_code),        # D: Code
-                        "", "", "", "",           # E, F, G, H: Κενά
-                        "Αποθήκη (Προσωρινό)",    # I: Place
-                        today_str,                # J: DateIn
-                        "",                       # K: DateOut
-                        0.0,                      # L: TotalPrice
-                        job_type                  # M: Status
+                        next_trans_id,            
+                        cust_name_clean,          
+                        selected_item,            
+                        str(current_code),        
+                        "", "", "", "",           
+                        "Apothiki (Prosorino)",   
+                        today_str,                
+                        "",                       
+                        0.0,                      
+                        job_type                  
                     ])
                     added_count += 1
 
                 if rows_to_append:
                     ws_xalia.append_rows(rows_to_append)
 
-                st.success(f"✅ Φορτώθηκαν επιτυχώς {added_count} τεμάχια (Κωδικοί από {from_code} έως {to_code})!")
+                st.success(f"✅ Fortothikan epitychos {added_count} temachia (Kodikoi apo {from_code} eos {to_code})!")
                 st.session_state['df_tr_xalia'] = pd.DataFrame()
                 st.rerun()
                 
             except Exception as e:
-                st.error(f"❌ Σφάλμα κατά την αποθήκευση: **{e}**")
+                st.error(f"❌ Sfalma kata tin apothikeysi: **{e}**")

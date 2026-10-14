@@ -23,25 +23,30 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 }
             }
             .header-card {
-                background-color: #ffffff;
-                border: 2px solid #2b3e50;
-                border-radius: 4px;
-                padding: 0px 5px;
-                text-align: center;
-                height: 42px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0px 1px 3px rgba(0,0,0,0.04);
-            }
-            .header-card-title {
-                font-weight: 700;
-                font-size: 0.95rem;
-                color: #2b3e50;
-                margin: 0;
-                white-space: nowrap;
-                font-family: "Source Sans Pro", sans-serif;
-            }
+    background-color: #ffffff;
+    border: 2px solid #2b3e50;
+    border-radius: 8px; /* Ίδια γωνία με τα Streamlit buttons */
+    padding: 0px 5px;
+    text-align: center;
+    height: 100%;
+    min-height: 38.5px; /* Ύψος που ταιριάζει ακριβώς με τα st.button */
+    display: flex !important;
+    align-items: center !important;     /* Κεντράρισμα σε ύψος */
+    justify-content: center !important; /* Κεντράρισμα σε μήκος */
+    box-shadow: 0px 1px 3px rgba(0,0,0,0.04);
+    box-sizing: border-box !important;
+}
+
+.header-card-title {
+    font-weight: 700;
+    font-size: 0.90rem;
+    color: #2b3e50;
+    margin: 0 !important;
+    padding: 0 !important;
+    white-space: nowrap;
+    font-family: "Source Sans Pro", sans-serif;
+    line-height: 1 !important;
+}
         </style>
     """, unsafe_allow_html=True)
 

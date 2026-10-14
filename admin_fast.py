@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΓΙΑ ΟΡΑΤΟΤΗΤΑ ΕΤΙΚΕΤΩΝ ΚΑΙ ΣΤΑΘΕΡΗ ΟΡΙΖΟΝΤΙΑ ΔΙΑΤΑΞΗ ---
+    # --- CSS ΓΙΑ ΣΤΑΘΕΡΗ ΟΡΙΖΟΝΤΙΑ ΓΡΑΜΜΗ ΣΕ ΚΙΝΗΤΑ ---
     st.markdown("""
         <style>
             div[data-testid="stColumn"] {
@@ -41,12 +41,6 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 margin: 0;
                 white-space: nowrap;
                 font-family: "Source Sans Pro", sans-serif;
-            }
-            /* Στοχεύουμε απευθείας τα labels του Streamlit για να είναι πάντα πράσινα και έντονα */
-            div[data-testid="stWidgetLabel"] label p {
-                font-weight: 700 !important;
-                font-size: 0.95rem !important;
-                color: #27ae60 !important; 
             }
         </style>
     """, unsafe_allow_html=True)
@@ -120,9 +114,11 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
 
     c1, c2 = st.columns(2)
     with c1:
-        from_code = st.number_input("Από Κωδικό", min_value=1, value=1, step=1, key="fast_from_code")
+        st.markdown('<div style="color: #27ae60 !important; font-weight: bold !important; font-size: 15px !important; margin-bottom: 5px !important; display: block !important;">Από Κωδικό</div>', unsafe_allow_html=True)
+        from_code = st.number_input("Από Κωδικό", min_value=1, value=1, step=1, key="fast_from_code", label_visibility="collapsed")
     with c2:
-        to_code = st.number_input("Έως Κωδικό", min_value=1, value=5, step=1, key="fast_to_code")
+        st.markdown('<div style="color: #27ae60 !important; font-weight: bold !important; font-size: 15px !important; margin-bottom: 5px !important; display: block !important;">Έως Κωδικό</div>', unsafe_allow_html=True)
+        to_code = st.number_input("Έως Κωδικό", min_value=1, value=5, step=1, key="fast_to_code", label_visibility="collapsed")
 
     selected_item = st.selectbox("Είδος Χαλιού", item_choices, key="fast_load_item")
     job_type = st.selectbox("Εργασία", ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη"], key="fast_load_job")

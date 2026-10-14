@@ -63,20 +63,13 @@ if 'df_tr_items' not in st.session_state or st.session_state['df_tr_items'].empt
 
 
 # --- ROUTING & MENU ---
-if 'active_subview' not in st.session_state:
-    st.session_state['active_subview'] = 'menu'
-
-# --- EPIKEFALIDA ME LOGO.PNG KAI KATHARA GRAMMATA ---
-col_logo, col_title = st.columns([1, 10])
-
-with col_logo:
-    if os.path.exists("logo.png"):
-        st.image("logo.png", width=45)
-    else:
-        st.write("🧺")
-
-with col_title:
-    st.markdown("##### IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ")
+# --- EPIKEFALIDA ME LOGO KAI KEIMENO STH IDIA GRAMMI ---
+st.markdown("""
+    <div style='display: flex; align-items: center; gap: 12px; margin-bottom: 20px;'>
+        <img src='app/static/logo.png' style='height: 40px; object-fit: contain;' onerror="this.style.display='none'">
+        <span style='font-size: 1.15rem; font-weight: 600; color: inherit;'>IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
+    </div>
+""", unsafe_allow_html=True)
 
 # Koumpi epistrofis an eimaste se ypo-selida
 if st.session_state['active_subview'] != 'menu':

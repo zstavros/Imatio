@@ -37,7 +37,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 margin: 0 !important;
                 padding: 0 !important;
                 text-align: center;
-                white-space: nowrap;
+                white-space: wrap;
                 font-family: "Source Sans Pro", sans-serif;
             }
         </style>

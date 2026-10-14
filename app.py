@@ -10,7 +10,7 @@ import admin_eidi
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
-# --- CUSTOM STYLING GIA TO KENTRARISMA, MEGALYTERES EPIKEFALIDES KAI MIKROTERA KENA ---
+# --- CUSTOM STYLING ΓΙΑ ΣΩΣΤΟ ΜΕΓΕΘΟΣ, ΜΙΚΡΟΤΕΡΑ ΚΕΝΑ ΚΑΙ ΑΠΟΛΥΤΟ ΚΕΝΤΡΑΡΙΣΜΑ ΣΤΑ ΚΟΥΜΠΙΑ ---
 st.markdown("""
     <style>
         .block-container {
@@ -36,7 +36,7 @@ st.markdown("""
             margin: 0 !important;
         }
 
-        /* Ta megala Boxes */
+        /* Τα μεγάλα Boxes */
         div[data-testid="stColumn"] {
             background-color: #6c8ebf !important;
             border-radius: 14px;
@@ -44,32 +44,32 @@ st.markdown("""
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* 1. Pio megala grammata stis epikefalides kai elaxisto keno kato */
+        /* 1. Επικεφαλίδες στα boxes: Ισορροπημένο μέγεθος (ούτε τεράστιο ούτε μικρό) και ελάχιστο κενό από κάτω */
         div[data-testid="stColumn"] h3, 
         div[data-testid="stColumn"] h4 {
-            font-size: 1.5rem !important;
+            font-size: 1.15rem !important;
             font-weight: 700 !important;
             color: #000000 !important;
             margin-top: 0px !important;
             margin-bottom: 2px !important;
         }
 
-        /* 2. Perigrafi: Xoris bold, mikrotero keno apo kato */
+        /* 2. Περιγραφή: Χωρίς bold, μικρότερο κενό από κάτω */
         div[data-testid="stColumn"] p, 
         div[data-testid="stColumn"] span,
         div[data-testid="stColumn"] .stCaption {
-            font-size: 0.95rem !important;
+            font-size: 0.9rem !important;
             color: #111111 !important;
             font-weight: 400 !important;
             margin-bottom: 12px !important;
         }
 
-        /* 3. Kentrarisma sto kentro gia ta koumpia kai eikonidia */
+        /* 3. Απόλυτο κεντράρισμα στα κουμπιά (οριζόντια & καθέτως/ύψος) */
         .stButton > button {
             border-radius: 8px !important;
-            font-size: 1rem !important;
+            font-size: 0.95rem !important;
             font-weight: 400 !important;
-            padding: 0.4rem 1rem !important;
+            padding: 0.5rem 1rem !important;
             color: #ffffff !important;
             border: none !important;
             background-color: #36456b !important;
@@ -78,6 +78,7 @@ st.markdown("""
             align-items: center !important;
             width: 100% !important;
             text-align: center !important;
+            line-height: 1.2 !important;
         }
 
         .stButton > button:hover {
@@ -90,7 +91,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- SYNDESI ME GOOGLE SHEETS ---
+# --- ΣΥΝΔΕΣΗ ΜΕ GOOGLE SHEETS ---
 @st.cache_resource
 def get_gspread_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -102,7 +103,7 @@ def get_worksheet(sheet_name):
     sh = client.open("ImatioAppDB")
     return sh.worksheet(sheet_name)
 
-# --- FORTOSI DEDOMENON ---
+# --- ΦΟΡΤΩΣΗ ΔΕΔΟΜΕΝΩΝ ---
 def load_all_data():
     try:
         ws_c = get_worksheet("Customers")
@@ -162,12 +163,12 @@ else:
 st.markdown(header_html, unsafe_allow_html=True)
 
 if st.session_state['active_subview'] != 'menu':
-    if st.button("⬅️ Epistrofi sto Kentriko Menu"):
+    if st.button("⬅️ Επιστροφή στο Κεντρικό Μενού"):
         st.session_state['active_subview'] = 'menu'
         st.rerun()
     st.markdown("---")
 
-# 1. ARXIKI KARTELA MENU
+# 1. ΑΡΧΙΚΗ ΚΑΡΤΕΛΑ ΜΕΝΟΥ
 if st.session_state['active_subview'] == 'menu':
     
     col1, col2 = st.columns(2, gap="large")
@@ -224,7 +225,7 @@ if st.session_state['active_subview'] == 'menu':
             st.session_state['active_subview'] = 'manage_catalog_edit'
             st.rerun()
 
-# 2. PARALAVI / PARADOSI XALION
+# 2. ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΧΑΛΙΩΝ
 elif st.session_state['active_subview'] == 'fast_loading':
     admin_fast.render_fast_loading_tab(
         st.session_state['df_customers'],
@@ -232,7 +233,7 @@ elif st.session_state['active_subview'] == 'fast_loading':
         get_worksheet
     )
 
-# 3. TROPOPOIISI XALION
+# 3. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ
 elif st.session_state['active_subview'] == 'edit_xalia':
     admin_eidi.render_edit_xalia_tab(
         st.session_state['df_tr_xalia'],
@@ -240,7 +241,7 @@ elif st.session_state['active_subview'] == 'edit_xalia':
         get_worksheet
     )
 
-# 4. PARALAVI / PARADOSI EIDON
+# 4. ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΕΙΔΩΝ
 elif st.session_state['active_subview'] == 'item_loading':
     admin_eidi.render_item_loading_tab(
         st.session_state['df_customers'],
@@ -248,7 +249,7 @@ elif st.session_state['active_subview'] == 'item_loading':
         get_worksheet
     )
 
-# 5. TROPOPOIISI ROUXON
+# 5. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ
 elif st.session_state['active_subview'] == 'edit_items':
     admin_eidi.render_edit_items_tab(
         st.session_state['df_tr_items'],
@@ -256,7 +257,7 @@ elif st.session_state['active_subview'] == 'edit_items':
         get_worksheet
     )
 
-# 6. DIACHEIRISI PELATON / KATALOGOU
+# 6. ΔΙΑΧΕΙΡΙΣΗ ΠΕΛΑΤΩΝ / ΚΑΤΑΛΟΓΟΥ
 elif st.session_state['active_subview'] in ['manage_customers_new', 'manage_customers_edit', 'manage_catalog_new', 'manage_catalog_edit']:
-    st.markdown("### ⚙️ Diacheirisi Enotitas")
-    st.info("I forma einai etoimi gia prosthiki tis antistoixis leitourgias.")
+    st.markdown("### ⚙️ Διαχείριση Ενότητας")
+    st.info("Η φόρμα είναι έτοιμη για προσθήκη της αντίστοιχης λειτουργίας.")

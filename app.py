@@ -10,7 +10,7 @@ import admin_eidi
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
-# --- CUSTOM STYLING ΓΙΑ ΣΩΣΤΟ ΜΕΓΕΘΟΣ, ΜΙΚΡΟΤΕΡΑ ΚΕΝΑ ΚΑΙ ΑΠΟΛΥΤΟ ΚΕΝΤΡΑΡΙΣΜΑ ΣΤΑ ΚΟΥΜΠΙΑ ---
+# --- ΑΥΣΤΗΡΟ (STRICT) CUSTOM STYLING ΓΙΑ ΑΜΕΣΗ ΕΦΑΡΜΟΓΗ ---
 st.markdown("""
     <style>
         .block-container {
@@ -19,6 +19,7 @@ st.markdown("""
             max-width: 1200px;
         }
 
+        /* Header Bar */
         .brand-header {
             display: flex;
             align-items: center;
@@ -40,11 +41,11 @@ st.markdown("""
         div[data-testid="stColumn"] {
             background-color: #6c8ebf !important;
             border-radius: 14px;
-            padding: 18px 20px !important;
+            padding: 16px 18px !important;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* 1. Επικεφαλίδες στα boxes: Ισορροπημένο μέγεθος (ούτε τεράστιο ούτε μικρό) και ελάχιστο κενό από κάτω */
+        /* 1. Επικεφαλίδες στα boxes: Μικρότερο μέγεθος & ελάχιστο κενό κάτω */
         div[data-testid="stColumn"] h3, 
         div[data-testid="stColumn"] h4 {
             font-size: 1.15rem !important;
@@ -52,24 +53,25 @@ st.markdown("""
             color: #000000 !important;
             margin-top: 0px !important;
             margin-bottom: 2px !important;
+            padding-bottom: 0px !important;
         }
 
-        /* 2. Περιγραφή: Χωρίς bold, μικρότερο κενό από κάτω */
-        div[data-testid="stColumn"] p, 
-        div[data-testid="stColumn"] span,
-        div[data-testid="stColumn"] .stCaption {
-            font-size: 0.9rem !important;
+        /* 2. Περιγραφή: Χωρίς bold, μικρότερο κενό κάτω */
+        div[data-testid="stColumn"] p {
+            font-size: 0.88rem !important;
             color: #111111 !important;
             font-weight: 400 !important;
-            margin-bottom: 12px !important;
+            margin-top: 0px !important;
+            margin-bottom: 8px !important;
+            line-height: 1.2 !important;
         }
 
-        /* 3. Απόλυτο κεντράρισμα στα κουμπιά (οριζόντια & καθέτως/ύψος) */
-        .stButton > button {
+        /* 3. Κουμπιά: Απόλυτο κεντράρισμα (Οριζόντια & Κατακόρυφα) & Ύψος */
+        div[data-testid="stColumn"] .stButton > button {
             border-radius: 8px !important;
-            font-size: 0.95rem !important;
-            font-weight: 400 !important;
-            padding: 0.5rem 1rem !important;
+            height: 42px !important; /* Σταθερό κομψό ύψος */
+            min-height: 42px !important;
+            padding: 0px 10px !important;
             color: #ffffff !important;
             border: none !important;
             background-color: #36456b !important;
@@ -77,16 +79,25 @@ st.markdown("""
             justify-content: center !important;
             align-items: center !important;
             width: 100% !important;
+            margin-bottom: 6px !important;
+        }
+
+        /* Επιβολή κεντραρίσματος και στο εσωτερικό keimeno tou Streamlit button */
+        div[data-testid="stColumn"] .stButton > button p,
+        div[data-testid="stColumn"] .stButton > button div {
+            font-size: 0.92rem !important;
+            font-weight: 500 !important;
+            color: #ffffff !important;
+            margin: 0 !important;
+            padding: 0 !important;
             text-align: center !important;
-            line-height: 1.2 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
 
-        .stButton > button:hover {
+        div[data-testid="stColumn"] .stButton > button:hover {
             background-color: #28334f !important;
-        }
-
-        div[data-testid="stColumn"] div.stMarkdown {
-            margin-bottom: 0px !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -175,7 +186,7 @@ if st.session_state['active_subview'] == 'menu':
     
     with col1:
         st.markdown("### 🚚 Τμήμα Χαλιών")
-        st.markdown("Παραλαβή, παράδοση & επεξεργασία στοιχείων χαλιών")
+        st.markdown("<p>Παραλαβή, παράδοση & επεξεργασία στοιχείων χαλιών</p>", unsafe_allow_html=True)
         
         if st.button("🚚 ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΧΑΛΙΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'fast_loading'
@@ -187,7 +198,7 @@ if st.session_state['active_subview'] == 'menu':
 
     with col2:
         st.markdown("### 👕 Τμήμα Ρούχων & Ειδών")
-        st.markdown("Παραλαβή, παράδοση & διαχείριση ραφιών/τιμών")
+        st.markdown("<p>Παραλαβή, παράδοση & διαχείριση ραφιών/τιμών</p>", unsafe_allow_html=True)
         
         if st.button("👕 ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΕΙΔΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'item_loading'
@@ -197,13 +208,13 @@ if st.session_state['active_subview'] == 'menu':
             st.session_state['active_subview'] = 'edit_items'
             st.rerun()
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
     col_c1, col_c2 = st.columns(2, gap="large")
     
     with col_c1:
         st.markdown("### 👤 Διαχείριση Πελατών")
-        st.markdown("Καταχώρηση νέων πελατών & τροποποίηση στοιχείων")
+        st.markdown("<p>Καταχώρηση νέων πελατών & τροποποίηση στοιχείων</p>", unsafe_allow_html=True)
         
         if st.button("➕/✏️ Διαχείριση Πελατών (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_new'
@@ -215,7 +226,7 @@ if st.session_state['active_subview'] == 'menu':
             
     with col_c2:
         st.markdown("### 📦 Διαχείριση Καταλόγου Ειδών & Χαλιών")
-        st.markdown("Δημιουργία νέων ειδών/χαλιών & τροποποίηση καταλόγου")
+        st.markdown("<p>Δημιουργία νέων ειδών/χαλιών & τροποποίηση καταλόγου</p>", unsafe_allow_html=True)
         
         if st.button("📦/✏️ Διαχείριση Καταλόγου (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_catalog_new'

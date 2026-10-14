@@ -96,7 +96,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- GOOGLE SHEETS CONNECTION (Διόρθωση ονόματος βάσης σε "ImatioDB") ---
+# --- GOOGLE SHEETS CONNECTION ---
 @st.cache_resource
 def get_gspread_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -105,8 +105,7 @@ def get_gspread_client():
 
 def get_worksheet(sheet_name):
     client = get_gspread_client()
-    # Χρησιμοποιούμε απευθείας το ID του Google Sheet για να παρακάμψουμε το Drive API
-    sh = client.open_by_key("1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms")  # <-- Βάλε εδώ το ακριβές ID του ImatioDB σου αν διαφέρει
+    sh = client.open("ImatioDB")
     return sh.worksheet(sheet_name)
 
 # --- ROBUST DATA LOADING ---
@@ -117,6 +116,7 @@ def load_all_data():
         st.session_state['df_customers'] = pd.DataFrame(data_c) if data_c else pd.DataFrame(columns=["CustomerID", "CuName", "CuPhone", "CuAddress"])
     except Exception as e:
         st.session_state['df_customers'] = pd.DataFrame(columns=["CustomerID", "CuName", "CuPhone", "CuAddress"])
+        st.error(f"Σφάλμα φόρτωσης Customers: {e}")
 
     try:
         ws_i = get_worksheet("Items")
@@ -238,32 +238,32 @@ if st.session_state['active_subview'] == 'menu':
 # 2. ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ
 elif st.session_state['active_subview'] == 'fast_loading':
     admin_fast.render_fast_loading_tab(
-        st.session_state['df_customers'],
-        st.session_state['df_items'],
+        st.session_state.get('df_customers', pd.DataFrame()),
+        st.session_state.get('df_items', pd.DataFrame()),
         get_worksheet
     )
 
 # 3. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ
 elif st.session_state['active_subview'] == 'edit_xalia':
     admin_eidi.render_edit_xalia_tab(
-        st.session_state['df_tr_xalia'],
-        st.session_state['df_customers'],
+        st.session_state.get('df_tr_xalia', pd.DataFrame()),
+        st.session_state.get('df_customers', pd.DataFrame()),
         get_worksheet
     )
 
 # 4. ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ
 elif st.session_state['active_subview'] == 'item_loading':
     admin_eidi.render_item_loading_tab(
-        st.session_state['df_customers'],
-        st.session_state['df_items'],
+        st.session_state.get('df_customers', pd.DataFrame()),
+        st.session_state.get('df_items', pd.DataFrame()),
         get_worksheet
     )
 
 # 5. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ
 elif st.session_state['active_subview'] == 'edit_items':
     admin_eidi.render_edit_items_tab(
-        st.session_state['df_tr_items'],
-        st.session_state['df_customers'],
+        st.session_state.get('df_tr_items', pd.DataFrame()),
+        st.session_state.get('df_customers', pd.DataFrame()),
         get_worksheet
     )
 
@@ -284,7 +284,6 @@ elif st.session_state['active_subview'] == 'manage_customers_new':
                 try:
                     ws_c = get_worksheet("Customers")
                     next_id = len(st.session_state['df_customers']) + 1
-                    # Αντιστοίχιση ακριβώς στις στήλες του Sheet: CustomerID, CuName, CuAddress, CuCity, CuPhone, CuMobile, CuEmail
                     row_data = [next_id, c_name, c_address, c_city, c_phone, c_mobile, c_email]
                     ws_c.append_row(row_data)
                     load_all_data()

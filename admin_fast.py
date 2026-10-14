@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΜΕ !IMPORTANT ΓΙΑ ΝΑ ΕΦΑΡΜΟΖΕΤΑΙ ΣΕ ΛΕΥΚΟ & ΜΑΥΡΟ ΦΟΝΤΟ ---
+    # --- CSS ΓΙΑ ΟΡΑΤΟΤΗΤΑ ΕΤΙΚΕΤΩΝ ΚΑΙ ΣΤΑΘΕΡΗ ΟΡΙΖΟΝΤΙΑ ΔΙΑΤΑΞΗ ---
     st.markdown("""
         <style>
             div[data-testid="stColumn"] {
@@ -42,12 +42,11 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 white-space: nowrap;
                 font-family: "Source Sans Pro", sans-serif;
             }
-            .field-label {
-                font-weight: 700;
-                font-size: 0.95rem;
+            /* Στοχεύουμε απευθείας τα labels του Streamlit για να είναι πάντα πράσινα και έντονα */
+            div[data-testid="stWidgetLabel"] label p {
+                font-weight: 700 !important;
+                font-size: 0.95rem !important;
                 color: #27ae60 !important; 
-                margin-bottom: 4px;
-                margin-top: 10px;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -121,11 +120,9 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
 
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown('<p class="field-label">Από Κωδικό</p>', unsafe_allow_html=True)
-        from_code = st.number_input("Από Κωδικό", min_value=1, value=1, step=1, key="fast_from_code", label_visibility="collapsed")
+        from_code = st.number_input("Από Κωδικό", min_value=1, value=1, step=1, key="fast_from_code")
     with c2:
-        st.markdown('<p class="field-label">Έως Κωδικό</p>', unsafe_allow_html=True)
-        to_code = st.number_input("Έως Κωδικό", min_value=1, value=5, step=1, key="fast_to_code", label_visibility="collapsed")
+        to_code = st.number_input("Έως Κωδικό", min_value=1, value=5, step=1, key="fast_to_code")
 
     selected_item = st.selectbox("Είδος Χαλιού", item_choices, key="fast_load_item")
     job_type = st.selectbox("Εργασία", ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη"], key="fast_load_job")

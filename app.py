@@ -96,7 +96,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- GOOGLE SHEETS CONNECTION ---
+# --- GOOGLE SHEETS CONNECTION (Παράκαμψη Drive API με open_by_key) ---
 @st.cache_resource
 def get_gspread_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -105,7 +105,9 @@ def get_gspread_client():
 
 def get_worksheet(sheet_name):
     client = get_gspread_client()
-    sh = client.open("ImatioDB")
+    # Χρησιμοποιούμε απευθείας το Spreadsheet ID για να μη ζητάει Google Drive API
+    SPREADSHEET_ID = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+    sh = client.open_by_key(SPREADSHEET_ID)
     return sh.worksheet(sheet_name)
 
 # --- ROBUST DATA LOADING ---

@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΓΙΑ ΣΤΑΘΕΡΗ ΟΡΙΖΟΝΤΙΑ ΓΡΑΜΜΗ ΣΕ ΚΙΝΗΤΑ & ΚΑΘΑΡΑ ΠΕΔΙΑ ---
+    # --- CSS ΓΙΑ ΟΡΑΤΟΤΗΤΑ ΣΕ ΣΚΟΥΡΟ/ΜΑΥΡΟ ΦΟΝΤΟ ΚΙΝΗΤΟΥ ---
     st.markdown("""
         <style>
             div[data-testid="stColumn"] {
@@ -42,10 +42,11 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 white-space: nowrap;
                 font-family: "Source Sans Pro", sans-serif;
             }
+            /* Φωτεινό χρώμα για να φαίνονται τέλεια στο μαύρο φόντο του κινητού */
             .field-label {
-                font-weight: 600;
-                font-size: 0.9rem;
-                color: #ffffff;
+                font-weight: 700;
+                font-size: 0.95rem;
+                color: #e2e8f0; 
                 margin-bottom: 4px;
                 margin-top: 10px;
             }
@@ -112,11 +113,11 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         )
 
     with col_btn:
-        submitted = st.button("ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
+        submitted = st.button("💾 ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
 
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
-    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ΜΕ ΞΕΚΑΘΑΡΟΥΣ ΤΙΤΛΟΥΣ ---
+    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ---
     selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
 
     c1, c2 = st.columns(2)

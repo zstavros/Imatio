@@ -22,30 +22,25 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                     min-width: 0 !important;
                 }
             }
-            .header-card {
+           .header-card {
                 background-color: #ffffff;
                 border: 2px solid #2b3e50;
                 border-radius: 4px;
-                padding: 0px;
-                text-align: center;
-                height: 42px;
-                min-height: 42px;
+                height: 40px !important;
                 display: flex !important;
                 align-items: center !important;     /* Απόλυτο κεντράρισμα σε ύψος */
                 justify-content: center !important; /* Απόλυτο κεντράρισμα σε πλάτος */
                 box-shadow: 0px 1px 3px rgba(0,0,0,0.04);
                 box-sizing: border-box !important;
+                margin: 0 !important;
             }
             .header-card-title {
                 font-weight: 700;
-                font-size: 0.95rem;
+                font-size: 0.90rem;
                 color: #2b3e50;
                 margin: 0 !important;
                 padding: 0 !important;
-                width: 100%;
-                text-align: center;
-                line-height: 42px !important; /* Εξαναγκάζει το κείμενο να κεντραριστεί κατακόρυφα στο ύψος του κουτιού */
-                white-space: wrap;
+                white-space: nowrap;
                 font-family: "Source Sans Pro", sans-serif;
             }
         </style>

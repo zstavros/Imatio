@@ -10,7 +10,7 @@ import admin_eidi
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
-# --- ΑΥΣΤΗΡΟ (STRICT) CUSTOM STYLING ΓΙΑ ΑΜΕΣΗ ΕΦΑΡΜΟΓΗ ---
+# --- ΑΥΣΤΗΡΟ (STRICT) CUSTOM STYLING ΓΙΑ ΣΤΑΘΕΡΕΣ ΔΙΑΣΤΑΣΕΙΣ ---
 st.markdown("""
     <style>
         .block-container {
@@ -45,7 +45,7 @@ st.markdown("""
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* 1. Επικεφαλίδες στα boxes: Μικρότερο μέγεθος & ελάχιστο κενό κάτω */
+        /* 1. Επικεφαλίδες στα boxes */
         div[data-testid="stColumn"] h3, 
         div[data-testid="stColumn"] h4 {
             font-size: 1.15rem !important;
@@ -56,7 +56,7 @@ st.markdown("""
             padding-bottom: 0px !important;
         }
 
-        /* 2. Περιγραφή: Χωρίς bold, μικρότερο κενό κάτω */
+        /* 2. Περιγραφή */
         div[data-testid="stColumn"] p {
             font-size: 0.88rem !important;
             color: #111111 !important;
@@ -66,10 +66,10 @@ st.markdown("""
             line-height: 1.2 !important;
         }
 
-        /* 3. Κουμπιά: Απόλυτο κεντράρισμα (Οριζόντια & Κατακόρυφα) & Ύψος */
+        /* 3. Κουμπιά: Απόλυτο κεντράρισμα & σταθερό ύψος */
         div[data-testid="stColumn"] .stButton > button {
             border-radius: 8px !important;
-            height: 42px !important; /* Σταθερό κομψό ύψος */
+            height: 42px !important;
             min-height: 42px !important;
             padding: 0px 10px !important;
             color: #ffffff !important;
@@ -82,7 +82,6 @@ st.markdown("""
             margin-bottom: 6px !important;
         }
 
-        /* Επιβολή κεντραρίσματος και στο εσωτερικό keimeno tou Streamlit button */
         div[data-testid="stColumn"] .stButton > button p,
         div[data-testid="stColumn"] .stButton > button div {
             font-size: 0.92rem !important;
@@ -186,25 +185,25 @@ if st.session_state['active_subview'] == 'menu':
     
     with col1:
         st.markdown("### 🚚 Τμήμα Χαλιών")
-        st.markdown("<p>Παραλαβή, παράδοση & επεξεργασία στοιχείων χαλιών</p>", unsafe_allow_html=True)
+        st.markdown("<p>Παραλαβή & επεξεργασία στοιχείων χαλιών</p>", unsafe_allow_html=True)
         
-        if st.button("🚚 ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΧΑΛΙΩΝ", use_container_width=True):
+        if st.button("🚚 ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'fast_loading'
             st.rerun()
             
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΕΓΓΡΑΦΩΝ ΧΑΛΙΩΝ", use_container_width=True):
+        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ & ΠΑΡΑΔΟΣΗ ΧΑΛΙΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'edit_xalia'
             st.rerun()
 
     with col2:
         st.markdown("### 👕 Τμήμα Ρούχων & Ειδών")
-        st.markdown("<p>Παραλαβή, παράδοση & διαχείριση ραφιών/τιμών</p>", unsafe_allow_html=True)
+        st.markdown("<p>Παραλαβή & διαχείριση ραφιών/τιμών</p>", unsafe_allow_html=True)
         
-        if st.button("👕 ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΕΙΔΩΝ", use_container_width=True):
+        if st.button("👕 ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'item_loading'
             st.rerun()
             
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ", use_container_width=True):
+        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ & ΠΑΡΑΔΟΣΗ ΡΟΥΧΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'edit_items'
             st.rerun()
 
@@ -216,11 +215,11 @@ if st.session_state['active_subview'] == 'menu':
         st.markdown("### 👤 Διαχείριση Πελατών")
         st.markdown("<p>Καταχώρηση νέων πελατών & τροποποίηση στοιχείων</p>", unsafe_allow_html=True)
         
-        if st.button("➕/✏️ Διαχείριση Πελατών (Νέα Εγγραφή)", use_container_width=True):
+        if st.button("➕ Διαχείριση Πελατών (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_new'
             st.rerun()
             
-        if st.button("➕/✏️ Διαχείριση Πελατών (Τροποποίηση)", use_container_width=True):
+        if st.button("✏️ Διαχείριση Πελατών (Τροποποίηση)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_edit'
             st.rerun()
             
@@ -228,15 +227,15 @@ if st.session_state['active_subview'] == 'menu':
         st.markdown("### 📦 Διαχείριση Καταλόγου Ειδών & Χαλιών")
         st.markdown("<p>Δημιουργία νέων ειδών/χαλιών & τροποποίηση καταλόγου</p>", unsafe_allow_html=True)
         
-        if st.button("📦/✏️ Διαχείριση Καταλόγου (Νέα Εγγραφή)", use_container_width=True):
+        if st.button("➕ Διαχείριση Καταλόγου (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_catalog_new'
             st.rerun()
             
-        if st.button("📦/✏️ Διαχείριση Καταλόγου (Τροποποίηση)", use_container_width=True):
+        if st.button("✏️ Διαχείριση Καταλόγου (Τροποποίηση)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_catalog_edit'
             st.rerun()
 
-# 2. ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΧΑΛΙΩΝ
+# 2. ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ
 elif st.session_state['active_subview'] == 'fast_loading':
     admin_fast.render_fast_loading_tab(
         st.session_state['df_customers'],
@@ -252,7 +251,7 @@ elif st.session_state['active_subview'] == 'edit_xalia':
         get_worksheet
     )
 
-# 4. ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΕΙΔΩΝ
+# 4. ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ
 elif st.session_state['active_subview'] == 'item_loading':
     admin_eidi.render_item_loading_tab(
         st.session_state['df_customers'],

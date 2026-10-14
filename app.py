@@ -7,7 +7,18 @@ from google.oauth2.service_account import Credentials
 import admin_fast
 import admin_eidi
 
-st.set_page_config(page_title="ImatioApp", layout="wide", initial_sidebar_state="expanded")
+# Μείωση του κεννού στην κορυφή της οθόνης (Streamlit wide layout tuning)
+st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="expanded")
+
+st.markdown("""
+    <style>
+        /* Μείωση του αρχικού κεννού ψηλά στην οθόνη του Streamlit */
+        .block-container {
+            padding-top: 1.2rem;
+            padding-bottom: 2rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # --- ΣΥΝΔΕΣΗ ΜΕ GOOGLE SHEETS ---
 @st.cache_resource
@@ -18,7 +29,7 @@ def get_gspread_client():
 
 def get_worksheet(sheet_name):
     client = get_gspread_client()
-    sh = client.open("ImatioAppDB") # Βάλτε το ακριβές όνομα του Google Sheet σας
+    sh = client.open("ImatioAppDB")
     return sh.worksheet(sheet_name)
 
 # --- ΦΟΡΤΩΣΗ ΔΕΔΟΜΕΝΩΝ ---
@@ -55,7 +66,13 @@ if 'df_tr_items' not in st.session_state or st.session_state['df_tr_items'].empt
 if 'active_subview' not in st.session_state:
     st.session_state['active_subview'] = 'menu'
 
-st.title("🧺 ImatioApp - Διαχείριση Στεγνοκαθαριστηρίου")
+# Επικεφαλίδα με λογότυπο και μικρότερη γραμματοσειρά
+st.markdown("""
+    <div style='display: flex; align-items: center; gap: 10px; margin-bottom: 15px;'>
+        <span style='font-size: 2rem;'>🧺</span>
+        <h3 style='margin: 0; font-size: 1.25rem; font-weight: 600; color: #31333F;'>IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</h3>
+    </div>
+""", unsafe_allow_html=True)
 
 # Κουμπί επιστροφής αν βρισκόμαστε σε υπο-σελίδα
 if st.session_state['active_subview'] != 'menu':

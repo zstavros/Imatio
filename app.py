@@ -105,7 +105,8 @@ def get_gspread_client():
 
 def get_worksheet(sheet_name):
     client = get_gspread_client()
-    sh = client.open("ImatioDB")  # <-- Διόρθωση εδώ από ImatioAppDB σε ImatioDB
+    # Χρησιμοποιούμε απευθείας το ID του Google Sheet για να παρακάμψουμε το Drive API
+    sh = client.open_by_key("1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms")  # <-- Βάλε εδώ το ακριβές ID του ImatioDB σου αν διαφέρει
     return sh.worksheet(sheet_name)
 
 # --- ROBUST DATA LOADING ---

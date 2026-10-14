@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΓΙΑ ΚΑΘΑΡΟ LAYOUT ΚΑΙ ΠΛΑΙΣΙΟ ΕΠΙΚΕΦΑΛΙΔΑΣ ---
+    # --- CSS ΓΙΑ ΝΑ ΕΧΕΙ ΤΟ ΙΔΙΟ ΥΨΟΣ ΜΕ ΤΑ ΚΟΥΜΠΙΑ ΚΑΙ ΜΕΓΑΛΥΤΕΡΑ ΓΡΑΜΜΑΤΑ ---
     st.markdown("""
         <style>
             div[data-testid="stColumn"] {
@@ -14,17 +14,22 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
             .header-card {
                 background-color: #ffffff;
                 border: 1px solid #d1d8e0;
-                border-left: 5px solid #2b3e50; /* Το χρώμα των κουμπιών */
-                border-radius: 8px;
-                padding: 8px 12px;
+                border-left: 5px solid #2b3e50;
+                border-radius: 6px;
+                padding: 6px 10px;
                 text-align: center;
-                box-shadow: 0px 2px 5px rgba(0,0,0,0.05);
+                height: 42px; /* Ίδιο ύψος περίπου με τα κουμπιά του Streamlit */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0px 1px 3px rgba(0,0,0,0.04);
             }
             .header-card-title {
                 font-weight: 800;
-                font-size: 1.15rem;
-                color: #1b6338; /* Το πράσινο του brand */
+                font-size: 1.25rem;
+                color: #1b6338;
                 margin: 0;
+                white-space: nowrap;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -70,8 +75,8 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
     item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
 
-    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΕΠΙΣΤΡΟΦΗ (ΑΡΙΣΤΕΡΑ) | ΤΙΤΛΟΣ ΣΕ ΠΛΑΙΣΙΟ (ΚΕΝΤΡΟ) | ΑΠΟΘΗΚΕΥΣΗ (ΔΕΞΙΑ) ---
-    col_nav, col_title, col_btn = st.columns([1.5, 2.5, 1.8])
+    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΕΠΙΣΤΡΟΦΗ | ΤΙΤΛΟΣ | ΑΠΟΘΗΚΕΥΣΗ ---
+    col_nav, col_title, col_btn = st.columns([1.5, 2.8, 1.8])
 
     with col_nav:
         if st.button("⬅️ Επιστροφή στο Κεντρικό Μενού", use_container_width=True):

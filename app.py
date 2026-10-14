@@ -3,24 +3,33 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 import os
+import base64
 
-# Eisagogi ton modules
+# Εισαγωγή των modules
 import admin_fast
 import admin_eidi
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="expanded")
 
-# Meiosi tou kenou psila stin othoni
+# --- ΣΩΣΤΟ CSS ΓΙΑ ΝΑ ΜΗΝ ΚΟΒΕΤΑΙ Η ΕΠΙΚΕΦΑΛΙΔΑ ---
 st.markdown("""
     <style>
+        /* Σωστό padding για να μην κρύβεται τίποτα από το top-header του Streamlit */
         .block-container {
-            padding-top: 1.5rem !important;
+            padding-top: 3.5rem !important;
             padding-bottom: 2rem !important;
+        }
+        /* Αφαίρεση περιττών περιθωρίων */
+        .main-header-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# --- SYNDESI ME GOOGLE SHEETS ---
+# --- ΣΥΝΔΕΣΗ ΜΕ GOOGLE SHEETS ---
 @st.cache_resource
 def get_gspread_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -32,7 +41,7 @@ def get_worksheet(sheet_name):
     sh = client.open("ImatioAppDB")
     return sh.worksheet(sheet_name)
 
-# --- FORTOSI DEDOMENON ---
+# --- ΦΟΡΤΩΣΗ ΔΕΔΟΜΕΝΩΝ ---
 if 'df_customers' not in st.session_state or st.session_state['df_customers'].empty:
     try:
         ws_c = get_worksheet("Customers")
@@ -66,54 +75,66 @@ if 'df_tr_items' not in st.session_state or st.session_state['df_tr_items'].empt
 if 'active_subview' not in st.session_state:
     st.session_state['active_subview'] = 'menu'
 
-# --- EPIKEFALIDA ME LOGO.PNG KAI KATHARA GRAMMATA ---
-col_logo, col_title = st.columns([0.08, 0.92])
+# --- ΑΣΦΑΛΗΣ ΜΕΘΟΔΟΣ ΕΜΦΑΝΙΣΗΣ LOGO + ΚΕΙΜΕΝΟΥ ΧΩΡΙΣ ΝΑ ΚΟΒΕΤΑΙ ---
+def get_base64_image(image_path):
+    if os.path.exists(image_path):
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+    return ""
 
-with col_logo:
-    if os.path.exists("logo.png"):
-        st.image("logo.png", width=38)
+logo_b64 = get_base64_image("logo.png")
 
-with col_title:
-    st.markdown("""
-        <div style='padding-top: 6px; font-size: 1.1rem; font-weight: 600;'>
-            IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ
+if logo_b64:
+    header_html = f"""
+        <div class="main-header-container">
+            <img src="data:image/png;base64,{logo_b64}" style="height: 45px; width: auto; object-fit: contain;">
+            <span style="font-size: 1.3rem; font-weight: 700; color: white; line-height: 1;">IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
         </div>
-    """, unsafe_allow_html=True)
+    """
+else:
+    header_html = """
+        <div class="main-header-container">
+            <span style="font-size: 1.8rem;">🧺</span>
+            <span style="font-size: 1.3rem; font-weight: 700; color: white; line-height: 1;">IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
+        </div>
+    """
 
-# Koumpi epistrofis an eimaste se ypo-selida
+st.markdown(header_html, unsafe_allow_html=True)
+
+# Κουμπί επιστροφής αν βρισκόμαστε σε υπο-σελίδα
 if st.session_state['active_subview'] != 'menu':
-    if st.button("⬅️ Epistrofi sto Kentriko Menu"):
+    if st.button("⬅️ Επιστροφή στο Κεντρικό Μενού"):
         st.session_state['active_subview'] = 'menu'
         st.rerun()
     st.markdown("---")
 
-# 1. KENTRIKO MENU
+# 1. ΚΕΝΤΡΙΚΟ ΜΕΝΟΥ
 if st.session_state['active_subview'] == 'menu':
-    st.markdown("### 🎛️ Epilexte Energeia")
+    st.markdown("### 🎛️ Επιλέξτε Ενέργεια")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.info("🚚 **Diacheirisi Chalion**")
-        if st.button("🚛 GRIGORI FORTOSI (Xalia)", use_container_width=True, type="primary"):
+        st.info("🚚 **Διαχείριση Χαλιών**")
+        if st.button("🚛 ΓΡΗΓΟΡΗ ΦΟΡΤΩΣΗ (Χαλιά)", use_container_width=True, type="primary"):
             st.session_state['active_subview'] = 'fast_loading'
             st.rerun()
             
-        if st.button("✏️ TROPOPOIISI EGGRAFON XALION", use_container_width=True):
+        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΕΓΓΡΑΦΩΝ ΧΑΛΙΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'edit_xalia'
             st.rerun()
 
     with col2:
-        st.info("👕 **Diacheirisi Rouchon & Eidon**")
-        if st.button("👕 KATAXORISI ROUXON / EIDON", use_container_width=True, type="primary"):
+        st.info("👕 **Διαχείριση Ρούχων & Ειδών**")
+        if st.button("👕 ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ", use_container_width=True, type="primary"):
             st.session_state['active_subview'] = 'item_loading'
             st.rerun()
             
-        if st.button("✏️ TROPOPOIISI ROUXON (Rafi, Timi, Status)", use_container_width=True):
+        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ (Ράφι, Τιμή, Status)", use_container_width=True):
             st.session_state['active_subview'] = 'edit_items'
             st.rerun()
 
-# 2. GRIGORI FORTOSI XALION
+# 2. ΓΡΗΓΟΡΗ ΦΟΡΤΩΣΗ ΧΑΛΙΩΝ
 elif st.session_state['active_subview'] == 'fast_loading':
     admin_fast.render_fast_loading_tab(
         st.session_state['df_customers'],
@@ -121,7 +142,7 @@ elif st.session_state['active_subview'] == 'fast_loading':
         get_worksheet
     )
 
-# 3. TROPOPOIISI XALION
+# 3. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ
 elif st.session_state['active_subview'] == 'edit_xalia':
     admin_eidi.render_edit_xalia_tab(
         st.session_state['df_tr_xalia'],
@@ -129,7 +150,7 @@ elif st.session_state['active_subview'] == 'edit_xalia':
         get_worksheet
     )
 
-# 4. KATAXORISI ROUXON
+# 4. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ
 elif st.session_state['active_subview'] == 'item_loading':
     admin_eidi.render_item_loading_tab(
         st.session_state['df_customers'],
@@ -137,7 +158,7 @@ elif st.session_state['active_subview'] == 'item_loading':
         get_worksheet
     )
 
-# 5. TROPOPOIISI ROUXON
+# 5. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ
 elif st.session_state['active_subview'] == 'edit_items':
     admin_eidi.render_edit_items_tab(
         st.session_state['df_tr_items'],

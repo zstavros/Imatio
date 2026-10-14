@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΓΙΑ ΝΑ ΕΧΕΙ ΤΟ ΙΔΙΟ ΥΨΟΣ ΜΕ ΤΑ ΚΟΥΜΠΙΑ ΚΑΙ ΜΕΓΑΛΥΤΕΡΑ ΓΡΑΜΜΑΤΑ ---
+    # --- CSS ΓΙΑ ΙΣΟΠΟΣΑ ΚΟΥΜΠΙΑ ΚΑΙ ΛΕΥΚΟ ΠΛΑΙΣΙΟ ΜΕ ΠΕΡΙΓΡΑΜΜΑ ---
     st.markdown("""
         <style>
             div[data-testid="stColumn"] {
@@ -12,21 +12,21 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 padding: 0px !important;
             }
             .header-card {
-                background-color: #2b3e50; /* Ίδιο σκούρο μπλε χρώμα με τα κουμπιά */
-                border: 1px solid #2b3e50;
-                border-radius: 4px; /* Στρογγύλεψη ίδια με τα κουμπιά */
+                background-color: #ffffff; /* Λευκό φόντο */
+                border: 2px solid #2b3e50; /* Περίγραμμα στο χρώμα των κουμπιών */
+                border-radius: 4px;
                 padding: 0px 10px;
                 text-align: center;
-                height: 42px; 
+                height: 42px; /* Ίδιο ύψος με τα κουμπιά */
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0px 1px 3px rgba(0,0,0,0.1);
+                box-shadow: 0px 1px 3px rgba(0,0,0,0.04);
             }
             .header-card-title {
-                font-weight: 600;
-                font-size: 0.95rem; /* Ίδιο μέγεθος με τα κουμπιά του Streamlit */
-                color: #ffffff; /* Λευκά γράμματα όπως τα κουμπιά */
+                font-weight: 600; /* Bold όπως στα κουμπιά */
+                font-size: 0.95rem; /* Ίδιο μέγεθος γραμματοσειράς */
+                color: #2b3e50; /* Χρώμα κειμένου ίδιο με τα κουμπιά */
                 margin: 0;
                 white-space: nowrap;
                 font-family: "Source Sans Pro", sans-serif;
@@ -75,8 +75,8 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
     item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
 
-    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΕΠΙΣΤΡΟΦΗ | ΤΙΤΛΟΣ | ΑΠΟΘΗΚΕΥΣΗ ---
-    col_nav, col_title, col_btn = st.columns([1.5, 2.8, 1.8])
+    # --- ΠΑΝΩ ΓΡΑΜΜΗ: 3 ΙΣΟΠΟΣΕΣ ΣΤΗΛΕΣ (1:1:1) ΓΙΑ ΙΔΙΟ ΜΗΚΟΣ ---
+    col_nav, col_title, col_btn = st.columns([1, 1, 1])
 
     with col_nav:
         if st.button("⬅️ Επιστροφή στο Κεντρικό Μενού", use_container_width=True):

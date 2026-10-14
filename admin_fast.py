@@ -40,9 +40,9 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 font-weight: 700;
                 font-size: 0.95rem;
                 color: #2b3e50;
-                margin: 10 !important;
+                margin: 0 !important;
                 padding: 0 !important;
-                white-space: nowrap;
+                white-space: wrap;
                 font-family: "Source Sans Pro", sans-serif;
                 line-height: normal !important;
             }

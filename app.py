@@ -96,7 +96,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- GOOGLE SHEETS CONNECTION (Παράκαμψη Drive API με open_by_key) ---
+# --- GOOGLE SHEETS CONNECTION ---
 @st.cache_resource
 def get_gspread_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -105,8 +105,8 @@ def get_gspread_client():
 
 def get_worksheet(sheet_name):
     client = get_gspread_client()
-    # Χρησιμοποιούμε απευθείας το Spreadsheet ID για να μη ζητάει Google Drive API
-    SPREADSHEET_ID = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+    # Χρήση του ID του Google Sheet
+    SPREADSHEET_ID = "18_Rke4EW04J0QaTw2PBgU1Q-NLgT7G2l3yR0NvX1jmE"
     sh = client.open_by_key(SPREADSHEET_ID)
     return sh.worksheet(sheet_name)
 
@@ -135,7 +135,7 @@ def load_all_data():
         st.session_state['df_tr_xalia'] = pd.DataFrame()
 
     try:
-        ws_ti = get_worksheet("TrEidi")
+        ws_ti = get_worksheet("TrItems")
         data_ti = ws_ti.get_all_records()
         st.session_state['df_tr_items'] = pd.DataFrame(data_ti) if data_ti else pd.DataFrame()
     except:

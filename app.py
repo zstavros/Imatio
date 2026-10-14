@@ -187,4 +187,76 @@ if st.session_state['active_subview'] == 'menu':
             st.rerun()
             
         st.write("")
-        if
+        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ", use_container_width=True):
+            st.session_state['active_subview'] = 'edit_items'
+            st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 📌 ΚΑΤΩ ΜΕΡΟΣ: ΤΜΗΜΑ ΠΕΛΑΤΩΝ ΚΑΙ ΚΑΤΑΛΟΓΟΥ
+    col_c1, col_c2 = st.columns(2, gap="large")
+    
+    with col_c1:
+        st.markdown("### 👤 Διαχείριση Πελατών")
+        st.write("Καταχώρηση νέων πελατών & τροποποίηση στοιχείων")
+        st.write("")
+        
+        if st.button("➕/✏️ Διαχείριση Πελατών (Νέα Εγγραφή)", use_container_width=True):
+            st.session_state['active_subview'] = 'manage_customers_new'
+            st.rerun()
+            
+        st.write("")
+        if st.button("➕/✏️ Διαχείριση Πελατών (Τροποποίηση)", use_container_width=True):
+            st.session_state['active_subview'] = 'manage_customers_edit'
+            st.rerun()
+            
+    with col_c2:
+        st.markdown("### 📦 Διαχείριση Καταλόγου Ειδών & Χαλιών")
+        st.write("Δημιουργία νέων ειδών/χαλιών & τροποποίηση καταλόγου")
+        st.write("")
+        
+        if st.button("📦/✏️ Διαχείριση Καταλόγου (Νέα Εγγραφή)", use_container_width=True):
+            st.session_state['active_subview'] = 'manage_catalog_new'
+            st.rerun()
+            
+        st.write("")
+        if st.button("📦/✏️ Διαχείριση Καταλόγου (Τροποποίηση)", use_container_width=True):
+            st.session_state['active_subview'] = 'manage_catalog_edit'
+            st.rerun()
+
+# 2. ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΧΑΛΙΩΝ
+elif st.session_state['active_subview'] == 'fast_loading':
+    admin_fast.render_fast_loading_tab(
+        st.session_state['df_customers'],
+        st.session_state['df_items'],
+        get_worksheet
+    )
+
+# 3. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ
+elif st.session_state['active_subview'] == 'edit_xalia':
+    admin_eidi.render_edit_xalia_tab(
+        st.session_state['df_tr_xalia'],
+        st.session_state['df_customers'],
+        get_worksheet
+    )
+
+# 4. ΠΑΡΑΛΑΒΗ / ΠΑΡΑΔΟΣΗ ΕΙΔΩΝ
+elif st.session_state['active_subview'] == 'item_loading':
+    admin_eidi.render_item_loading_tab(
+        st.session_state['df_customers'],
+        st.session_state['df_items'],
+        get_worksheet
+    )
+
+# 5. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ
+elif st.session_state['active_subview'] == 'edit_items':
+    admin_eidi.render_edit_items_tab(
+        st.session_state['df_tr_items'],
+        st.session_state['df_customers'],
+        get_worksheet
+    )
+
+# 6. ΔΙΑΧΕΙΡΙΣΗ ΠΕΛΑΤΩΝ / ΚΑΤΑΛΟΓΟΥ
+elif st.session_state['active_subview'] in ['manage_customers_new', 'manage_customers_edit', 'manage_catalog_new', 'manage_catalog_edit']:
+    st.markdown("### ⚙️ Διαχείριση Ενότητας")
+    st.info("Η φόρμα είναι έτοιμη για προσθήκη της αντίστοιχης λειτουργίας.")

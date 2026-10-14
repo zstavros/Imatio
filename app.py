@@ -174,12 +174,6 @@ else:
 
 st.markdown(header_html, unsafe_allow_html=True)
 
-if st.session_state['active_subview'] != 'menu':
-    if st.button("⬅️ Επιστροφή στο Κεντρικό Μενού"):
-        st.session_state['active_subview'] = 'menu'
-        st.rerun()
-    st.markdown("---")
-
 # 1. ΑΡΧΙΚΗ ΚΑΡΤΕΛΑ ΜΕΝΟΥ
 if st.session_state['active_subview'] == 'menu':
     

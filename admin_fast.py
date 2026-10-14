@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΓΙΑ ΟΡΑΤΟΤΗΤΑ ΣΕ ΣΚΟΥΡΟ/ΜΑΥΡΟ ΦΟΝΤΟ ΚΙΝΗΤΟΥ ---
+    # --- CSS GIA IDANIKI EMFANISI SE ASPRO & MAURO FONTO ---
     st.markdown("""
         <style>
             div[data-testid="stColumn"] {
@@ -42,11 +42,11 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 white-space: nowrap;
                 font-family: "Source Sans Pro", sans-serif;
             }
-            /* Φωτεινό χρώμα για να φαίνονται τέλεια στο μαύρο φόντο του κινητού */
+            /* Prasino pou fainetai teleia kai se aspro kai se mauro fonto */
             .field-label {
                 font-weight: 700;
                 font-size: 0.95rem;
-                color: #e2e8f0; 
+                color: #27ae60; 
                 margin-bottom: 4px;
                 margin-top: 10px;
             }
@@ -66,10 +66,10 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         name_col = df_customers.columns[1]
 
     if df_customers.empty or not name_col:
-        st.warning("⚠️ Δεν βρέθηκαν πελάτες. Καταχωρίστε πρώτα πελάτες.")
+        st.warning("⚠️ Den vrethikan pelates. Kataxoriste proti pelates.")
         return
     
-    cust_choices = ["-- Επιλέξτε Πελάτη --"]
+    cust_choices = ["-- Epilexte Pelati --"]
     for _, row in df_customers.iterrows():
         val = row.get(name_col)
         if pd.notnull(val) and str(val).strip() != '':
@@ -91,14 +91,14 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 col_name_key = ik
                 break
 
-    raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
-    item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
+    raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Chali Mechanis", "Chali Cheiropoiito", "Moketa"]
+    item_choices = ["-- Epilexte Eidos Chaliou --"] + raw_items
 
-    # --- ΠΑΝΩ ΓΡΑΜΜΗ ---
+    # --- PANO GRAMMI: ARXIKI | PARALAVI | APOTHKEYSI ---
     col_nav, col_title, col_btn = st.columns([1, 1, 1])
 
     with col_nav:
-        if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
+        if st.button("🏠 ARXIKI", use_container_width=True):
             st.session_state['active_subview'] = 'menu'
             st.rerun()
 
@@ -106,38 +106,38 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         st.markdown(
             """
             <div class="header-card">
-                <p class="header-card-title">ΠΑΡΑΛΑΒΗ</p>
+                <p class="header-card-title">PARALAVI</p>
             </div>
             """, 
             unsafe_allow_html=True
         )
 
     with col_btn:
-        submitted = st.button("💾 ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
+        submitted = st.button("💾 APOTHKEYSI", type="primary", use_container_width=True)
 
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
-    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ---
-    selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
+    # --- FORMA KATAXORISIS ---
+    selected_customer_str = st.selectbox("Epilogi Pelati", cust_choices, key="fast_load_cust")
 
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown('<p class="field-label">Από Κωδικό</p>', unsafe_allow_html=True)
-        from_code = st.number_input("Από Κωδικό", min_value=1, value=1, step=1, key="fast_from_code", label_visibility="collapsed")
+        st.markdown('<p class="field-label">Apo Kodiko</p>', unsafe_allow_html=True)
+        from_code = st.number_input("Apo Kodiko", min_value=1, value=1, step=1, key="fast_from_code", label_visibility="collapsed")
     with c2:
-        st.markdown('<p class="field-label">Έως Κωδικό</p>', unsafe_allow_html=True)
-        to_code = st.number_input("Έως Κωδικό", min_value=1, value=5, step=1, key="fast_to_code", label_visibility="collapsed")
+        st.markdown('<p class="field-label">Eos Kodiko</p>', unsafe_allow_html=True)
+        to_code = st.number_input("Eos Kodiko", min_value=1, value=5, step=1, key="fast_to_code", label_visibility="collapsed")
 
-    selected_item = st.selectbox("Είδος Χαλιού", item_choices, key="fast_load_item")
-    job_type = st.selectbox("Εργασία", ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη"], key="fast_load_job")
+    selected_item = st.selectbox("Eidos Chaliou", item_choices, key="fast_load_item")
+    job_type = st.selectbox("Ergasia", ["Plysimo", "Fylaxi", "Plysimo & Fylaxi"], key="fast_load_job")
 
     if submitted:
-        if selected_customer_str == "-- Επιλέξτε Πελάτη --":
-            st.error("❌ Παρακαλώ επιλέξτε πελάτη!")
-        elif selected_item == "-- Επιλέξτε Είδος Χαλιού --":
-            st.error("❌ Παρακαλώ επιλέξτε είδος χαλιού!")
+        if selected_customer_str == "-- Epilexte Pelati --":
+            st.error("❌ Parakalo epilexte pelati!")
+        elif selected_item == "-- Epilexte Eidos Chaliou --":
+            st.error("❌ Parakalo epilexte eidos chaliou!")
         elif from_code > to_code:
-            st.error("❌ Ο 'Από Κωδικός' δεν μπορεί να είναι μεγαλύτερος από τον 'Έως Κωδικό'!")
+            st.error("❌ O 'Apo Kodikos' den borei na einai megaliteros apo ton 'Eos Kodiko'!")
         else:
             cust_name_clean = selected_customer_str.split(" (")[0]
             today_str = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -162,7 +162,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                         selected_item,            
                         str(current_code),        
                         "", "", "", "",           
-                        "Αποθήκη (Προσωρινό)",    
+                        "Apothiki (Prosorino)",   
                         today_str,                
                         "",                       
                         0.0,                      
@@ -173,9 +173,9 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 if rows_to_append:
                     ws_xalia.append_rows(rows_to_append)
 
-                st.success(f"✅ Φορτώθηκαν επιτυχώς {added_count} τεμάχια (Κωδικοί από {from_code} έως {to_code})!")
+                st.success(f"✅ Fortothikan epitychos {added_count} temachia (Kodikoi apo {from_code} eos {to_code})!")
                 st.session_state['active_subview'] = 'menu'
                 st.rerun()
                 
             except Exception as e:
-                st.error(f"❌ Σφάλμα κατά την αποθήκευση: **{e}**")
+                st.error(f"❌ Sfalma kata tin apothikeysi: **{e}**")

@@ -3,55 +3,29 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
+    if not df_customers.empty:
+        df_customers.columns = df_customers.columns.str.strip()
+
     st.markdown("<p style='font-weight: bold; font-size: 1.15rem;'>🚛 Γρήγορη Φόρτωση / Παραλαβή Χαλιών</p>", unsafe_allow_html=True)
-    st.write("Καταχωρήστε μαζικά χαλιά από το φορτηγό με εύρος κωδικών (π.χ. από 1 έως 5).")
+    st.write("Καταχωρίστε μαζικά χαλιά από το φορτηγό με εύρος κωδικών (π.χ. από 1 έως 5).")
 
-    # Άμεση ανάγνωση πελατών από το Google Sheet "Customers" για απόλυτη εγγύηση
-    df_c = pd.DataFrame()
-    try:
-        ws_cust = get_worksheet("Customers")
-        raw_data = ws_cust.get_all_records()
-        if raw_data:
-            df_c = pd.DataFrame(raw_data)
-            df_c.columns = df_c.columns.str.strip()
-    except Exception as e:
-        st.error(f"Σφάλμα σύνδεσης με Customers: {e}")
-
-    # Αν αποτύχει, δοκιμάζουμε από το όρισμα που πέρασε
-    if df_c.empty and not df_customers.empty:
-        df_c = df_customers.copy()
-        df_c.columns = df_c.columns.str.strip()
-
-    # Εντοπισμός στήλης ονόματος πελάτη
-    name_col = None
-    for col in ['CuName', 'Name', 'CUSTOMER', 'CustomerName']:
-        if not df_c.empty and col in df_c.columns:
-            name_col = col
-            break
+    name_col = 'CuName' if 'CuName' in df_customers.columns else ('Name' if 'Name' in df_customers.columns else (df_customers.columns[1] if len(df_customers.columns) > 1 else None))
     
-    if not name_col and not df_c.empty and len(df_c.columns) > 1:
-        name_col = df_c.columns[1]
-
-    if df_c.empty or not name_col:
-        st.warning("⚠️ Δεν βρέθηκαν πελάτες στο Google Sheet 'Customers'. Καταχωρίστε πρώτα πελάτες.")
+    if df_customers.empty or not name_col:
+        st.warning("⚠️ Δεν βρέθηκαν πελάτες. Καταχωρίστε πρώτα πελάτες.")
         return
     
-    # Δημιουργία λίστας επιλογής πελατών
     cust_choices = ["-- Επιλέξτε Πελάτη --"]
-    for _, row in df_c.iterrows():
+    for _, row in df_customers.iterrows():
         val = row.get(name_col)
         if pd.notnull(val) and str(val).strip() != '':
-            phone = ""
-            for p_col in ['CuMobile', 'CuPhone', 'Mobile', 'Phone']:
-                if p_col in row and pd.notnull(row[p_col]) and str(row[p_col]).strip() != '':
-                    phone = str(row[p_col])
-                    break
+            phone = row.get('CuMobile') if pd.notnull(row.get('CuMobile')) and str(row.get('CuMobile')).strip() != '' else row.get('CuPhone', '')
             if phone:
                 cust_choices.append(f"{val} ({phone})")
             else:
                 cust_choices.append(str(val))
 
-    # Φόρμα εισαγωγής
+    # Χρήση st.form για αυτόματο καθαρισμό πεδίων
     with st.form("fast_loading_form", clear_on_submit=True):
         selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
 
@@ -61,16 +35,8 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         with col2:
             to_code = st.number_input("Έως Κωδικό (To Code)", min_value=1, value=5, step=1, key="fast_to_code")
 
-        # Εύρεση στήλης ειδών
-        col_name_key = None
-        if not df_items.empty:
-            df_items.columns = df_items.columns.str.strip()
-            for ik in ['ItName', 'Name', 'ItemName']:
-                if ik in df_items.columns:
-                    col_name_key = ik
-                    break
-
-        raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
+        col_name_key = 'ItName' if 'ItName' in df_items.columns else ('Name' if not df_items.empty and 'Name' in df_items.columns else None)
+        raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key in df_items.columns else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
         item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
         
         selected_item = st.selectbox("Είδος Χαλιού", item_choices, key="fast_load_item")
@@ -121,6 +87,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                     ws_xalia.append_rows(rows_to_append)
 
                 st.success(f"✅ Φορτώθηκαν επιτυχώς {added_count} τεμάχια (Κωδικοί από {from_code} έως {to_code})!")
+                st.session_state['df_tr_xalia'] = pd.DataFrame()
                 st.rerun()
                 
             except Exception as e:

@@ -3,13 +3,28 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΓΙΑ ΝΑ ΦΥΓΟΥΝ ΤΑ ΜΠΛΕ ΚΟΥΤΙΑ ΚΑΙ ΝΑ ΕΙΝΑΙ ΣΥΜΜΑΖΕΜΕΝΑ ---
+    # --- CSS ΓΙΑ ΚΑΘΑΡΟ LAYOUT ΚΑΙ ΠΛΑΙΣΙΟ ΕΠΙΚΕΦΑΛΙΔΑΣ ---
     st.markdown("""
         <style>
             div[data-testid="stColumn"] {
                 background-color: transparent !important;
                 box-shadow: none !important;
                 padding: 0px !important;
+            }
+            .header-card {
+                background-color: #ffffff;
+                border: 1px solid #d1d8e0;
+                border-left: 5px solid #2b3e50; /* Το χρώμα των κουμπιών */
+                border-radius: 8px;
+                padding: 8px 12px;
+                text-align: center;
+                box-shadow: 0px 2px 5px rgba(0,0,0,0.05);
+            }
+            .header-card-title {
+                font-weight: 800;
+                font-size: 1.15rem;
+                color: #1b6338; /* Το πράσινο του brand */
+                margin: 0;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -55,7 +70,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
     item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
 
-    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΕΠΙΣΤΡΟΦΗ (ΑΡΙΣΤΕΡΑ) | ΤΙΤΛΟΣ (ΚΕΝΤΡΟ) | ΑΠΟΘΗΚΕΥΣΗ (ΔΕΞΙΑ) ---
+    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΕΠΙΣΤΡΟΦΗ (ΑΡΙΣΤΕΡΑ) | ΤΙΤΛΟΣ ΣΕ ΠΛΑΙΣΙΟ (ΚΕΝΤΡΟ) | ΑΠΟΘΗΚΕΥΣΗ (ΔΕΞΙΑ) ---
     col_nav, col_title, col_btn = st.columns([1.5, 2.5, 1.8])
 
     with col_nav:
@@ -65,9 +80,11 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
 
     with col_title:
         st.markdown(
-            "<div style='text-align: center; font-weight: 800; font-size: 1.15rem; color: #1b6338; margin-top: 6px;'>"
-            "🚛 Γρήγορη Φόρτωση / Παραλαβή Χαλιών"
-            "</div>", 
+            """
+            <div class="header-card">
+                <p class="header-card-title">🚛 Γρήγορη Φόρτωση / Παραλαβή Χαλιών</p>
+            </div>
+            """, 
             unsafe_allow_html=True
         )
 
@@ -76,7 +93,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
 
     st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
-    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ (ΕΚΤΟΣ ST.FORM ΑΛΛΑ ΜΕ KEY) ---
+    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ---
     selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
 
     c1, c2 = st.columns(2)
@@ -131,8 +148,6 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                     ws_xalia.append_rows(rows_to_append)
 
                 st.success(f"✅ Φορτώθηκαν επιτυχώς {added_count} τεμάχια (Κωδικοί από {from_code} έως {to_code})!")
-                
-                # --- ΕΠΙΣΤΡΟΦΗ ΣΤΟ ΜΕΝΟΥ ΑΥΤΟΜΑΤΑ ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ ---
                 st.session_state['active_subview'] = 'menu'
                 st.rerun()
                 

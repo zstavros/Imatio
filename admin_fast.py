@@ -3,34 +3,55 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    if not df_customers.empty:
-        df_customers.columns = df_customers.columns.str.strip()
-
     st.markdown("<p style='font-weight: bold; font-size: 1.15rem;'>🚛 Γρήγορη Φόρτωση / Παραλαβή Χαλιών</p>", unsafe_allow_html=True)
     st.write("Καταχωρήστε μαζικά χαλιά από το φορτηγό με εύρος κωδικών (π.χ. από 1 έως 5).")
 
-    if df_customers.empty:
-        try:
-            ws_cust = get_worksheet("Customers")
-            df_customers = pd.DataFrame(ws_cust.get_all_records())
-            if not df_customers.empty:
-                df_customers.columns = df_customers.columns.str.strip()
-        except Exception:
-            pass
+    # Άμεση ανάγνωση πελατών από το Google Sheet "Customers" για απόλυτη εγγύηση
+    df_c = pd.DataFrame()
+    try:
+        ws_cust = get_worksheet("Customers")
+        raw_data = ws_cust.get_all_records()
+        if raw_data:
+            df_c = pd.DataFrame(raw_data)
+            df_c.columns = df_c.columns.str.strip()
+    except Exception as e:
+        st.error(f"Σφάλμα σύνδεσης με Customers: {e}")
 
-    name_col = 'CuName' if 'CuName' in df_customers.columns else ('Name' if 'Name' in df_customers.columns else (df_customers.columns[1] if len(df_customers.columns) > 1 else None))
+    # Αν αποτύχει, δοκιμάζουμε από το όρισμα που πέρασε
+    if df_c.empty and not df_customers.empty:
+        df_c = df_customers.copy()
+        df_c.columns = df_c.columns.str.strip()
+
+    # Εντοπισμός στήλης ονόματος πελάτη
+    name_col = None
+    for col in ['CuName', 'Name', 'CUSTOMER', 'CustomerName']:
+        if not df_c.empty and col in df_c.columns:
+            name_col = col
+            break
     
-    if df_customers.empty or not name_col:
-        st.warning("⚠️ Δεν βρέθηκαν πελάτες. Καταχωρήστε πρώτα πελάτες.")
+    if not name_col and not df_c.empty and len(df_c.columns) > 1:
+        name_col = df_c.columns[1]
+
+    if df_c.empty or not name_col:
+        st.warning("⚠️ Δεν βρέθηκαν πελάτες στο Google Sheet 'Customers'. Καταχωρίστε πρώτα πελάτες.")
         return
     
+    # Δημιουργία λίστας επιλογής πελατών
     cust_choices = ["-- Επιλέξτε Πελάτη --"]
-    for _, row in df_customers.iterrows():
-        if pd.notnull(row.get(name_col)) and str(row.get(name_col)).strip() != '':
-            phone = row.get('CuMobile') if pd.notnull(row.get('CuMobile')) and str(row.get('CuMobile')).strip() != '' else row.get('CuPhone', '')
-            cust_choices.append(f"{row[name_col]} ({phone})")
+    for _, row in df_c.iterrows():
+        val = row.get(name_col)
+        if pd.notnull(val) and str(val).strip() != '':
+            phone = ""
+            for p_col in ['CuMobile', 'CuPhone', 'Mobile', 'Phone']:
+                if p_col in row and pd.notnull(row[p_col]) and str(row[p_col]).strip() != '':
+                    phone = str(row[p_col])
+                    break
+            if phone:
+                cust_choices.append(f"{val} ({phone})")
+            else:
+                cust_choices.append(str(val))
 
-    # Χρήση st.form για να καθαρίζουν τα πεδία αυτόματα και να αποτρέπονται τα διπλασιασξένα κλικ
+    # Φόρμα εισαγωγής
     with st.form("fast_loading_form", clear_on_submit=True):
         selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
 
@@ -40,8 +61,16 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         with col2:
             to_code = st.number_input("Έως Κωδικό (To Code)", min_value=1, value=5, step=1, key="fast_to_code")
 
-        col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
-        raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key in df_items.columns else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
+        # Εύρεση στήλης ειδών
+        col_name_key = None
+        if not df_items.empty:
+            df_items.columns = df_items.columns.str.strip()
+            for ik in ['ItName', 'Name', 'ItemName']:
+                if ik in df_items.columns:
+                    col_name_key = ik
+                    break
+
+        raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
         item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
         
         selected_item = st.selectbox("Είδος Χαλιού", item_choices, key="fast_load_item")
@@ -62,24 +91,20 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
 
             try:
                 ws_xalia = get_worksheet("TrXalia")
-                
-                # Ασφαλής υπολογισμός επόμενου TransactionID κατευθείαν από τα τρέχοντα δεδομένα της Google
                 existing_data = ws_xalia.get_all_records()
                 df_xalia = pd.DataFrame(existing_data)
                 
                 if not df_xalia.empty and 'TransactionID' in df_xalia.columns:
-                    # Μετατρέπουμε σε numeric για αποφυγή σφαλμάτων σύγκρισης
                     df_xalia['TransactionID'] = pd.to_numeric(df_xalia['TransactionID'], errors='coerce')
                     next_trans_id = int(df_xalia['TransactionID'].max()) + 1 if not df_xalia['TransactionID'].dropna().empty else 1
                 else:
                     next_trans_id = 1
 
-                # Συγκεντρώνουμε όλες τις γραμμές σε μία λίστα για μαζική αποστολή (Batch Insert)
                 rows_to_append = []
                 added_count = 0
                 for current_code in range(int(from_code), int(to_code) + 1):
                     rows_to_append.append([
-                        next_trans_id,              # A: TransactionID
+                        next_trans_id,            # A: TransactionID
                         cust_name_clean,            # B: CustomerName
                         selected_item,              # C: ItName
                         str(current_code),          # D: Code
@@ -92,14 +117,10 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                     ])
                     added_count += 1
 
-                # Μία και μοναδική κλήση API για όλες τις γραμμές
                 if rows_to_append:
                     ws_xalia.append_rows(rows_to_append)
 
                 st.success(f"✅ Φορτώθηκαν επιτυχώς {added_count} τεμάχια (Κωδικοί από {from_code} έως {to_code})!")
-                
-                # Καθαρισμός του session state για να ξαναδιαβάσει τα νέα δεδομένα
-                st.session_state['df_tr_xalia'] = pd.DataFrame()
                 st.rerun()
                 
             except Exception as e:

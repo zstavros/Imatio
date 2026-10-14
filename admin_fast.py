@@ -76,7 +76,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
 
     st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
-    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ---
+    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ (ΕΚΤΟΣ ST.FORM ΑΛΛΑ ΜΕ KEY) ---
     selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
 
     c1, c2 = st.columns(2)
@@ -131,7 +131,9 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                     ws_xalia.append_rows(rows_to_append)
 
                 st.success(f"✅ Φορτώθηκαν επιτυχώς {added_count} τεμάχια (Κωδικοί από {from_code} έως {to_code})!")
-                st.session_state['df_tr_xalia'] = pd.DataFrame()
+                
+                # --- ΕΠΙΣΤΡΟΦΗ ΣΤΟ ΜΕΝΟΥ ΑΥΤΟΜΑΤΑ ΜΕΤΑ ΤΗΝ ΑΠΟΘΗΚΕΥΣΗ ---
+                st.session_state['active_subview'] = 'menu'
                 st.rerun()
                 
             except Exception as e:

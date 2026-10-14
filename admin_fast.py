@@ -6,9 +6,6 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     st.markdown("<p style='font-weight: bold; font-size: 1.15rem;'>🚛 Γρήγορη Φόρτωση / Παραλαβή Χαλιών</p>", unsafe_allow_html=True)
     st.write("Καταχωρήστε μαζικά χαλιά από το φορτηγό με εύρος κωδικών (π.χ. από 1 έως 5).")
 
-    # --- DEBUG INFO ---
-    st.write("🔍 **DEBUG - DataFrame Πελατών:**", df_customers)
-
     if not df_customers.empty:
         df_customers.columns = df_customers.columns.str.strip()
 

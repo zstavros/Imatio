@@ -3,19 +3,15 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- STYLING & COLOR COMBINATION ---
+    # --- STYLING ---
     st.markdown("""
         <style>
-            .fast-header-box {
-                background: linear-gradient(135deg, #1b6338 0%, #28804c 100%);
-                padding: 14px 20px;
-                border-radius: 10px;
-                color: #ffffff;
-                text-align: center;
-                font-size: 1.25rem;
-                font-weight: 700;
-                margin-bottom: 20px;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            .fast-title {
+                color: #1b6338;
+                font-size: 1.4rem;
+                font-weight: 800;
+                margin: 0;
+                padding-top: 5px;
             }
             div[data-testid="stForm"] {
                 background-color: #f4f6f9;
@@ -26,9 +22,6 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
             }
         </style>
     """, unsafe_allow_html=True)
-
-    # Prasino header psila sto kentro
-    st.markdown('<div class="fast-header-box">🚛 Γρήγορη Φόρτωση / Παραλαβή Χαλιών</div>', unsafe_allow_html=True)
 
     if not df_customers.empty:
         df_customers.columns = df_customers.columns.str.strip()
@@ -43,7 +36,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         name_col = df_customers.columns[1]
 
     if df_customers.empty or not name_col:
-        st.warning("⚠️ Den vrethikan pelates. Kataxoriste proti pelates.")
+        st.warning("⚠️ Δεν βρέθηκαν πελάτες. Καταχωρίστε πρώτα πελάτες.")
         return
     
     cust_choices = ["-- Επιλέξτε Πελάτη --"]
@@ -71,20 +64,33 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
     item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
 
+    # --- TOP ROW: TITLE & SUBMIT BUTTON ---
+    top_col1, top_col2 = st.columns([3, 1])
+    with top_col1:
+        st.markdown('<p class="fast-title">🚛 Γρήγορη Φόρτωση / Παραλαβή Χαλιών</p>', unsafe_allow_html=True)
+
     with st.form("fast_loading_form", clear_on_submit=True):
+        # Το κουμπί αποθήκευσης μπαίνει μέσα στη φόρμα αλλά το τοποθετούμε έξυπνα δεξιά
+        # (ή το πατάει ο χρήστης από κάτω/πάνω ανάλογα με τη δομή της φόρμες)
+        # Για να είναι το κουμπί ακριβώς δίπλα στον τίτλο πανω δεξιά:
+        
+        # Σημείωση: Στο Streamlit το st.form_submit_button πρέπει να είναι μέσα στο with st.form.
+        # Οπότε βάζουμε μια γραμμή εσωτερικά για το κουμπί πάνω δεξιά.
+        
+        col_btn1, col_btn2 = st.columns([4, 1.2])
+        with col_btn2:
+            submitted = st.form_submit_button("🚀 Αποθήκευση", type="primary", use_container_width=True)
+
         selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
 
-        col1, col2 = st.columns(2)
-        with col1:
+        c1, c2 = st.columns(2)
+        with c1:
             from_code = st.number_input("Από Κωδικό (From Code)", min_value=1, value=1, step=1, key="fast_from_code")
-        with col2:
+        with c2:
             to_code = st.number_input("Έως Κωδικό (To Code)", min_value=1, value=5, step=1, key="fast_to_code")
 
         selected_item = st.selectbox("Είδος Χαλιού", item_choices, key="fast_load_item")
         job_type = st.selectbox("Εργασία", ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη"], key="fast_load_job")
-
-        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-        submitted = st.form_submit_button("🚀 Μαζική Φόρτωση & Αποθήκευση", type="primary", use_container_width=True)
 
     if submitted:
         if selected_customer_str == "-- Επιλέξτε Πελάτη --":

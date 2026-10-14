@@ -15,7 +15,7 @@ st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="co
 st.markdown("""
     <style>
         .block-container {
-            padding-top: 2rem !important;
+            padding-top: 3.5rem !important; /* Αυξήσαμε το κενό από πάνω για να μην κόβεται τίποτα */
             padding-bottom: 2rem !important;
             max-width: 1200px;
         }

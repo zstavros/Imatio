@@ -3,13 +3,20 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΓΙΑ ΣΤΑΘΕΡΗ ΟΡΙΖΟΝΤΙΑ ΓΡΑΜΜΗ ΣΕ ΚΙΝΗΤΑ ---
+    # --- CSS ΧΩΡΙΣ ΠΛΑΙΣΙΟ - ΜΟΝΟ ΚΑΘΑΡΟ ΚΕΝΤΡΑΡΙΣΜΕΝΟ ΚΕΙΜΕΝΟ ---
     st.markdown("""
         <style>
             div[data-testid="stColumn"] {
                 background-color: transparent !important;
                 box-shadow: none !important;
                 padding: 0px 2px !important;
+            }
+            /* Στοιχίζουμε τη μεσαία στήλη ακριβώς στο κέντρο κατακόρυφα */
+            div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
             }
             @media (max-width: 768px) {
                 div[data-testid="stHorizontalBlock"] {
@@ -22,24 +29,14 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                     min-width: 0 !important;
                 }
             }
-           .header-card {
-                background-color: #ffffff;
-                border: 2px solid #2b3e50;
-                border-radius: 4px;
-                height: 40px !important;
-                display: flex !important;
-                align-items: center !important;     /* Απόλυτο κεντράρισμα σε ύψος */
-                justify-content: center !important; /* Απόλυτο κεντράρισμα σε πλάτος */
-                box-shadow: 0px 1px 3px rgba(0,0,0,0.04);
-                box-sizing: border-box !important;
-                margin: 0 !important;
-            }
-            .header-card-title {
+            /* Κλασικό καθαρό κείμενο χωρίς border και background */
+            .header-title-only {
                 font-weight: 700;
-                font-size: 0.90rem;
+                font-size: 0.95rem;
                 color: #2b3e50;
                 margin: 0 !important;
                 padding: 0 !important;
+                text-align: center;
                 white-space: nowrap;
                 font-family: "Source Sans Pro", sans-serif;
             }
@@ -87,7 +84,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
     item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
 
-    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΑΡΧΙΚΗ | ΠΑΡΑΛΑΒΗ | ΑΠΟΘΗΚΕΥΣΗ ---
+    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΑΡΧΙΚΗ | ΤΙΤΛΟΣ ΧΩΡΙΣ ΠΛΑΙΣΙΟ | ΑΠΟΘΗΚΕΥΣΗ ---
     col_nav, col_title, col_btn = st.columns([1, 1, 1])
 
     with col_nav:
@@ -98,15 +95,15 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     with col_title:
         st.markdown(
             """
-            <div class="header-card">
-                <p class="header-card-title">ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ</p>
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                <p class="header-title-only">ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ</p>
             </div>
             """, 
             unsafe_allow_html=True
         )
 
     with col_btn:
-        submitted = st.button("ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
+        submitted = st.button("💾 ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
 
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 

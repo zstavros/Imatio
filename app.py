@@ -148,7 +148,21 @@ if 'df_customers' not in st.session_state or st.session_state['df_customers'].em
 if 'active_subview' not in st.session_state:
     st.session_state['active_subview'] = 'menu'
 
-# --- HEADER WITH LOGO ---
+# --- ROUTING & MENU MAP FOR HEADER TITLE ---
+subview_titles = {
+    'fast_loading': 'ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ',
+    'edit_xalia': 'ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ',
+    'item_loading': 'ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ',
+    'edit_items': 'ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ',
+    'manage_customers_new': 'ΝΕΑ ΕΓΓΡΑΦΗ ΠΕΛΑΤΗ',
+    'manage_customers_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ',
+    'manage_catalog_new': 'ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛΟΓΟΥ',
+    'manage_catalog_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ'
+}
+
+current_page_title = subview_titles.get(st.session_state.get('active_subview', 'menu'), '')
+
+# --- HEADER WITH LOGO & DYNAMIC PAGE TITLE ---
 def get_base64_image(image_path):
     if os.path.exists(image_path):
         with open(image_path, "rb") as img_file:
@@ -157,18 +171,56 @@ def get_base64_image(image_path):
 
 logo_b64 = get_base64_image("logo.png")
 
+# CSS update για flex layout με space-between
+st.markdown("""
+    <style>
+        .brand-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 12px 20px !important;
+            background-color: #1b6338 !important;
+            border-radius: 10px !important;
+            margin-bottom: 25px !important;
+        }
+        .brand-header-left {
+            display: flex !important;
+            align-items: center !important;
+            gap: 15px !important;
+        }
+        .brand-page-title {
+            font-size: 1.2rem !important;
+            font-weight: 800 !important;
+            color: #ffffff !important;
+            margin: 0 !important;
+            text-transform: uppercase !important;
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 if logo_b64:
     header_html = f"""
         <div class="brand-header">
-            <img src="data:image/png;base64,{logo_b64}" style="height: 42px; width: auto; object-fit: contain;">
-            <span class="brand-title">IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
+            <div class="brand-header-left">
+                <img src="data:image/png;base64,{logo_b64}" style="height: 42px; width: auto; object-fit: contain;">
+                <span class="brand-title">IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
+            </div>
+            <div>
+                <span class="brand-page-title">{current_page_title}</span>
+            </div>
         </div>
     """
 else:
-    header_html = """
+    header_html = f"""
         <div class="brand-header">
-            <span style="font-size: 1.6rem;">🧺</span>
-            <span class="brand-title">IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
+            <div class="brand-header-left">
+                <span style="font-size: 1.6rem;">🧺</span>
+                <span class="brand-title">IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
+            </div>
+            <div>
+                <span class="brand-page-title">{current_page_title}</span>
+            </div>
         </div>
     """
 

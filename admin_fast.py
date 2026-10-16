@@ -3,21 +3,45 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΓΙΑ ΣΤΑΘΕΡΗ ΟΡΙΖΟΝΤΙΑ ΓΡΑΜΜΗ ΣΕ ΚΙΝΗΤΑ ---
+    # --- CSS ΓΙΑ ΣΤΑΘΕΡΗ ΔΙΑΤΑΞΗ ΚΑΙ ΠΡΑΣΙΝΗ ΜΠΑΡΑ HEADER ---
     st.markdown("""
         <style>
+            /* Πράσινη μπάρα επικεφαλίδας (Header Banner) */
+            .top-green-header {
+                background-color: #1e6b37;
+                border-radius: 8px;
+                padding: 10px 15px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 15px;
+            }
+            .top-green-header-left {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .top-green-header-title {
+                color: #ffffff !important;
+                font-weight: bold !important;
+                font-size: 1.1rem !important;
+                margin: 0 !important;
+                font-family: 'Source Sans Pro', sans-serif;
+            }
+            .top-green-header-page {
+                color: #ffffff !important;
+                font-weight: bold !important;
+                font-size: 1.1rem !important;
+                margin: 0 !important;
+                font-family: 'Source Sans Pro', sans-serif;
+                text-transform: uppercase;
+            }
+
+            /* Ρυθμίσεις για τα κουμπιά στη γραμμή πλοήγησης */
             div[data-testid="stColumn"] {
                 background-color: transparent !important;
                 box-shadow: none !important;
-                padding: 0px 2px !important;
-            }
-            /* Στοιχίζουμε τη μεσαία στήλη και την κατεβάζουμε λίγο πιο κάτω */
-            div[data-testid="stHorizontalBlock"] > div:nth-child(2) {
-                display: flex !important;
-                flex-direction: column !important;
-                justify-content: center !important;
-                align-items: center !important;
-                margin-top: 6px !important; 
+                padding: 0px 4px !important;
             }
             @media (max-width: 768px) {
                 div[data-testid="stHorizontalBlock"] {
@@ -31,6 +55,19 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 }
             }
         </style>
+    """, unsafe_allow_html=True)
+
+    # --- 1. ΠΡΑΣΙΝΗ ΜΠΑΡΑ ΕΠΙΚΕΦΑΛΙΔΑΣ (LOGO + ΤΙΤΛΟΣ) ---
+    st.markdown("""
+        <div class="top-green-header">
+            <div class="top-green-header-left">
+                <span style="background-color: #1a237e; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem;">ΙΜΑΤΙΟ</span>
+                <p class="top-green-header-title">ΙΜΑΤΙΟ-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</p>
+            </div>
+            <div>
+                <p class="top-green-header-page">ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ</p>
+            </div>
+        </div>
     """, unsafe_allow_html=True)
 
     if not df_customers.empty:
@@ -74,32 +111,24 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
     item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
 
-    # --- ΠΑΝΩ ΓΡΑΜΜΗ: ΑΡΧΙΚΗ | ΤΙΤΛΟΣ ΜΕ ΠΡΑΣΙΝΟ BOLD & WRAP | ΑΠΟΘΗΚΕΥΣΗ ---
-    col_nav, col_title, col_btn = st.columns([1, 1, 1])
+    # --- 2. ΓΡΑΜΜΗ ΚΟΥΜΠΙΩΝ: ΑΡΧΙΚΗ & ΑΠΟΘΗΚΕΥΣΗ ---
+    col_nav, col_space, col_btn = st.columns([1, 1, 1])
 
     with col_nav:
         if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
             st.session_state['active_subview'] = 'menu'
             st.rerun()
 
-    with col_title:
-        st.markdown(
-            """
-            <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
-                <p style="font-weight: bold !important; font-size: 0.85rem !important; color: #27ae60 !important; margin: 0 !important; padding: 0 !important; text-align: center; line-height: 1.15 !important; white-space: normal !important; word-break: break-word; font-family: 'Source Sans Pro', sans-serif;">
-                    ΠΑΡΑΛΑΒΗ<br>ΧΑΛΙΩΝ
-                </p>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
+    with col_space:
+        # Κενός χώρος στη μέση για να διατηρηθούν τα κουμπιά συμμαζεμένα στα άκρα
+        pass
 
     with col_btn:
         submitted = st.button("💾 ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
 
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
-    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ---
+    # --- 3. ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ---
     selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
 
     c1, c2 = st.columns(2)

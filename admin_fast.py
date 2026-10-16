@@ -3,41 +3,9 @@ import pandas as pd
 from datetime import datetime
 
 def render_fast_loading_tab(df_customers, df_items, get_worksheet):
-    # --- CSS ΓΙΑ ΣΤΑΘΕΡΗ ΔΙΑΤΑΞΗ ΚΑΙ ΠΡΑΣΙΝΗ ΜΠΑΡΑ HEADER ---
+    # --- CSS ΓΙΑ ΣΤΑΘΕΡΗ ΔΙΑΤΑΞΗ ΚΟΥΜΠΙΩΝ ΚΑΙ ΦΟΡΜΑΣ ---
     st.markdown("""
         <style>
-            /* Πράσινη μπάρα επικεφαλίδας (Header Banner) */
-            .top-green-header {
-                background-color: #1e6b37;
-                border-radius: 8px;
-                padding: 10px 15px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 15px;
-            }
-            .top-green-header-left {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
-            .top-green-header-title {
-                color: #ffffff !important;
-                font-weight: bold !important;
-                font-size: 1.1rem !important;
-                margin: 0 !important;
-                font-family: 'Source Sans Pro', sans-serif;
-            }
-            .top-green-header-page {
-                color: #ffffff !important;
-                font-weight: bold !important;
-                font-size: 1.1rem !important;
-                margin: 0 !important;
-                font-family: 'Source Sans Pro', sans-serif;
-                text-transform: uppercase;
-            }
-
-            /* Ρυθμίσεις για τα κουμπιά στη γραμμή πλοήγησης */
             div[data-testid="stColumn"] {
                 background-color: transparent !important;
                 box-shadow: none !important;
@@ -57,15 +25,15 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         </style>
     """, unsafe_allow_html=True)
 
-    # --- 1. ΠΡΑΣΙΝΗ ΜΠΑΡΑ ΕΠΙΚΕΦΑΛΙΔΑΣ (LOGO + ΤΙΤΛΟΣ) ---
+    # --- 1. ΜΙΑ ΚΑΙ ΜΟΝΑΔΙΚΗ ΠΡΑΣΙΝΗ ΜΠΑΡΑ ΕΠΙΚΕΦΑΛΙΔΑΣ (LOGO + ΤΙΤΛΟΣ) ---
     st.markdown("""
-        <div class="top-green-header">
-            <div class="top-green-header-left">
+        <div style="background-color: #1e6b37; border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
                 <span style="background-color: #1a237e; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem;">ΙΜΑΤΙΟ</span>
-                <p class="top-green-header-title">ΙΜΑΤΙΟ-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</p>
+                <p style="color: #ffffff !important; font-weight: bold !important; font-size: 1.1rem !important; margin: 0 !important; font-family: 'Source Sans Pro', sans-serif;">ΙΜΑΤΙΟ-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</p>
             </div>
             <div>
-                <p class="top-green-header-page">ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ</p>
+                <p style="color: #ffffff !important; font-weight: bold !important; font-size: 1.1rem !important; margin: 0 !important; font-family: 'Source Sans Pro', sans-serif; text-transform: uppercase;">ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ</p>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -120,7 +88,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
             st.rerun()
 
     with col_space:
-        # Κενός χώρος στη μέση για να διατηρηθούν τα κουμπιά συμμαζεμένα στα άκρα
+        # Διατηρούμε τον κενό χώρο στη μέση για να είναι τα κουμπιά συμμαζεμένα στα άκρα
         pass
 
     with col_btn:

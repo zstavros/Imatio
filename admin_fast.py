@@ -25,19 +25,6 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         </style>
     """, unsafe_allow_html=True)
 
-    # --- 1. ΜΙΑ ΚΑΙ ΜΟΝΑΔΙΚΗ ΠΡΑΣΙΝΗ ΜΠΑΡΑ ΕΠΙΚΕΦΑΛΙΔΑΣ (LOGO + ΤΙΤΛΟΣ) ---
-    st.markdown("""
-        <div style="background-color: #1e6b37; border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="background-color: #1a237e; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem;">ΙΜΑΤΙΟ</span>
-                <p style="color: #ffffff !important; font-weight: bold !important; font-size: 1.1rem !important; margin: 0 !important; font-family: 'Source Sans Pro', sans-serif;">ΙΜΑΤΙΟ-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</p>
-            </div>
-            <div>
-                <p style="color: #ffffff !important; font-weight: bold !important; font-size: 1.1rem !important; margin: 0 !important; font-family: 'Source Sans Pro', sans-serif; text-transform: uppercase;">ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ</p>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
     if not df_customers.empty:
         df_customers.columns = df_customers.columns.str.strip()
 
@@ -79,7 +66,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
     item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
 
-    # --- 2. ΓΡΑΜΜΗ ΚΟΥΜΠΙΩΝ: ΑΡΧΙΚΗ & ΑΠΟΘΗΚΕΥΣΗ ---
+    # --- ΓΡΑΜΜΗ ΚΟΥΜΠΙΩΝ: ΑΡΧΙΚΗ & ΑΠΟΘΗΚΕΥΣΗ ---
     col_nav, col_space, col_btn = st.columns([1, 1, 1])
 
     with col_nav:
@@ -88,7 +75,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
             st.rerun()
 
     with col_space:
-        # Διατηρούμε τον κενό χώρο στη μέση για να είναι τα κουμπιά συμμαζεμένα στα άκρα
+        # Κενός χώρος στη μέση για να διατηρηθούν τα κουμπιά συμμαζεμένα στα άκρα
         pass
 
     with col_btn:
@@ -96,7 +83,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
 
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
-    # --- 3. ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ---
+    # --- ΦΟΡΜΑ ΚΑΤΑΧΩΡΗΣΗΣ ---
     selected_customer_str = st.selectbox("Επιλογή Πελάτη", cust_choices, key="fast_load_cust")
 
     c1, c2 = st.columns(2)

@@ -171,7 +171,7 @@ def get_base64_image(image_path):
 
 logo_b64 = get_base64_image("logo.png")
 
-# CSS update για flex layout με space-between
+# CSS update για ομοιόμορφη στοίχιση και ίδια γραμματοσειρά
 st.markdown("""
     <style>
         .brand-header {
@@ -188,14 +188,6 @@ st.markdown("""
             align-items: center !important;
             gap: 15px !important;
         }
-        .brand-page-title {
-            font-size: 1.2rem !important;
-            font-weight: 800 !important;
-            color: #ffffff !important;
-            margin: 0 !important;
-            text-transform: uppercase !important;
-            font-family: 'Source Sans Pro', sans-serif;
-        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -207,7 +199,7 @@ if logo_b64:
                 <span class="brand-title">IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
             </div>
             <div>
-                <span class="brand-page-title">{current_page_title}</span>
+                <span class="brand-title">{current_page_title}</span>
             </div>
         </div>
     """
@@ -219,7 +211,7 @@ else:
                 <span class="brand-title">IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
             </div>
             <div>
-                <span class="brand-page-title">{current_page_title}</span>
+                <span class="brand-title">{current_page_title}</span>
             </div>
         </div>
     """

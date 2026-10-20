@@ -55,15 +55,37 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
             else:
                 cust_choices.append(str(val))
 
-    col_name_key = None
+    # --- ΦΙΛΤΡΑΡΙΣΜΑ ΕΙΔΩΝ ΜΟΝΟ ΓΙΑ "Χαλιά" ---
+    raw_items = []
     if not df_items.empty:
         df_items.columns = df_items.columns.str.strip()
+        
+        # Εντοπισμός στήλης ονόματος είδους
+        col_name_key = None
         for ik in ['ItName', 'Name', 'ItemName']:
             if ik in df_items.columns:
                 col_name_key = ik
                 break
+                
+        # Εντοπισμός στήλης Category
+        col_cat_key = None
+        for ck in ['Category', 'CAT', 'CategoryName']:
+            if ck in df_items.columns:
+                col_cat_key = ck
+                break
 
-    raw_items = df_items[col_name_key].dropna().tolist() if not df_items.empty and col_name_key else ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
+        if col_name_key:
+            if col_cat_key:
+                # Φιλτράρισμα όπου η κατηγορία είναι "Χαλιά" (χωρίς διάκριση πεζών/κεφαλαίων)
+                filtered_df = df_items[df_items[col_cat_key].astype(str).str.strip().str.lower() == "χαλιά"]
+                raw_items = filtered_df[col_name_key].dropna().tolist()
+            else:
+                # Αν δεν βρεθεί η στήλη Category, παίρνει τα πάντα προληπτικά
+                raw_items = df_items[col_name_key].dropna().tolist()
+
+    if not raw_items:
+        raw_items = ["Χαλί Μηχανής", "Χαλί Χειροποίητο", "Μοκέτα"]
+
     item_choices = ["-- Επιλέξτε Είδος Χαλιού --"] + raw_items
 
     # --- ΓΡΑΜΜΗ ΚΟΥΜΠΙΩΝ: ΑΡΧΙΚΗ & ΑΠΟΘΗΚΕΥΣΗ ---
@@ -75,7 +97,6 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
             st.rerun()
 
     with col_space:
-        # Κενός χώρος στη μέση για να διατηρηθούν τα κουμπιά συμμαζεμένα στα άκρα
         pass
 
     with col_btn:

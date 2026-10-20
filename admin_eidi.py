@@ -4,7 +4,7 @@ from datetime import datetime
 
 STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη", "Έτοιμο", "Παραδόθηκε"]
 
-# --- ENIAIO CSS STYLING XΩΡΙΣ ΕΞΩΤΕΡΙΚΑ ΚΕΝΑ ---
+# --- ENIAIO CSS STYLING GIA OMOIOMORFIA KOUMPIWN ---
 st.markdown("""
     <style>
         .stButton > button {
@@ -13,11 +13,11 @@ st.markdown("""
             border-radius: 8px !important;
             border: none !important;
             font-weight: 500 !important;
+            height: 42px !important;
         }
         .stButton > button:hover {
             background-color: #28334f !important;
         }
-        /* Αφαιρούμε τα επιπλέον κενά από τα containers */
         div[data-testid="stVerticalBlock"] > div {
             gap: 0.4rem !important;
         }
@@ -26,9 +26,12 @@ st.markdown("""
 
 # --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia) ---
 def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
-    if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_xalia"):
-        st.session_state['active_subview'] = 'menu'
-        st.rerun()
+    # Koumpi ARXIKI sto idio stil kai megethos me tin nea eggrafi
+    col_nav, col_space = st.columns([1, 2])
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_xalia", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
 
     st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Χαλιών (TrXalia)")
     
@@ -115,7 +118,6 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
         prefix_icon = "🟢 [ΕΤΟΙΜΟ] " if is_etoimo else "📌 "
         expander_label = f"{prefix_icon}ID: #{tr_id} | {c_name} ({phone_show}) | Barcode: {code_val} | Θέση: {place_val} | Τιμή: {price_val}€ | Κατάσταση: {status_val} | {item_name}"
 
-        # Καθαρή εμφάνιση χωρίς έξτρα containers που μεγαλώνουν τα κενά
         with st.expander(expander_label):
             col1, col2, col3, col4, col5 = st.columns(5)
             
@@ -135,7 +137,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                     key=f"st_x_{tr_id}_{idx}"
                 )
 
-            if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_x_{tr_id}_{idx}", type="primary"):
+            if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_x_{tr_id}_{idx}", type="primary", use_container_width=True):
                 try:
                     id_col = ws.col_values(1)
                     sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
@@ -161,9 +163,11 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
 
 # --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrEidi) ---
 def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
-    if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_items"):
-        st.session_state['active_subview'] = 'menu'
-        st.rerun()
+    col_nav, col_space = st.columns([1, 2])
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_items", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
 
     st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Ρούχων / Ειδών (TrEidi)")
     
@@ -246,7 +250,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                     key=f"st_it_{tr_id}_{idx}"
                 )
 
-            if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_it_{tr_id}_{idx}", type="primary"):
+            if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_it_{tr_id}_{idx}", type="primary", use_container_width=True):
                 try:
                     id_col = ws.col_values(1)
                     sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
@@ -269,9 +273,11 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
 
 # --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---
 def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
-    if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item"):
-        st.session_state['active_subview'] = 'menu'
-        st.rerun()
+    col_nav, col_space = st.columns([1, 2])
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
 
     st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
     
@@ -292,7 +298,7 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
         price = st.number_input("Τιμή (€)", min_value=0.0, step=0.5)
         status = st.selectbox("Εργασία / Κατάσταση", ["Πλύσιμο", "Στεγνό Καθάρισμα", "Σιδέρωμα"])
 
-        submitted = st.form_submit_button("💾 Αποθήκευση Είδους", type="primary")
+        submitted = st.form_submit_button("💾 Αποθήκευση Είδους", type="primary", use_container_width=True)
 
     if submitted:
         if sel_cust == "-- Επιλέξτε Πελάτη --" or sel_item == "-- Επιλέξτε Είδος --":

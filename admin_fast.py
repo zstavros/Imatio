@@ -60,14 +60,12 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
     if not df_items.empty:
         df_items.columns = df_items.columns.str.strip()
         
-        # Εντοπισμός στήλης ονόματος είδους
         col_name_key = None
         for ik in ['ItName', 'Name', 'ItemName']:
             if ik in df_items.columns:
                 col_name_key = ik
                 break
                 
-        # Εντοπισμός στήλης Category
         col_cat_key = None
         for ck in ['Category', 'CAT', 'CategoryName']:
             if ck in df_items.columns:
@@ -76,11 +74,9 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
 
         if col_name_key:
             if col_cat_key:
-                # Φιλτράρισμα όπου η κατηγορία είναι "Χαλιά" (χωρίς διάκριση πεζών/κεφαλαίων)
                 filtered_df = df_items[df_items[col_cat_key].astype(str).str.strip().str.lower() == "χαλιά"]
                 raw_items = filtered_df[col_name_key].dropna().tolist()
             else:
-                # Αν δεν βρεθεί η στήλη Category, παίρνει τα πάντα προληπτικά
                 raw_items = df_items[col_name_key].dropna().tolist()
 
     if not raw_items:
@@ -134,33 +130,38 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 existing_data = ws_xalia.get_all_records()
                 df_xalia = pd.DataFrame(existing_data)
                 
+                # Βρίσκουμε την τρέχουσα μέγιστη τιμή TransactionID για να συνεχίσουμε αυξανόμενα
+                current_max_id = 0
                 if not df_xalia.empty and 'TransactionID' in df_xalia.columns:
-                    df_xalia['TransactionID'] = pd.to_numeric(df_xalia['TransactionID'], errors='coerce')
-                    next_trans_id = int(df_xalia['TransactionID'].max()) + 1 if not df_xalia['TransactionID'].dropna().empty else 1
-                else:
-                    next_trans_id = 1
+                    ids = pd.to_numeric(df_xalia['TransactionID'], errors='coerce').dropna()
+                    if not ids.empty:
+                        current_max_id = int(ids.max())
 
                 rows_to_append = []
                 added_count = 0
+                
+                # Δημιουργία ξεχωριστού ID για κάθε μεμονωμένο χαλί/κωδικό
                 for current_code in range(int(from_code), int(to_code) + 1):
+                    current_max_id += 1  # ⬅️ Κάθε αντικείμενο παίρνει εντελώς μοναδικό, αυξανόμενο ID!
+                    
                     rows_to_append.append([
-                        next_trans_id,            
-                        cust_name_clean,          
-                        selected_item,            
-                        str(current_code),        
-                        "", "", "", "",           
-                        "Αποθήκη (Προσωρινό)",    
-                        today_str,                
-                        "",                       
-                        0.0,                      
-                        job_type                  
+                        current_max_id,         # TransactionID (Μοναδικό)
+                        cust_name_clean,        # CustomerName
+                        selected_item,          # ItName
+                        str(current_code),      # Code (Barcode)
+                        "", "", "", "",         # Length, Height, κλπ.
+                        "Αποθήκη (Προσωρινό)",   # Place / Θέση
+                        today_str,              # DateIn
+                        "",                     # DateOut
+                        0.0,                    # TotalPrice
+                        job_type                # Status
                     ])
                     added_count += 1
 
                 if rows_to_append:
                     ws_xalia.append_rows(rows_to_append)
 
-                st.success(f"✅ Φορτώθηκαν επιτυχώς {added_count} τεμάχια (Κωδικοί από {from_code} έως {to_code})!")
+                st.success(f"✅ Φορτώθηκαν επιτυχώς {added_count} τεμάχια με μοναδικά ID (Κωδικοί από {from_code} έως {to_code})!")
                 st.session_state['active_subview'] = 'menu'
                 st.rerun()
                 

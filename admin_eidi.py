@@ -6,16 +6,21 @@ STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξ
 
 # --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia) ---
 def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
+    # Koumpi Epistrofis stin Arhiki
+    if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=False, key="back_home_xalia"):
+        st.session_state['active_subview'] = 'menu'
+        st.rerun()
+
     st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Χαλιών (TrXalia)")
     
     if df_xalia.empty:
         st.info("Δεν βρέθηκαν εγγραφές στα Χαλιά.")
         return
 
-    # 1. Εξαιρούμε οριστικά όσες εγγραφές είναι "Παραδόθηκε"
+    # 1. Exairoume oristika oses eggrafes einai "Παραδόθηκε"
     df_active = df_xalia[df_xalia['Status'] != 'Παραδόθηκε'].copy()
     
-    # 2. Φιλτράρισμα με τη στήλη Category από τα Items
+    # 2. Filtarisma me ti stili Category apo ta Items
     if not df_items.empty:
         df_items.columns = df_items.columns.str.strip()
         
@@ -36,10 +41,10 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
         st.success("🎉 Δεν υπάρχουν εκκρεμότητες στα χαλιά!")
         return
 
-    # Πεδίο Αναζήτησης
+    # Pedio Anazitisis
     search_query = st.text_input("🔎 Αναζήτηση με Όνομα Πελάτη, Κινητό/Τηλέφωνο ή Barcode:", key="search_xalia_input")
 
-    # 3. Ετοιμάζουμε τα τηλέφωνα πελατών (CuPhone & CuMobile) καθαρίζοντας κενά και παύλες
+    # 3.etoimzoume ta tilefona pelaton
     cust_phone_map = {}
     if not df_customers.empty:
         df_cust_copy = df_customers.copy()
@@ -57,7 +62,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                             phones.append(clean_p)
                 cust_phone_map[cust_name] = " ".join(phones)
 
-    # 4. Εκτέλεση Αναζήτησης
+    # 4. Ektelesi Anazitisis
     if search_query:
         q_raw = search_query.strip().lower()
         q_clean_num = q_raw.replace(" ", "").replace("-", "").replace("+", "").replace("(", "").replace(")", "")
@@ -84,7 +89,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
     st.write(f"Βρέθηκαν **{len(df_filtered)}** ενεργές εγγραφές:")
     ws = get_worksheet_fn("TrXalia")
 
-    # 5. Εμφάνιση εγγραφών
+    # 5. Emfanisi eggrafon me dinamiko background an einai "Έτοιμο"
     for idx, row in df_filtered.iterrows():
         tr_id = str(row['TransactionID'])
         c_name = row.get('CustomerName', 'Άγνωστος')
@@ -93,8 +98,25 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
         status_val = row.get('Status', '-')
         item_name = row.get('ItName', '')
         phone_show = cust_phone_map.get(c_name, '-')
+        
+        try:
+            price_val = float(row.get('TotalPrice', 0.0))
+        except:
+            price_val = 0.0
 
-        expander_label = f"📌 ID: #{tr_id} | {c_name} ({phone_show}) | Barcode: {code_val} | Θέση: {place_val} | Κατάσταση: {status_val} | {item_name}"
+        expander_label = f"📌 ID: #{tr_id} | {c_name} ({phone_show}) | Barcode: {code_val} | Θέση: {place_val} | Τιμή: {price_val}€ | Κατάσταση: {status_val} | {item_name}"
+
+        # An einai Etoimo, bazoume custom CSS gia to background xroma ton koumpion (#36456b)
+        is_etoimo = (status_val == "Έτοιμο")
+        if is_etoimo:
+            st.markdown("""
+                <style>
+                div[data-testid="stExpander"] {
+                    background-color: #36456b !important;
+                    border-radius: 8px !important;
+                }
+                </style>
+            """, unsafe_allow_html=True)
 
         with st.expander(expander_label):
             col1, col2, col3, col4, col5 = st.columns(5)
@@ -106,11 +128,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
             with col3:
                 new_place = st.text_input("Θέση", value=str(place_val), key=f"plc_{tr_id}_{idx}")
             with col4:
-                try:
-                    curr_pr = float(row.get('TotalPrice', 0.0))
-                except:
-                    curr_pr = 0.0
-                new_price = st.number_input("Τιμή (€)", value=curr_pr, step=1.0, key=f"prc_{tr_id}_{idx}")
+                new_price = st.number_input("Τιμή (€)", value=price_val, step=1.0, key=f"prc_{tr_id}_{idx}")
             with col5:
                 curr_st = row.get('Status', STATUS_OPTIONS[0])
                 new_st = st.selectbox(
@@ -121,7 +139,6 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
 
             if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_x_{tr_id}_{idx}", type="primary"):
                 try:
-                    # Εντοπισμός γραμμής με βάση το μοναδικό TransactionID
                     id_col = ws.col_values(1)
                     if tr_id in id_col:
                         sheet_row = id_col.index(tr_id) + 1
@@ -145,7 +162,6 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                         if new_st == "Παραδόθηκε" and "DateOut" in cols:
                             ws.update_cell(sheet_row, cols.index("DateOut") + 1, datetime.now().strftime("%Y-%m-%d %H:%M"))
 
-                    # Άμεση επαναφόρτωση δεδομένων από το Google Sheet
                     updated_data = ws.get_all_records()
                     st.session_state['df_tr_xalia'] = pd.DataFrame(updated_data) if updated_data else pd.DataFrame()
                     
@@ -157,6 +173,10 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
 
 # --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrEidi) ---
 def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
+    if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=False, key="back_home_items"):
+        st.session_state['active_subview'] = 'menu'
+        st.rerun()
+
     st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Ρούχων / Ειδών (TrEidi)")
     
     if df_items_trans.empty:
@@ -214,8 +234,24 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         phone_show = cust_phone_map.get(c_name, '-')
         shelf_val = row.get('Shelf', row.get('Place', '-'))
         status_val = row.get('Status', '-')
+        
+        try:
+            curr_pr = float(row.get('TotalPrice', 0.0))
+        except:
+            curr_pr = 0.0
 
-        expander_label = f"👕 ID: #{tr_id} | {c_name} ({phone_show}) | Θέση: {shelf_val} | Κατάσταση: {status_val} | {row.get('ItName', '')}"
+        expander_label = f"👕 ID: #{tr_id} | {c_name} ({phone_show}) | Θέση: {shelf_val} | Τιμή: {curr_pr}€ | Κατάσταση: {status_val} | {row.get('ItName', '')}"
+
+        is_etoimo = (status_val == "Έτοιμο")
+        if is_etoimo:
+            st.markdown("""
+                <style>
+                div[data-testid="stExpander"] {
+                    background-color: #36456b !important;
+                    border-radius: 8px !important;
+                }
+                </style>
+            """, unsafe_allow_html=True)
 
         with st.expander(expander_label):
             col1, col2, col3 = st.columns(3)
@@ -223,10 +259,6 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
             with col1:
                 new_shelf = st.text_input("Ράφι / Θέση (Shelf)", value=str(shelf_val), key=f"shf_{tr_id}_{idx}")
             with col2:
-                try:
-                    curr_pr = float(row.get('TotalPrice', 0.0))
-                except:
-                    curr_pr = 0.0
                 new_price = st.number_input("Τιμή (€)", value=curr_pr, step=1.0, key=f"prc_it_{tr_id}_{idx}")
             with col3:
                 curr_st = row.get('Status', STATUS_OPTIONS[0])
@@ -267,6 +299,10 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
 
 # --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---
 def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
+    if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=False, key="back_home_load_item"):
+        st.session_state['active_subview'] = 'menu'
+        st.rerun()
+
     st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
     
     if df_customers.empty:
@@ -297,7 +333,6 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
                 data = ws.get_all_records()
                 df = pd.DataFrame(data)
                 
-                # Υπολογισμός ΠΑΝΤΑ νέου μοναδικού TransactionID για κάθε μεμονωμένο είδος
                 next_id = 1
                 if not df.empty and 'TransactionID' in df.columns:
                     ids = pd.to_numeric(df['TransactionID'], errors='coerce').dropna()

@@ -5,18 +5,37 @@ from datetime import datetime
 STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη", "Έτοιμο", "Παραδόθηκε"]
 
 # --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia) ---
-def render_edit_xalia_tab(df_xalia, df_customers, get_worksheet_fn):
+def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
     st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Χαλιών (TrXalia)")
     
     if df_xalia.empty:
         st.info("Δεν βρέθηκαν εγγραφές στα Χαλιά.")
         return
 
-    # Εξαιρούμε οριστικά όσες εγγραφές είναι "Παραδόθηκε"
+    # 1. Εξαιρούμε οριστικά όσες εγγραφές είναι "Παραδόθηκε"
     df_active = df_xalia[df_xalia['Status'] != 'Παραδόθηκε'].copy()
     
+    # 2. ΦΙΛΤΡΑΡΙΣΜΑ ΜΕ ΤΗ ΣΤΗΛΗ CATEGORY
+    if not df_items.empty:
+        df_items.columns = df_items.columns.str.strip()
+        
+        col_name_key = next((ik for ik in ['ItName', 'Name', 'ItemName'] if ik in df_items.columns), None)
+        col_cat_key = next((ck for ck in ['Category', 'CAT', 'CategoryName'] if ck in df_items.columns), None)
+        
+        if col_name_key and col_cat_key:
+            # Βρίσκουμε όλα τα ονόματα ειδών που έχουν Category = "Χαλιά"
+            xalia_items_list = df_items[
+                df_items[col_cat_key].astype(str).str.strip().str.lower() == "χαλιά"
+            ][col_name_key].dropna().astype(str).str.strip().tolist()
+            
+            if xalia_items_list:
+                # Κρατάμε μόνο τις εγγραφές των οποίων το ItName είναι στην κατηγορία Χαλιά
+                df_active = df_active[
+                    df_active['ItName'].astype(str).str.strip().isin(xalia_items_list)
+                ]
+
     if df_active.empty:
-        st.success("🎉 Δεν υπάρχουν εκκρεμότητες! Όλα τα χαλιά έχουν παραδοθεί.")
+        st.success("🎉 Δεν υπάρχουν εκκρεμότητες στα χαλιά!")
         return
 
     # Πεδίο Αναζήτησης
@@ -33,7 +52,6 @@ def render_edit_xalia_tab(df_xalia, df_customers, get_worksheet_fn):
     if search_query:
         q = search_query.strip().lower()
         
-        # Φιλτράρισμα με CustomerName, Code και Τηλέφωνο
         def match_row(row):
             c_name = str(row.get('CustomerName', '')).lower()
             code_val = str(row.get('Code', '')).lower()
@@ -81,7 +99,6 @@ def render_edit_xalia_tab(df_xalia, df_customers, get_worksheet_fn):
 
             if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_x_{tr_id}_{idx}", type="primary"):
                 try:
-                    # Ασφαλής εύρεση πραγματικής γραμμής στο Google Sheet μέσω TransactionID
                     id_col = ws.col_values(1)
                     if tr_id in id_col:
                         sheet_row = id_col.index(tr_id) + 1
@@ -115,14 +132,12 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         st.info("Δεν βρέθηκαν εγγραφές στα Ρούχα.")
         return
 
-    # Εξαιρούμε τα "Παραδόθηκε"
     df_active = df_items_trans[df_items_trans['Status'] != 'Παραδόθηκε'].copy()
     
     if df_active.empty:
         st.success("🎉 Δεν υπάρχουν εκκρεμότητες στα ρούχα!")
         return
 
-    # Πεδίο Αναζήτησης
     search_query = st.text_input("🔎 Αναζήτηση με Όνομα Πελάτη ή Κινητό:", key="search_items_input")
 
     cust_phone_map = {}

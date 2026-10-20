@@ -288,9 +288,9 @@ elif st.session_state['active_subview'] == 'edit_xalia':
     admin_eidi.render_edit_xalia_tab(
         st.session_state.get('df_tr_xalia', pd.DataFrame()),
         st.session_state.get('df_customers', pd.DataFrame()),
+        st.session_state.get('df_items', pd.DataFrame()),  # <--- Προστέθηκε αυτό
         get_worksheet
     )
-
 # 4. ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ
 elif st.session_state['active_subview'] == 'item_loading':
     admin_eidi.render_item_loading_tab(

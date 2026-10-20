@@ -23,7 +23,6 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
         col_cat_key = next((ck for ck in ['Category', 'CAT', 'CategoryName'] if ck in df_items.columns), None)
         
         if col_name_key and col_cat_key:
-            # Βρίσκουμε όλα τα ονόματα ειδών που ανήκουν στην κατηγορία "Χαλιά"
             xalia_items_list = df_items[
                 df_items[col_cat_key].astype(str).str.strip().str.lower() == "χαλιά"
             ][col_name_key].dropna().astype(str).str.strip().tolist()
@@ -96,23 +95,24 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
         item_name = row.get('ItName', '')
         phone_show = cust_phone_map.get(c_name, '-')
 
-        # Διαμόρφωση τίτλου: Αφαίρεση "Πελάτης:", αλλαγή "Κωδικός" σε "Barcode", προσθήκη Θέσης & Κατάστασης
         expander_label = f"📌 ID: #{tr_id} | {c_name} ({phone_show}) | Barcode: {code_val} | Θέση: {place_val} | Κατάσταση: {status_val} | {item_name}"
 
         with st.expander(expander_label):
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4, col5 = st.columns(5)
             
             with col1:
                 new_len = st.text_input("Μήκος (m)", value=str(row.get('Length', '')), key=f"len_{tr_id}_{idx}")
             with col2:
                 new_hei = st.text_input("Ύψος (m)", value=str(row.get('Height', '')), key=f"hei_{tr_id}_{idx}")
             with col3:
+                new_place = st.text_input("Θέση", value=str(place_val), key=f"plc_{tr_id}_{idx}")
+            with col4:
                 try:
                     curr_pr = float(row.get('TotalPrice', 0.0))
                 except:
                     curr_pr = 0.0
                 new_price = st.number_input("Τιμή (€)", value=curr_pr, step=1.0, key=f"prc_{tr_id}_{idx}")
-            with col4:
+            with col5:
                 curr_st = row.get('Status', STATUS_OPTIONS[0])
                 new_st = st.selectbox(
                     "Κατάσταση", STATUS_OPTIONS,
@@ -133,6 +133,12 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                         ws.update_cell(sheet_row, cols.index("Length") + 1, new_len)
                     if "Height" in cols:
                         ws.update_cell(sheet_row, cols.index("Height") + 1, new_hei)
+                    
+                    # Ενημέρωση στήλης Θέσης (Place ή Shelf)
+                    place_col_name = "Place" if "Place" in cols else ("Shelf" if "Shelf" in cols else None)
+                    if place_col_name:
+                        ws.update_cell(sheet_row, cols.index(place_col_name) + 1, new_place)
+
                     if "TotalPrice" in cols:
                         ws.update_cell(sheet_row, cols.index("TotalPrice") + 1, new_price)
                     if "Status" in cols:

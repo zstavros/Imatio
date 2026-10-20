@@ -121,16 +121,11 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
 
             if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_x_{tr_id}_{idx}", type="primary"):
                 try:
-                    # Ακριβής εντοπισμός γραμμής συνδυάζοντας TransactionID ΚΑΙ Code (Barcode)
-                    all_records = ws.get_all_records()
-                    sheet_row = -1
-                    
-                    for r_idx, sheet_r in enumerate(all_records):
-                        if str(sheet_r.get('TransactionID', '')) == tr_id and str(sheet_r.get('Code', '')) == code_val:
-                            sheet_row = r_idx + 2  # +2 λόγω επικεφαλίδας
-                            break
-                    
-                    if sheet_row == -1:
+                    # Εντοπισμός γραμμής με βάση το μοναδικό TransactionID
+                    id_col = ws.col_values(1)
+                    if tr_id in id_col:
+                        sheet_row = id_col.index(tr_id) + 1
+                    else:
                         sheet_row = idx + 2
 
                     cols = df_xalia.columns.tolist()
@@ -150,11 +145,11 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                         if new_st == "Παραδόθηκε" and "DateOut" in cols:
                             ws.update_cell(sheet_row, cols.index("DateOut") + 1, datetime.now().strftime("%Y-%m-%d %H:%M"))
 
-                    # Άμεση επαναφόρτωση δεδομένων από Google Sheet
+                    # Άμεση επαναφόρτωση δεδομένων από το Google Sheet
                     updated_data = ws.get_all_records()
                     st.session_state['df_tr_xalia'] = pd.DataFrame(updated_data) if updated_data else pd.DataFrame()
                     
-                    st.success("✅ Η ενημέρωση έγινε επιτυχώς στη σωστή εγγραφή!")
+                    st.success("✅ Η ενημέρωση έγινε επιτυχώς!")
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Σφάλμα αποθήκευσης: {e}")
@@ -243,13 +238,10 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
 
             if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_it_{tr_id}_{idx}", type="primary"):
                 try:
-                    all_records = ws.get_all_records()
-                    sheet_row = -1
-                    for r_idx, sheet_r in enumerate(all_records):
-                        if str(sheet_r.get('TransactionID', '')) == tr_id:
-                            sheet_row = r_idx + 2
-                            break
-                    if sheet_row == -1:
+                    id_col = ws.col_values(1)
+                    if tr_id in id_col:
+                        sheet_row = id_col.index(tr_id) + 1
+                    else:
                         sheet_row = idx + 2
 
                     cols = df_items_trans.columns.tolist()
@@ -305,7 +297,7 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
                 data = ws.get_all_records()
                 df = pd.DataFrame(data)
                 
-                # Υπολογισμός ΠΑΝΤΑ νέου μοναδικού TransactionID
+                # Υπολογισμός ΠΑΝΤΑ νέου μοναδικού TransactionID για κάθε μεμονωμένο είδος
                 next_id = 1
                 if not df.empty and 'TransactionID' in df.columns:
                     ids = pd.to_numeric(df['TransactionID'], errors='coerce').dropna()

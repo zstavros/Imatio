@@ -4,7 +4,7 @@ from datetime import datetime
 
 STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη", "Έτοιμο", "Παραδόθηκε"]
 
-# --- ENIAIO CSS STYLING GIA OMOIOMORFIA ---
+# --- ENIAIO CSS STYLING GIA OMOIOMORFIA & ETOIMA ---
 st.markdown("""
     <style>
         .stButton > button {
@@ -16,6 +16,12 @@ st.markdown("""
         }
         .stButton > button:hover {
             background-color: #28334f !important;
+        }
+        /* Δυναμικό στιλ για τα expanders που είναι Έτοιμα */
+        .etoimo-expander div[data-testid="stExpander"] {
+            background-color: #1b6338 !important;
+            border: 2px solid #27ae60 !important;
+            border-radius: 8px !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -107,56 +113,60 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
         except:
             price_val = 0.0
 
-        expander_label = f"📌 ID: #{tr_id} | {c_name} ({phone_show}) | Barcode: {code_val} | Θέση: {place_val} | Τιμή: {price_val}€ | Κατάσταση: {status_val} | {item_name}"
-
         is_etoimo = (status_val == "Έτοιμο")
-        
-        # Εφαρμογή δυναμικού background χρώματος (Πράσινο #1b6338 αν είναι Έτοιμο)
-        box_style = "background-color: #1b6338; padding: 6px; border-radius: 8px; margin-bottom: 8px;" if is_etoimo else "margin-bottom: 8px;"
-        
-        st.markdown(f'<div style="{box_style}">', unsafe_allow_html=True)
-        with st.expander(expander_label):
-            col1, col2, col3, col4, col5 = st.columns(5)
+        prefix_icon = "🟢 [ΕΤΟΙΜΟ] " if is_etoimo else "📌 "
+        expander_label = f"{prefix_icon}ID: #{tr_id} | {c_name} ({phone_show}) | Barcode: {code_val} | Θέση: {place_val} | Τιμή: {price_val}€ | Κατάσταση: {status_val} | {item_name}"
+
+        # Χρήση container με κλάση αν είναι έτοιμο
+        container_class = "etoimo-expander" if is_etoimo else ""
+        with st.container():
+            if is_etoimo:
+                st.markdown(f'<div class="{container_class}">', unsafe_allow_html=True)
             
-            with col1:
-                new_len = st.text_input("Μήκος (m)", value=str(row.get('Length', '')), key=f"len_{tr_id}_{idx}")
-            with col2:
-                new_hei = st.text_input("Ύψος (m)", value=str(row.get('Height', '')), key=f"hei_{tr_id}_{idx}")
-            with col3:
-                new_place = st.text_input("Θέση", value=str(place_val), key=f"plc_{tr_id}_{idx}")
-            with col4:
-                new_price = st.number_input("Τιμή (€)", value=price_val, step=1.0, key=f"prc_{tr_id}_{idx}")
-            with col5:
-                curr_st = row.get('Status', STATUS_OPTIONS[0])
-                new_st = st.selectbox(
-                    "Κατάσταση", STATUS_OPTIONS,
-                    index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 0,
-                    key=f"st_x_{tr_id}_{idx}"
-                )
+            with st.expander(expander_label):
+                col1, col2, col3, col4, col5 = st.columns(5)
+                
+                with col1:
+                    new_len = st.text_input("Μήκος (m)", value=str(row.get('Length', '')), key=f"len_{tr_id}_{idx}")
+                with col2:
+                    new_hei = st.text_input("Ύψος (m)", value=str(row.get('Height', '')), key=f"hei_{tr_id}_{idx}")
+                with col3:
+                    new_place = st.text_input("Θέση", value=str(place_val), key=f"plc_{tr_id}_{idx}")
+                with col4:
+                    new_price = st.number_input("Τιμή (€)", value=price_val, step=1.0, key=f"prc_{tr_id}_{idx}")
+                with col5:
+                    curr_st = row.get('Status', STATUS_OPTIONS[0])
+                    new_st = st.selectbox(
+                        "Κατάσταση", STATUS_OPTIONS,
+                        index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 0,
+                        key=f"st_x_{tr_id}_{idx}"
+                    )
 
-            if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_x_{tr_id}_{idx}", type="primary"):
-                try:
-                    id_col = ws.col_values(1)
-                    sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
-                    cols = df_xalia.columns.tolist()
+                if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_x_{tr_id}_{idx}", type="primary"):
+                    try:
+                        id_col = ws.col_values(1)
+                        sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
+                        cols = df_xalia.columns.tolist()
 
-                    if "Length" in cols: ws.update_cell(sheet_row, cols.index("Length") + 1, new_len)
-                    if "Height" in cols: ws.update_cell(sheet_row, cols.index("Height") + 1, new_hei)
-                    
-                    place_col_name = "Place" if "Place" in cols else ("Shelf" if "Shelf" in cols else None)
-                    if place_col_name: ws.update_cell(sheet_row, cols.index(place_col_name) + 1, new_place)
-                    if "TotalPrice" in cols: ws.update_cell(sheet_row, cols.index("TotalPrice") + 1, new_price)
-                    if "Status" in cols:
-                        ws.update_cell(sheet_row, cols.index("Status") + 1, new_st)
-                        if new_st == "Παραδόθηκε" and "DateOut" in cols:
-                            ws.update_cell(sheet_row, cols.index("DateOut") + 1, datetime.now().strftime("%Y-%m-%d %H:%M"))
+                        if "Length" in cols: ws.update_cell(sheet_row, cols.index("Length") + 1, new_len)
+                        if "Height" in cols: ws.update_cell(sheet_row, cols.index("Height") + 1, new_hei)
+                        
+                        place_col_name = "Place" if "Place" in cols else ("Shelf" if "Shelf" in cols else None)
+                        if place_col_name: ws.update_cell(sheet_row, cols.index(place_col_name) + 1, new_place)
+                        if "TotalPrice" in cols: ws.update_cell(sheet_row, cols.index("TotalPrice") + 1, new_price)
+                        if "Status" in cols:
+                            ws.update_cell(sheet_row, cols.index("Status") + 1, new_st)
+                            if new_st == "Παραδόθηκε" and "DateOut" in cols:
+                                ws.update_cell(sheet_row, cols.index("DateOut") + 1, datetime.now().strftime("%Y-%m-%d %H:%M"))
 
-                    st.session_state['df_tr_xalia'] = pd.DataFrame(ws.get_all_records())
-                    st.success("✅ Επιτυχής ενημέρωση!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ Σφάλμα: {e}")
-        st.markdown('</div>', unsafe_allow_html=True)
+                        st.session_state['df_tr_xalia'] = pd.DataFrame(ws.get_all_records())
+                        st.success("✅ Επιτυχής ενημέρωση!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Σφάλμα: {e}")
+            
+            if is_etoimo:
+                st.markdown('</div>', unsafe_allow_html=True)
 
 
 # --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrEidi) ---
@@ -227,47 +237,51 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         except:
             curr_pr = 0.0
 
-        expander_label = f"👕 ID: #{tr_id} | {c_name} ({phone_show}) | Θέση: {shelf_val} | Τιμή: {curr_pr}€ | Κατάσταση: {status_val} | {row.get('ItName', '')}"
-
         is_etoimo = (status_val == "Έτοιμο")
-        box_style = "background-color: #1b6338; padding: 6px; border-radius: 8px; margin-bottom: 8px;" if is_etoimo else "margin-bottom: 8px;"
+        prefix_icon = "🟢 [ΕΤΟΙΜΟ] " if is_etoimo else "👕 "
+        expander_label = f"{prefix_icon}ID: #{tr_id} | {c_name} ({phone_show}) | Θέση: {shelf_val} | Τιμή: {curr_pr}€ | Κατάσταση: {status_val} | {row.get('ItName', '')}"
 
-        st.markdown(f'<div style="{box_style}">', unsafe_allow_html=True)
-        with st.expander(expander_label):
-            col1, col2, col3 = st.columns(3)
+        with st.container():
+            if is_etoimo:
+                st.markdown('<div class="etoimo-expander">', unsafe_allow_html=True)
             
-            with col1:
-                new_shelf = st.text_input("Ράφι / Θέση (Shelf)", value=str(shelf_val), key=f"shf_{tr_id}_{idx}")
-            with col2:
-                new_price = st.number_input("Τιμή (€)", value=curr_pr, step=1.0, key=f"prc_it_{tr_id}_{idx}")
-            with col3:
-                curr_st = row.get('Status', STATUS_OPTIONS[0])
-                new_st = st.selectbox(
-                    "Κατάσταση", STATUS_OPTIONS,
-                    index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 0,
-                    key=f"st_it_{tr_id}_{idx}"
-                )
+            with st.expander(expander_label):
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    new_shelf = st.text_input("Ράφι / Θέση (Shelf)", value=str(shelf_val), key=f"shf_{tr_id}_{idx}")
+                with col2:
+                    new_price = st.number_input("Τιμή (€)", value=curr_pr, step=1.0, key=f"prc_it_{tr_id}_{idx}")
+                with col3:
+                    curr_st = row.get('Status', STATUS_OPTIONS[0])
+                    new_st = st.selectbox(
+                        "Κατάσταση", STATUS_OPTIONS,
+                        index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 0,
+                        key=f"st_it_{tr_id}_{idx}"
+                    )
 
-            if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_it_{tr_id}_{idx}", type="primary"):
-                try:
-                    id_col = ws.col_values(1)
-                    sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
-                    cols = df_items_trans.columns.tolist()
-                    shelf_col_name = "Shelf" if "Shelf" in cols else "Place"
-                    
-                    if shelf_col_name in cols: ws.update_cell(sheet_row, cols.index(shelf_col_name) + 1, new_shelf)
-                    if "TotalPrice" in cols: ws.update_cell(sheet_row, cols.index("TotalPrice") + 1, new_price)
-                    if "Status" in cols:
-                        ws.update_cell(sheet_row, cols.index("Status") + 1, new_st)
-                        if new_st == "Παραδόθηκε" and "DateOut" in cols:
-                            ws.update_cell(sheet_row, cols.index("DateOut") + 1, datetime.now().strftime("%Y-%m-%d %H:%M"))
+                if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_it_{tr_id}_{idx}", type="primary"):
+                    try:
+                        id_col = ws.col_values(1)
+                        sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
+                        cols = df_items_trans.columns.tolist()
+                        shelf_col_name = "Shelf" if "Shelf" in cols else "Place"
+                        
+                        if shelf_col_name in cols: ws.update_cell(sheet_row, cols.index(shelf_col_name) + 1, new_shelf)
+                        if "TotalPrice" in cols: ws.update_cell(sheet_row, cols.index("TotalPrice") + 1, new_price)
+                        if "Status" in cols:
+                            ws.update_cell(sheet_row, cols.index("Status") + 1, new_st)
+                            if new_st == "Παραδόθηκε" and "DateOut" in cols:
+                                ws.update_cell(sheet_row, cols.index("DateOut") + 1, datetime.now().strftime("%Y-%m-%d %H:%M"))
 
-                    st.session_state['df_tr_items'] = pd.DataFrame(ws.get_all_records())
-                    st.success("✅ Επιτυχής ενημέρωση!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ Σφάλμα: {e}")
-        st.markdown('</div>', unsafe_allow_html=True)
+                        st.session_state['df_tr_items'] = pd.DataFrame(ws.get_all_records())
+                        st.success("✅ Επιτυχής ενημέρωση!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Σφάλμα: {e}")
+            
+            if is_etoimo:
+                st.markdown('</div>', unsafe_allow_html=True)
 
 
 # --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---

@@ -69,14 +69,19 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
     st.write(f"Βρέθηκαν **{len(df_filtered)}** ενεργές εγγραφές:")
     ws = get_worksheet_fn("TrXalia")
 
-    # Εμφάνιση εγγραφών
+        # Εμφάνιση εγγραφών με προσθήκη Θέσης και Κατάστασης στον τίτλο
     for idx, row in df_filtered.iterrows():
         tr_id = str(row['TransactionID'])
         c_name = row.get('CustomerName', 'Άγνωστος')
         code_val = row.get('Code', '-')
+        place_val = row.get('Place', row.get('Shelf', '-'))  # Παίρνει τη θέση/ράφι
+        status_val = row.get('Status', '-')                  # Παίρνει την κατάσταση
+        item_name = row.get('ItName', '')
         phone_show = cust_phone_map.get(c_name, '-')
 
-        with st.expander(f"📌 ID: #{tr_id} | Πελάτης: {c_name} ({phone_show}) | Κωδικός: {code_val} | {row.get('ItName', '')}"):
+
+        expander_label = f"📌 ID: #{tr_id} | Πελάτης: {c_name} ({phone_show}) | Κωδικός: {code_val} | Θέση: {place_val} | Κατάσταση: {status_val} | {item_name}"
+        with st.expander(expander_label):
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:

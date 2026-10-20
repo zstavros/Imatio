@@ -305,6 +305,7 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
                 data = ws.get_all_records()
                 df = pd.DataFrame(data)
                 
+                # Υπολογισμός ΠΑΝΤΑ νέου μοναδικού TransactionID
                 next_id = 1
                 if not df.empty and 'TransactionID' in df.columns:
                     ids = pd.to_numeric(df['TransactionID'], errors='coerce').dropna()
@@ -318,7 +319,7 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
                 
                 ws.append_row(row_data)
                 st.session_state['df_tr_items'] = pd.DataFrame()
-                st.success("✅ Το είδος καταχωρήθηκε επιτυχώς!")
+                st.success(f"✅ Το είδος καταχωρήθηκε επιτυχώς με μοναδικό ID #{next_id}!")
                 st.rerun()
             except Exception as e:
                 st.error(f"❌ Σφάλμα: {e}")

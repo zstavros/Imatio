@@ -7,7 +7,6 @@ STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξ
 # --- ENIAIO CSS STYLING GIA OMOIOMORFIA ---
 st.markdown("""
     <style>
-        /* Omoiomorfo styl gia ola ta koumpia (symperilamvanomenou tou ARXIKI) */
         .stButton > button {
             background-color: #36456b !important;
             color: #ffffff !important;
@@ -17,11 +16,6 @@ st.markdown("""
         }
         .stButton > button:hover {
             background-color: #28334f !important;
-        }
-        
-        /* Styl gia to expander otan einai Etoimo */
-        div.stExpander[data-baseweb="accordion"] {
-            border-radius: 8px !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -115,20 +109,13 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
 
         expander_label = f"📌 ID: #{tr_id} | {c_name} ({phone_show}) | Barcode: {code_val} | Θέση: {place_val} | Τιμή: {price_val}€ | Κατάσταση: {status_val} | {item_name}"
 
-        # An einai Etoimo, dinoume xroma sto expander mesw container style
         is_etoimo = (status_val == "Έτοιμο")
         
-        expander_container = st.container()
-        if is_etoimo:
-            expander_container.markdown("""
-                <style>
-                div[data-testid="stExpander"] {
-                    background-color: #36456b !important;
-                }
-                </style>
-            """, unsafe_allow_html=True)
-
-        with expander_container.expander(expander_label):
+        # Εφαρμογή δυναμικού background χρώματος (Πράσινο #1b6338 αν είναι Έτοιμο)
+        box_style = "background-color: #1b6338; padding: 6px; border-radius: 8px; margin-bottom: 8px;" if is_etoimo else "margin-bottom: 8px;"
+        
+        st.markdown(f'<div style="{box_style}">', unsafe_allow_html=True)
+        with st.expander(expander_label):
             col1, col2, col3, col4, col5 = st.columns(5)
             
             with col1:
@@ -169,6 +156,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Σφάλμα: {e}")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 # --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrEidi) ---
@@ -242,17 +230,10 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         expander_label = f"👕 ID: #{tr_id} | {c_name} ({phone_show}) | Θέση: {shelf_val} | Τιμή: {curr_pr}€ | Κατάσταση: {status_val} | {row.get('ItName', '')}"
 
         is_etoimo = (status_val == "Έτοιμο")
-        expander_container = st.container()
-        if is_etoimo:
-            expander_container.markdown("""
-                <style>
-                div[data-testid="stExpander"] {
-                    background-color: #36456b !important;
-                }
-                </style>
-            """, unsafe_allow_html=True)
+        box_style = "background-color: #1b6338; padding: 6px; border-radius: 8px; margin-bottom: 8px;" if is_etoimo else "margin-bottom: 8px;"
 
-        with expander_container.expander(expander_label):
+        st.markdown(f'<div style="{box_style}">', unsafe_allow_html=True)
+        with st.expander(expander_label):
             col1, col2, col3 = st.columns(3)
             
             with col1:
@@ -286,6 +267,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Σφάλμα: {e}")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
 # --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---

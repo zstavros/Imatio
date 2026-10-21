@@ -4,7 +4,7 @@ from datetime import datetime
 
 STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη", "Έτοιμο", "Παραδόθηκε"]
 
-# --- CSS ΓΙΑ ΚΑΘΑΡΟ ΚΟΥΜΠΙ ΧΩΡΙΣ ΠΛΑΙΣΙΑ ---
+# --- CSS GIA KATHARO KOUMPI ---
 st.markdown("""
     <style>
         .stButton > button {
@@ -21,9 +21,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia) ---
+# --- 1. TROPOPOISI XALIWN (TrXalia) ---
 def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
-    # Σκέτο κουμπί χωρίς st.columns για να μην παίρνει το γαλάζιο φόντο της στήλης
     if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_xalia"):
         st.session_state['active_subview'] = 'menu'
         st.rerun()

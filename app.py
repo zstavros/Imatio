@@ -13,6 +13,11 @@ st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="co
 # --- STRICT CUSTOM STYLING ---
 st.markdown("""
     <style>
+        /* Απόκρυψη επάνω μπάρας (Share, GitHub, 3 τελείες, κλπ.) */
+        header {visibility: hidden;}
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+                
         .block-container {
             padding-top: 3.5rem !important;
             padding-bottom: 2rem !important;

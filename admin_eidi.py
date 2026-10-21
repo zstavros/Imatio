@@ -4,10 +4,10 @@ from datetime import datetime
 
 STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη", "Έτοιμο", "Παραδόθηκε"]
 
-# --- CSS GIA OLA TA KOUMPIA (KAI FORMAS KAI EKTO) ---
+# --- CSS GIA OLA TA KOUMPIA KAI AFAIRESI PERIGRAMMATOS FORMAS ---
 st.markdown("""
     <style>
-        /* Koumpia ekto formas kai mesa se forma */
+        /* 1. Sosto xroma kai xoris perigrammata se OLA ta koumpia */
         .stButton > button, 
         div[data-testid="stFormSubmitButton"] > button {
             background-color: #36456b !important;
@@ -21,6 +21,13 @@ st.markdown("""
         .stButton > button:hover, 
         div[data-testid="stFormSubmitButton"] > button:hover {
             background-color: #28334f !important;
+        }
+
+        /* 2. Afairesi perigrammatos kai fontou apo ti forma (st.form) */
+        div[data-testid="stForm"] {
+            border: none !important;
+            padding: 0px !important;
+            background-color: transparent !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -273,13 +280,6 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
 
 # --- 3. KATAXORISI ROUXWN / EIDWN ---
 def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
-    # Koumpi Archiki EKTO formas gia na ginei akrivos idio me tin 1i eikona
-    col_nav, col_space = st.columns([1, 2])
-    with col_nav:
-        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
-
     if df_customers.empty:
         st.warning("⚠️ Δεν βρέθηκαν πελάτες.")
         return
@@ -301,16 +301,28 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
             if roucha_items:
                 item_choices += roucha_items
 
-    st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
-
+    # H FORMA PERIKLEIEI KAI TA KOUMPIA PSILA ΚΑΙ ΤΑ PEDIA XWRIS BORDER
     with st.form("item_loading_form", clear_on_submit=True):
+        col_nav, col_empty, col_save = st.columns([1, 1, 1])
+        
+        with col_nav:
+            # Form submit button gia tin Archiki gia na einai psila stin idia grammi
+            form_back = st.form_submit_button("🏠 ΑΡΧΙΚΗ", use_container_width=True)
+            if form_back:
+                st.session_state['active_subview'] = 'menu'
+                st.rerun()
+
+        with col_save:
+            # Form submit button gia tin Apothikefsi dexia psila
+            submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", use_container_width=True)
+
+        st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
+        
         sel_cust = st.selectbox("Πελάτης", cust_choices)
         sel_item = st.selectbox("Είδος", item_choices)
         shelf = st.text_input("Ράφι / Θέση")
         price = st.number_input("Τιμή (€)", min_value=0.0, step=0.5)
         status = st.selectbox("Εργασία / Κατάσταση", ["Πλύσιμο", "Στεγνό Καθάρισμα", "Σιδέρωμα"])
-
-        submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", use_container_width=True)
 
     if submitted:
         if sel_cust == "-- Επιλέξτε Πελάτη --" or sel_item == "-- Επιλέξτε Είδος --":

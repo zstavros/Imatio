@@ -4,20 +4,19 @@ from datetime import datetime
 
 STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη", "Έτοιμο", "Παραδόθηκε"]
 
-# --- CSS ΓΙΑ ΚΑΘΑΡΟ ΚΟΥΜΠΙ ΧΩΡΙΣ ΓΑΛΑΖΙΟ ΦΟΝΤΟ ---
+# --- CSS ΓΙΑ ΝΑ ΕΙΝΑΙ ΤΟ ΚΟΥΜΠΙ ΑΚΡΙΒΩΣ ΟΠΩΣ ΣΤΟ ADMIN_FAST ---
 st.markdown("""
     <style>
-        /* Ειδική κλάση για να εξαιρείται το κουμπί Αρχική από τα γαλάζια κουτιά στηλών */
-        .home-container .stButton > button {
+        .home-btn-container .stButton > button {
             background-color: #36456b !important;
             color: #ffffff !important;
             border-radius: 8px !important;
             border: none !important;
             font-weight: 500 !important;
             height: 42px !important;
-            width: 220px !important;
+            width: 180px !important; /* Σταθερό κομψό πλάτος όπως το θες */
         }
-        .home-container .stButton > button:hover {
+        .home-btn-container .stButton > button:hover {
             background-color: #28334f !important;
         }
     </style>
@@ -25,8 +24,7 @@ st.markdown("""
 
 # --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia) ---
 def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
-    # Καθαρό κουμπί χωρίς st.columns για να μην παίρνει το γαλάζιο φόντο
-    st.markdown('<div class="home-container">', unsafe_allow_html=True)
+    st.markdown('<div class="home-btn-container">', unsafe_allow_html=True)
     if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_xalia"):
         st.session_state['active_subview'] = 'menu'
         st.rerun()
@@ -162,7 +160,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
 
 # --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrEidi) ---
 def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
-    st.markdown('<div class="home-container">', unsafe_allow_html=True)
+    st.markdown('<div class="home-btn-container">', unsafe_allow_html=True)
     if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_items"):
         st.session_state['active_subview'] = 'menu'
         st.rerun()
@@ -272,7 +270,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
 
 # --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---
 def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
-    st.markdown('<div class="home-container">', unsafe_allow_html=True)
+    st.markdown('<div class="home-btn-container">', unsafe_allow_html=True)
     if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item"):
         st.session_state['active_subview'] = 'menu'
         st.rerun()

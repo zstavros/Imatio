@@ -267,16 +267,16 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                     st.error(f"❌ Σφάλμα: {e}")
 
 
-# --- 3. KATAXORISI ROUXWN / EIDWN ---
+# --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---
 def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
-    col_nav, col_empty, col_save = st.columns([1, 1, 1])
-    
-    with col_nav:
-        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
+    if df_customers.empty:
+        st.warning("⚠️ Δεν βρέθηκαν πελάτες.")
+        return
 
-    # Filtrahma eidon mono gia tin katigoria "Ρούχα"
+    name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
+    cust_choices = ["-- Επιλέξτε Πελάτη --"] + df_customers[name_col].dropna().tolist()
+
+    # Φιλτράρισμα ειδών αποκλειστικά για την κατηγορία "Ρούχα"
     item_choices = ["-- Επιλέξτε Είδος --"]
     if not df_items.empty:
         df_items.columns = df_items.columns.str.strip()
@@ -289,24 +289,16 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
             ][col_name_key].dropna().astype(str).str.strip().tolist()
             if roucha_items:
                 item_choices += roucha_items
-        else:
-            # An den yparxei stili katigorias, deixnoume ola gia asfaleia
-            item_choices += df_items[col_name_key].dropna().tolist() if col_name_key else ["Κουστούμι", "Πάπλωμα", "Μπουφάν"]
-
-    if df_customers.empty:
-        st.warning("⚠️ Δεν βρέθηκαν πελάτες.")
-        return
-
-    name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
-    cust_choices = ["-- Επιλέξτε Πελάτη --"] + df_customers[name_col].dropna().tolist()
 
     with st.form("item_loading_form", clear_on_submit=True):
-        col_top_nav, col_empty_form, col_save = st.columns([1, 1, 1])
-        with col_top_nav:
+        col_nav, col_empty, col_save = st.columns([1, 1, 1])
+        
+        with col_nav:
             form_back = st.form_submit_button("🏠 ΑΡΧΙΚΗ", use_container_width=True)
             if form_back:
                 st.session_state['active_subview'] = 'menu'
                 st.rerun()
+
         with col_save:
             submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", use_container_width=True)
 

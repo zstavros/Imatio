@@ -17,13 +17,13 @@ st.markdown("""
         header {visibility: hidden;}
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-    
+        
         /* Απόκρυψη του Manage app badge/button */
         .viewerBadge_link__1S137 {display: none !important;}
         div[class*="viewerBadge"] {display: none !important;}
         
         .block-container {
-            padding-top: 3.5rem !important;
+            padding-top: 1.5rem !important;
             padding-bottom: 2rem !important;
             max-width: 1200px;
         }
@@ -45,15 +45,16 @@ st.markdown("""
             margin: 0 !important;
         }
 
-        div[data-testid="stColumn"] {
+        /* Γαλάζιο φόντο ΜΟΝΟ στις καρτέλες του αρχικού μενού */
+        .menu-cards div[data-testid="stColumn"] {
             background-color: #6c8ebf !important;
             border-radius: 14px;
             padding: 16px 18px !important;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        div[data-testid="stColumn"] h3, 
-        div[data-testid="stColumn"] h4 {
+        .menu-cards div[data-testid="stColumn"] h3, 
+        .menu-cards div[data-testid="stColumn"] h4 {
             font-size: 1.15rem !important;
             font-weight: 700 !important;
             color: #000000 !important;
@@ -62,7 +63,7 @@ st.markdown("""
             padding-bottom: 0px !important;
         }
 
-        div[data-testid="stColumn"] p {
+        .menu-cards div[data-testid="stColumn"] p {
             font-size: 0.88rem !important;
             color: #111111 !important;
             font-weight: 400 !important;
@@ -71,7 +72,7 @@ st.markdown("""
             line-height: 1.2 !important;
         }
 
-        div[data-testid="stColumn"] .stButton > button {
+        .menu-cards div[data-testid="stColumn"] .stButton > button {
             border-radius: 8px !important;
             height: 42px !important;
             min-height: 42px !important;
@@ -86,8 +87,8 @@ st.markdown("""
             margin-bottom: 6px !important;
         }
 
-        div[data-testid="stColumn"] .stButton > button p,
-        div[data-testid="stColumn"] .stButton > button div {
+        .menu-cards div[data-testid="stColumn"] .stButton > button p,
+        .menu-cards div[data-testid="stColumn"] .stButton > button div {
             font-size: 0.92rem !important;
             font-weight: 500 !important;
             color: #ffffff !important;
@@ -99,7 +100,7 @@ st.markdown("""
             justify-content: center !important;
         }
 
-        div[data-testid="stColumn"] .stButton > button:hover {
+        .menu-cards div[data-testid="stColumn"] .stButton > button:hover {
             background-color: #28334f !important;
         }
     </style>
@@ -114,7 +115,6 @@ def get_gspread_client():
 
 def get_worksheet(sheet_name):
     client = get_gspread_client()
-    # Χρήση του ID του Google Sheet
     SPREADSHEET_ID = "18_Rke4EW04J0QaTw2PBgU1Q-NLgT7G2l3yR0NvX1jmE"
     sh = client.open_by_key(SPREADSHEET_ID)
     return sh.worksheet(sheet_name)
@@ -180,7 +180,6 @@ def get_base64_image(image_path):
 
 logo_b64 = get_base64_image("logo.png")
 
-# CSS update για ομοιόμορφη στοίχιση και ίδια γραμματοσειρά
 st.markdown("""
     <style>
         .brand-header {
@@ -229,6 +228,7 @@ st.markdown(header_html, unsafe_allow_html=True)
 
 # 1. ΑΡΧΙΚΗ ΚΑΡΤΕΛΑ ΜΕΝΟΥ
 if st.session_state['active_subview'] == 'menu':
+    st.markdown('<div class="menu-cards">', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2, gap="large")
     
@@ -261,14 +261,14 @@ if st.session_state['active_subview'] == 'menu':
     col_c1, col_c2 = st.columns(2, gap="large")
     
     with col_c1:
-        st.markdown("### 👤 Διαχείριση Πελατών")
+        st.markdown("### 👤 Διαχείριση Πελάτων")
         st.markdown("<p>Καταχώρηση νέων πελατών & τροποποίηση στοιχείων</p>", unsafe_allow_html=True)
         
-        if st.button("➕ Διαχείριση Πελατών (Νέα Εγγραφή)", use_container_width=True):
+        if st.button("➕ Διαχείριση Πελάτων (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_new'
             st.rerun()
             
-        if st.button("✏️ Διαχείριση Πελατών (Τροποποίηση)", use_container_width=True):
+        if st.button("✏️ Διαχείριση Πελάτων (Τροποποίηση)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_edit'
             st.rerun()
             
@@ -284,6 +284,8 @@ if st.session_state['active_subview'] == 'menu':
             st.session_state['active_subview'] = 'manage_catalog_edit'
             st.rerun()
 
+    st.markdown('</div>', unsafe_allow_html=True)
+
 # 2. ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ
 elif st.session_state['active_subview'] == 'fast_loading':
     admin_fast.render_fast_loading_tab(
@@ -297,9 +299,10 @@ elif st.session_state['active_subview'] == 'edit_xalia':
     admin_eidi.render_edit_xalia_tab(
         st.session_state.get('df_tr_xalia', pd.DataFrame()),
         st.session_state.get('df_customers', pd.DataFrame()),
-        st.session_state.get('df_items', pd.DataFrame()),  # <--- Προστέθηκε αυτό
+        st.session_state.get('df_items', pd.DataFrame()),
         get_worksheet
     )
+
 # 4. ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ
 elif st.session_state['active_subview'] == 'item_loading':
     admin_eidi.render_item_loading_tab(

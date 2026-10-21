@@ -4,6 +4,23 @@ from datetime import datetime
 
 STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη", "Έτοιμο", "Παραδόθηκε"]
 
+# --- CSS ΓΙΑ ΤΑ ΚΟΥΜΠΙΑ ---
+st.markdown("""
+    <style>
+        .stButton > button {
+            background-color: #36456b !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            border: none !important;
+            font-weight: 500 !important;
+            height: 42px !important;
+        }
+        .stButton > button:hover {
+            background-color: #28334f !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia) ---
 def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
     col_nav, col_space = st.columns([1, 2])

@@ -4,33 +4,13 @@ from datetime import datetime
 
 STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη", "Έτοιμο", "Παραδόθηκε"]
 
-# --- CSS GIA AKRIVOS IDIO KOUMPI ME TO ADMIN_FAST ---
-st.markdown("""
-    <style>
-        /* Target sto koumpi poy vrisketai mesa sto nav-btn container */
-        .nav-btn .stButton > button {
-            background-color: #36456b !important;
-            color: #ffffff !important;
-            border-radius: 8px !important;
-            border: none !important;
-            font-weight: 500 !important;
-            height: 42px !important;
-            width: 180px !important;
-            margin-bottom: 15px !important;
-        }
-        .nav-btn .stButton > button:hover {
-            background-color: #28334f !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- 1. TROPOPOIISI XALIWN (TrXalia) ---
+# --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia) ---
 def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
-    st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
-    if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_xalia"):
-        st.session_state['active_subview'] = 'menu'
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    col_nav, col_space = st.columns([1, 2])
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_xalia", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
 
     st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Χαλιών (TrXalia)")
     
@@ -160,13 +140,13 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                     st.error(f"❌ Σφάλμα: {e}")
 
 
-# --- 2. TROPOPOIISI ROUXWN / EIDWN (TrEidi) ---
+# --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrEidi) ---
 def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
-    st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
-    if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_items"):
-        st.session_state['active_subview'] = 'menu'
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    col_nav, col_space = st.columns([1, 2])
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_items", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
 
     st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Ρούχων / Ειδών (TrEidi)")
     
@@ -270,13 +250,13 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                     st.error(f"❌ Σφάλμα: {e}")
 
 
-# --- 3. KATAXORISI ROUXWN / EIDWN ---
+# --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---
 def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
-    st.markdown('<div class="nav-btn">', unsafe_allow_html=True)
-    if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item"):
-        st.session_state['active_subview'] = 'menu'
-        st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    col_nav, col_space = st.columns([1, 2])
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
 
     st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
     

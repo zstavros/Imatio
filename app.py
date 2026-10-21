@@ -45,6 +45,35 @@ st.markdown("""
             margin: 0 !important;
         }
 
+        /* ΓΕΝΙΚΟ ΣΤΥΛ ΓΙΑ ΟΛΑ ΤΑ ΚΟΥΜΠΙΑ (ΣΚΟΥΡΟ ΜΠΛΕ ΦΟΝΤΟ) */
+        .stButton > button {
+            background-color: #36456b !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            border: none !important;
+            font-weight: 500 !important;
+            height: 42px !important;
+            min-height: 42px !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+
+        .stButton > button p,
+        .stButton > button div {
+            font-size: 0.92rem !important;
+            font-weight: 500 !important;
+            color: #ffffff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            text-align: center !important;
+        }
+
+        .stButton > button:hover {
+            background-color: #28334f !important;
+        }
+
         /* Γαλάζιο φόντο ΜΟΝΟ στις καρτέλες του αρχικού μενού */
         .menu-cards div[data-testid="stColumn"] {
             background-color: #6c8ebf !important;
@@ -70,38 +99,6 @@ st.markdown("""
             margin-top: 0px !important;
             margin-bottom: 8px !important;
             line-height: 1.2 !important;
-        }
-
-        .menu-cards div[data-testid="stColumn"] .stButton > button {
-            border-radius: 8px !important;
-            height: 42px !important;
-            min-height: 42px !important;
-            padding: 0px 10px !important;
-            color: #ffffff !important;
-            border: none !important;
-            background-color: #36456b !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            width: 100% !important;
-            margin-bottom: 6px !important;
-        }
-
-        .menu-cards div[data-testid="stColumn"] .stButton > button p,
-        .menu-cards div[data-testid="stColumn"] .stButton > button div {
-            font-size: 0.92rem !important;
-            font-weight: 500 !important;
-            color: #ffffff !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            text-align: center !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
-
-        .menu-cards div[data-testid="stColumn"] .stButton > button:hover {
-            background-color: #28334f !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -261,10 +258,10 @@ if st.session_state['active_subview'] == 'menu':
     col_c1, col_c2 = st.columns(2, gap="large")
     
     with col_c1:
-        st.markdown("### 👤 Διαχείριση Πελάτων")
+        st.markdown("### 👤 Διαχείριση Πελάτών")
         st.markdown("<p>Καταχώρηση νέων πελατών & τροποποίηση στοιχείων</p>", unsafe_allow_html=True)
         
-        if st.button("➕ Διαχείριση Πελάτων (Νέα Εγγραφή)", use_container_width=True):
+        if st.button("➕ Διαχείριση Πελατών (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_new'
             st.rerun()
             

@@ -269,14 +269,6 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
 
 # --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---
 def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
-    col_nav, col_space = st.columns([1, 2])
-    with col_nav:
-        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
-
-    st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
-    
     if df_customers.empty:
         st.warning("⚠️ Δεν βρέθηκαν πελάτες.")
         return
@@ -287,15 +279,31 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
     item_name_col = 'ItName' if 'ItName' in df_items.columns else 'Name'
     item_choices = ["-- Επιλέξτε Είδος --"] + (df_items[item_name_col].dropna().tolist() if not df_items.empty else ["Κουστούμι", "Πάπλωμα", "Μπουφάν"])
 
+    # Perikleioume ti diataxi mesa sti forma gia na doulevei to koumpi psila
     with st.form("item_loading_form", clear_on_submit=True):
+        # Topothetisi koumpion Archiki kai Apothikefsi psila opos sta chalia
+        col_nav, col_empty, col_save = st.columns([1, 1, 1])
+        
+        with col_nav:
+            # Eidiko koumpi poy xrisimopoiei to session_state gia epistrofi xoris submit
+            back_clicked = st.form_submit_button("🏠 ΑΡΧΙΚΗ", use_container_width=True)
+            if back_clicked:
+                st.session_state['active_subview'] = 'menu'
+                st.rerun()
+
+        with col_save:
+            submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
+
+        st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
+
+        # Pedia formas
         sel_cust = st.selectbox("Πελάτης", cust_choices)
         sel_item = st.selectbox("Είδος", item_choices)
         shelf = st.text_input("Ράφι / Θέση")
         price = st.number_input("Τιμή (€)", min_value=0.0, step=0.5)
         status = st.selectbox("Εργασία / Κατάσταση", ["Πλύσιμο", "Στεγνό Καθάρισμα", "Σιδέρωμα"])
 
-        submitted = st.form_submit_button("💾 Αποθήκευση Είδους", type="primary", use_container_width=True)
-
+    # Logiki apothikeusis otan patithei to APOSTHKEFSI
     if submitted:
         if sel_cust == "-- Επιλέξτε Πελάτη --" or sel_item == "-- Επιλέξτε Είδος --":
             st.error("❌ Παρακαλώ συμπληρώστε Πελάτη και Είδος!")
@@ -308,7 +316,8 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
                 next_id = 1
                 if not df.empty and 'TransactionID' in df.columns:
                     ids = pd.to_numeric(df['TransactionID'], errors='coerce').dropna()
-                    if not ids.empty: next_id = int(ids.max()) + 1
+                    if not ids.empty: 
+                        next_id = int(ids.max()) + 1
 
                 row_data = [
                     next_id, sel_cust, sel_item, shelf,

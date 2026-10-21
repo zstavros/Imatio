@@ -17,7 +17,11 @@ st.markdown("""
         header {visibility: hidden;}
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-                
+    
+        /* Απόκρυψη του Manage app badge/button */
+        .viewerBadge_link__1S137 {display: none !important;}
+        div[class*="viewerBadge"] {display: none !important;}
+        
         .block-container {
             padding-top: 3.5rem !important;
             padding-bottom: 2rem !important;

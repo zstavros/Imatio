@@ -4,23 +4,20 @@ from datetime import datetime
 
 STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη", "Έτοιμο", "Παραδόθηκε"]
 
-# --- CSS ΓΙΑ ΣΤΑΘΕΡΗ ΔΙΑΤΑΞΗ ΚΟΥΜΠΙΩΝ ---
+# --- CSS ΓΙΑ ΚΑΘΑΡΟ ΚΟΥΜΠΙ ΧΩΡΙΣ ΓΑΛΑΖΙΟ ΦΟΝΤΟ ---
 st.markdown("""
     <style>
-        div[data-testid="stColumn"] {
-            background-color: transparent !important;
-            box-shadow: none !important;
-            padding: 0px 4px !important;
-        }
-        .stButton > button {
+        /* Ειδική κλάση για να εξαιρείται το κουμπί Αρχική από τα γαλάζια κουτιά στηλών */
+        .home-container .stButton > button {
             background-color: #36456b !important;
             color: #ffffff !important;
             border-radius: 8px !important;
             border: none !important;
             font-weight: 500 !important;
             height: 42px !important;
+            width: 220px !important;
         }
-        .stButton > button:hover {
+        .home-container .stButton > button:hover {
             background-color: #28334f !important;
         }
     </style>
@@ -28,12 +25,12 @@ st.markdown("""
 
 # --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia) ---
 def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
-    # Περιορίζουμε το πλάτος του κουμπιού για να μην απλώνεται σε όλη την οθόνη
-    col_nav, col_space = st.columns([1, 2])
-    with col_nav:
-        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_xalia", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
+    # Καθαρό κουμπί χωρίς st.columns για να μην παίρνει το γαλάζιο φόντο
+    st.markdown('<div class="home-container">', unsafe_allow_html=True)
+    if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_xalia"):
+        st.session_state['active_subview'] = 'menu'
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Χαλιών (TrXalia)")
     
@@ -165,11 +162,11 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
 
 # --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrEidi) ---
 def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
-    col_nav, col_space = st.columns([1, 2])
-    with col_nav:
-        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_items", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
+    st.markdown('<div class="home-container">', unsafe_allow_html=True)
+    if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_items"):
+        st.session_state['active_subview'] = 'menu'
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Ρούχων / Ειδών (TrEidi)")
     
@@ -275,11 +272,11 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
 
 # --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---
 def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
-    col_nav, col_space = st.columns([1, 2])
-    with col_nav:
-        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
+    st.markdown('<div class="home-container">', unsafe_allow_html=True)
+    if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item"):
+        st.session_state['active_subview'] = 'menu'
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
     

@@ -4,24 +4,28 @@ from datetime import datetime
 
 STATUS_OPTIONS = ["Πλύσιμο", "Φύλαξη", "Πλύσιμο & Φύλαξη", "Έτοιμο", "Παραδόθηκε"]
 
-# --- CSS ΓΙΑ ΤΑ ΚΟΥΜΠΙΑ ---
+# --- CSS GIA OLA TA KOUMPIA (KAI FORMAS KAI EKTO) ---
 st.markdown("""
     <style>
-        .stButton > button {
+        /* Koumpia ekto formas kai mesa se forma */
+        .stButton > button, 
+        div[data-testid="stFormSubmitButton"] > button {
             background-color: #36456b !important;
             color: #ffffff !important;
             border-radius: 8px !important;
             border: none !important;
             font-weight: 500 !important;
             height: 42px !important;
+            box-shadow: none !important;
         }
-        .stButton > button:hover {
+        .stButton > button:hover, 
+        div[data-testid="stFormSubmitButton"] > button:hover {
             background-color: #28334f !important;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia) ---
+# --- 1. TROPOPOIISI XALIWN (TrXalia) ---
 def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
     col_nav, col_space = st.columns([1, 2])
     with col_nav:
@@ -157,7 +161,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                     st.error(f"❌ Σφάλμα: {e}")
 
 
-# --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrEidi) ---
+# --- 2. TROPOPOIISI ROUXWN / EIDWN (TrEidi) ---
 def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
     col_nav, col_space = st.columns([1, 2])
     with col_nav:
@@ -267,8 +271,15 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                     st.error(f"❌ Σφάλμα: {e}")
 
 
-# --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---
+# --- 3. KATAXORISI ROUXWN / EIDWN ---
 def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
+    # Koumpi Archiki EKTO formas gia na ginei akrivos idio me tin 1i eikona
+    col_nav, col_space = st.columns([1, 2])
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
+
     if df_customers.empty:
         st.warning("⚠️ Δεν βρέθηκαν πελάτες.")
         return
@@ -276,7 +287,7 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
     name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
     cust_choices = ["-- Επιλέξτε Πελάτη --"] + df_customers[name_col].dropna().tolist()
 
-    # Φιλτράρισμα ειδών αποκλειστικά για την κατηγορία "Ρούχα"
+    # Filtrahma eidon mono gia tin katigoria "Ρούχα"
     item_choices = ["-- Επιλέξτε Είδος --"]
     if not df_items.empty:
         df_items.columns = df_items.columns.str.strip()
@@ -290,25 +301,16 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
             if roucha_items:
                 item_choices += roucha_items
 
+    st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
+
     with st.form("item_loading_form", clear_on_submit=True):
-        col_nav, col_empty, col_save = st.columns([1, 1, 1])
-        
-        with col_nav:
-            form_back = st.form_submit_button("🏠 ΑΡΧΙΚΗ", use_container_width=True)
-            if form_back:
-                st.session_state['active_subview'] = 'menu'
-                st.rerun()
-
-        with col_save:
-            submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", use_container_width=True)
-
-        st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
-        
         sel_cust = st.selectbox("Πελάτης", cust_choices)
         sel_item = st.selectbox("Είδος", item_choices)
         shelf = st.text_input("Ράφι / Θέση")
         price = st.number_input("Τιμή (€)", min_value=0.0, step=0.5)
         status = st.selectbox("Εργασία / Κατάσταση", ["Πλύσιμο", "Στεγνό Καθάρισμα", "Σιδέρωμα"])
+
+        submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", use_container_width=True)
 
     if submitted:
         if sel_cust == "-- Επιλέξτε Πελάτη --" or sel_item == "-- Επιλέξτε Είδος --":

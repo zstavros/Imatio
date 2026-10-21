@@ -267,8 +267,32 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                     st.error(f"❌ Σφάλμα: {e}")
 
 
-# --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---
+# --- 3. KATAXORISI ROUXWN / EIDWN ---
 def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
+    col_nav, col_empty, col_save = st.columns([1, 1, 1])
+    
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_load_item", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
+
+    # Filtrahma eidon mono gia tin katigoria "Ρούχα"
+    item_choices = ["-- Επιλέξτε Είδος --"]
+    if not df_items.empty:
+        df_items.columns = df_items.columns.str.strip()
+        col_name_key = next((ik for ik in ['ItName', 'Name', 'ItemName'] if ik in df_items.columns), None)
+        col_cat_key = next((ck for ck in ['Category', 'CAT', 'CategoryName'] if ck in df_items.columns), None)
+        
+        if col_name_key and col_cat_key:
+            roucha_items = df_items[
+                df_items[col_cat_key].astype(str).str.strip().str.lower() == "ρούχα"
+            ][col_name_key].dropna().astype(str).str.strip().tolist()
+            if roucha_items:
+                item_choices += roucha_items
+        else:
+            # An den yparxei stili katigorias, deixnoume ola gia asfaleia
+            item_choices += df_items[col_name_key].dropna().tolist() if col_name_key else ["Κουστούμι", "Πάπλωμα", "Μπουφάν"]
+
     if df_customers.empty:
         st.warning("⚠️ Δεν βρέθηκαν πελάτες.")
         return
@@ -276,34 +300,24 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
     name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
     cust_choices = ["-- Επιλέξτε Πελάτη --"] + df_customers[name_col].dropna().tolist()
 
-    item_name_col = 'ItName' if 'ItName' in df_items.columns else 'Name'
-    item_choices = ["-- Επιλέξτε Είδος --"] + (df_items[item_name_col].dropna().tolist() if not df_items.empty else ["Κουστούμι", "Πάπλωμα", "Μπουφάν"])
-
-    # Perikleioume ti diataxi mesa sti forma gia na doulevei to koumpi psila
     with st.form("item_loading_form", clear_on_submit=True):
-        # Topothetisi koumpion Archiki kai Apothikefsi psila opos sta chalia
-        col_nav, col_empty, col_save = st.columns([1, 1, 1])
-        
-        with col_nav:
-            # Eidiko koumpi poy xrisimopoiei to session_state gia epistrofi xoris submit
-            back_clicked = st.form_submit_button("🏠 ΑΡΧΙΚΗ", use_container_width=True)
-            if back_clicked:
+        col_top_nav, col_empty_form, col_save = st.columns([1, 1, 1])
+        with col_top_nav:
+            form_back = st.form_submit_button("🏠 ΑΡΧΙΚΗ", use_container_width=True)
+            if form_back:
                 st.session_state['active_subview'] = 'menu'
                 st.rerun()
-
         with col_save:
-            submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", use_container_width=True)
 
         st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
-
-        # Pedia formas
+        
         sel_cust = st.selectbox("Πελάτης", cust_choices)
         sel_item = st.selectbox("Είδος", item_choices)
         shelf = st.text_input("Ράφι / Θέση")
         price = st.number_input("Τιμή (€)", min_value=0.0, step=0.5)
         status = st.selectbox("Εργασία / Κατάσταση", ["Πλύσιμο", "Στεγνό Καθάρισμα", "Σιδέρωμα"])
 
-    # Logiki apothikeusis otan patithei to APOSTHKEFSI
     if submitted:
         if sel_cust == "-- Επιλέξτε Πελάτη --" or sel_item == "-- Επιλέξτε Είδος --":
             st.error("❌ Παρακαλώ συμπληρώστε Πελάτη και Είδος!")
@@ -316,8 +330,7 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
                 next_id = 1
                 if not df.empty and 'TransactionID' in df.columns:
                     ids = pd.to_numeric(df['TransactionID'], errors='coerce').dropna()
-                    if not ids.empty: 
-                        next_id = int(ids.max()) + 1
+                    if not ids.empty: next_id = int(ids.max()) + 1
 
                 row_data = [
                     next_id, sel_cust, sel_item, shelf,

@@ -59,17 +59,10 @@ def render_edit_customer_tab(df_customers, get_worksheet):
     valid_customers = df_customers[df_customers[name_col].astype(str).str.strip() != ""]
     cust_options = ["-- Epilexte pelati gia epexergasia --"] + [f"{r[name_col]} ({r.get('CuPhone', r.get('CuMobile', ''))})" for _, r in valid_customers.iterrows()]
 
-    # 1. ΚΟΥΜΠΙΑ ΣΤΗΝ ΚΟΡΥΦΗ (Κάτω από τον πράσινο τίτλο)
-    col_nav, col_empty, col_save = st.columns([1, 1, 1])
-    with col_nav:
-        if st.button("🏠 ARXIKI", key="btn_home_edit_cust", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
-    
-    # 2. Ο ΤΙΤΛΟΣ «Tropopoiisi» ΠΙΟ ΚΑΤΩ
+    # 1. ΤΙΤΛΟΣ ΜΟΛΥΒΑΚΙ
     st.markdown("### ✏️ Tropopoiisi Stoixeiwn Pelati")
 
-    # 3. ΑΝΑΖΗΤΗΣΗ ΠΕΛΑΤΗ
+    # 2. ΑΝΑΖΗΤΗΣΗ ΠΕΛΑΤΗ
     selected_c = st.selectbox("Anazitisi Pelati", cust_options, label_visibility="collapsed", key="search_cust_selectbox")
 
     if selected_c and selected_c != "-- Epilexte pelati gia epexergasia --":
@@ -78,15 +71,19 @@ def render_edit_customer_tab(df_customers, get_worksheet):
         
         st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
 
+        # 3. ΦΟΡΜΑ ΜΕ ΤΑ ΚΟΥΜΠΙΑ ΣΤΗΝ ΚΟΡΥΦΗ ΤΗΣ
         with st.form(key=f"form_edit_cust_{c_name_val}"):
-            # Κουμπί Αποθήκευσης μέσα στη φόρμα επεξεργασίας
-            col_save_top, col_sp = st.columns([1, 2])
-            with col_save_top:
+            col_nav, col_empty, col_save = st.columns([1, 1, 1])
+            with col_nav:
+                if st.form_submit_button("🏠 ARXIKI", use_container_width=True):
+                    st.session_state['active_subview'] = 'menu'
+                    st.rerun()
+            with col_save:
                 submitted_c = st.form_submit_button("💾 APO8IKEYSI", type="primary", use_container_width=True)
 
             st.write(f"✏️ Epexergasia: **{c_name_val}**")
             
-            # Πεδία με δυναμικά keys για ακαριαία ενημέρωση
+            # Πεδία με δυναμικά keys για άμεση αλλαγή δεδομένων
             e_name = st.text_input("Onomatepwnymo", value=str(c_row_data.get('CuName', c_row_data.get('Name', ''))), key=f"ec_name_{c_name_val}")
             e_mobile1 = st.text_input("Kinito-1", value=str(c_row_data.get('CuPhone', '')), key=f"ec_mob1_{c_name_val}")
             e_mobile2 = st.text_input("Kinito-2", value=str(c_row_data.get('CuMobile', '')), key=f"ec_mob2_{c_name_val}")
@@ -111,6 +108,12 @@ def render_edit_customer_tab(df_customers, get_worksheet):
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Sfalma: {e}")
+    else:
+        col_nav, col_space = st.columns([1, 2])
+        with col_nav:
+            if st.button("🏠 ARXIKI", key="btn_home_edit_cust_main", use_container_width=True):
+                st.session_state['active_subview'] = 'menu'
+                st.rerun()
 
 # ---------------------------------------------------------
 # 3. ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛΟΓΟΥ
@@ -174,17 +177,8 @@ def render_edit_item_tab(df_items, get_worksheet):
         item_options.append(display_str)
         item_map[display_str] = name_val
 
-    # 1. ΚΟΥΜΠΙ ΑΡΧΙΚΗ ΣΤΗΝ ΚΟΡΥΦΗ
-    col_nav, col_empty = st.columns([1, 2])
-    with col_nav:
-        if st.button("🏠 ARXIKI", key="btn_home_edit_item", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
-
-    # 2. ΤΙΤΛΟΣ ΠΙΟ ΚΑΤΩ
     st.markdown("### ✏️ Tropopoiisi Katalogoy")
 
-    # 3. ΑΝΑΖΗΤΗΣΗ ΕΙΔΟΥΣ
     selected_display = st.selectbox("Anazitisi Eidous", item_options, label_visibility="collapsed", key="search_item_selectbox_top")
 
     if selected_display and selected_display != "-- Epilexte eidos --":
@@ -197,8 +191,12 @@ def render_edit_item_tab(df_items, get_worksheet):
         st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
 
         with st.form(key=f"form_edit_item_{real_name}"):
-            col_save_top, col_sp = st.columns([1, 2])
-            with col_save_top:
+            col_nav, col_empty, col_save = st.columns([1, 1, 1])
+            with col_nav:
+                if st.form_submit_button("🏠 ARXIKI", use_container_width=True):
+                    st.session_state['active_subview'] = 'menu'
+                    st.rerun()
+            with col_save:
                 submitted_edit = st.form_submit_button("💾 APO8IKEYSI", type="primary", use_container_width=True)
 
             st.write(f"✏️ Epexergasia: **{real_name}**")
@@ -225,3 +223,9 @@ def render_edit_item_tab(df_items, get_worksheet):
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Sfalma: {e}")
+    else:
+        col_nav, col_space = st.columns([1, 2])
+        with col_nav:
+            if st.button("🏠 ARXIKI", key="btn_home_edit_item_main", use_container_width=True):
+                st.session_state['active_subview'] = 'menu'
+                st.rerun()

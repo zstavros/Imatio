@@ -111,10 +111,10 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
             price_val = 0.0
 
         is_etoimo = (status_val == "Έτοιμο")
-        prefix_icon = "🟢 [ΕΤΟΙΜΟ] " if is_etoimo 
+        prefix_icon = "🟢 [ΕΤΟΙΜΟ] 📌 " if is_etoimo else "📌 "
         sep = " 🟢 * " if is_etoimo else " 🔴 * "
         expander_label = f"{prefix_icon}ID: #{tr_id}{sep}{c_name} ({phone_show}){sep}Barcode: {code_val}{sep}Θέση: {place_val}{sep}Τιμή: {price_val}€{sep}Κατάσταση: {status_val}{sep}{item_name}"
-        
+
         with st.expander(expander_label):
             col1, col2, col3, col4, col5 = st.columns(5)
             
@@ -168,7 +168,6 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
 
     st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Ρούχων / Ειδών (TrItems)")
     
-    # 1. Όπως στα χαλιά: Αν το dataframe είναι άδειο, φορτώνουμε φρέσκα δεδομένα από το Google Sheet
     if df_items_trans is None or df_items_trans.empty:
         try:
             ws_ti = get_worksheet_fn("TrItems")
@@ -183,10 +182,8 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         st.info("Δεν βρέθηκαν εγγραφές στα Ρούχα.")
         return
 
-    # Καθαρισμός κενών από τα ονόματα των στηλών
     df_items_trans.columns = df_items_trans.columns.str.strip()
 
-    # 2. Φιλτράρισμα ενεργών (όσες ΔΕΝ είναι παραδομένες)
     if 'Status' in df_items_trans.columns:
         df_active = df_items_trans[
             df_items_trans['Status'].astype(str).str.strip().str.lower() != 'παραδόθηκε'
@@ -241,7 +238,6 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         tr_id = str(row.get('TransactionID', ''))
         c_name = row.get('CustomerName', 'Άγνωστος')
         phone_show = cust_phone_map.get(c_name, '-')
-        # Υποστήριξη είτε Place είτε Shelf
         place_val = row.get('Place', row.get('Shelf', '-'))
         status_val = row.get('Status', '-')
         item_name = row.get('ItName', '')
@@ -252,8 +248,9 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
             curr_pr = 0.0
 
         is_etoimo = (str(status_val).strip().lower() == "έτοιμο")
-        prefix_icon = "🟢 [ΕΤΟΙΜΟ] " if is_etoimo else "👕 "
-        expander_label = f"{prefix_icon}ID: #{tr_id} | {c_name} ({phone_show}) | Θέση: {place_val} | Τιμή: {curr_pr}€ | Κατάσταση: {status_val} | {item_name}"
+        prefix_icon = "🟢 [ΕΤΟΙΜΟ] 🟩 👕 " if is_etoimo else "🔴 👕 "
+        sep = " 🟢 * " if is_etoimo else " 🔴 * "
+        expander_label = f"{prefix_icon}ID: #{tr_id}{sep}{c_name} ({phone_show}){sep}Θέση: {place_val}{sep}Τιμή: {curr_pr}€{sep}Κατάσταση: {status_val}{sep}{item_name}"
 
         with st.expander(expander_label):
             col1, col2, col3 = st.columns(3)
@@ -270,7 +267,6 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                     key=f"st_it_{tr_id}_{idx}"
                 )
 
-            # 3. Αποθήκευση αλλαγών με την ίδια λογική των χαλιών
             if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_it_{tr_id}_{idx}", type="primary", use_container_width=True):
                 try:
                     id_col = [str(x) for x in ws.col_values(1)]
@@ -303,7 +299,6 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
     name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
     cust_choices = ["-- Επιλέξτε Πελάτη --"] + df_customers[name_col].dropna().tolist()
 
-    # Φιλτράρισμα ειδών αποκλειστικά για την κατηγορία "Ρούχα"
     item_choices = ["-- Επιλέξτε Είδος --"]
     if not df_items.empty:
         df_items.columns = df_items.columns.str.strip()
@@ -342,7 +337,7 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
             st.error("❌ Παρακαλώ συμπληρώστε Πελάτη και Είδος!")
         else:
             try:
-                ws = get_worksheet_fn("TrItems")  # ΔΙΟΡΘΩΣΗ ΕΔΩ
+                ws = get_worksheet_fn("TrItems")
                 data = ws.get_all_records()
                 df = pd.DataFrame(data)
                 

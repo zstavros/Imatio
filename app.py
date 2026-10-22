@@ -310,8 +310,17 @@ elif st.session_state['active_subview'] == 'manage_customers_new':
 
 # 7. ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ
 elif st.session_state['active_subview'] == 'manage_customers_edit':
+    # 1. Καθαρίζουμε το cache της Streamlit
+    st.cache_data.clear()
+    # 2. Φέρνουμε ολοκαίνουργια δεδομένα απευθείας από το Google Sheet
+    ws_cust = get_worksheet("Customers")
+    fresh_cust_data = ws_cust.get_all_records()
+    df_fresh_customers = pd.DataFrame(fresh_cust_data)
+    # 3. Ενημερώνουμε και το session_state
+    st.session_state['df_customers'] = df_fresh_customers
+    # 4. Καλούμε τη φόρμα με τα ΦΡΕΣΚΑ δεδομένα!
     admin_egg.render_edit_customer_tab(
-        st.session_state.get('df_customers', pd.DataFrame()), 
+        df_fresh_customers, 
         get_worksheet
     )
 
@@ -324,7 +333,16 @@ elif st.session_state['active_subview'] == 'manage_catalog_new':
 
 # 9. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ
 elif st.session_state['active_subview'] == 'manage_catalog_edit':
+    # 1. Καθαρίζουμε το cache της Streamlit
+    st.cache_data.clear()
+    # 2. Φέρνουμε ολοκαίνουργια δεδομένα απευθείας από το Google Sheet
+    ws_items = get_worksheet("Items")
+    fresh_items_data = ws_items.get_all_records()
+    df_fresh_items = pd.DataFrame(fresh_items_data)
+    # 3. Ενημερώνουμε και το session_state
+    st.session_state['df_items'] = df_fresh_items
+    # 4. Καλούμε τη φόρμα με τα ΦΡΕΣΚΑ δεδομένα!
     admin_egg.render_edit_item_tab(
-        st.session_state.get('df_items', pd.DataFrame()), 
+        df_fresh_items, 
         get_worksheet
     )

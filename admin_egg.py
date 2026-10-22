@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # ---------------------------------------------------------
-# 1. ΝΕΑ ΕΓΓΡΑΦΗ ΠΕΛΑΤΗ
+# 1. NEA EGGRAFI PELATI
 # ---------------------------------------------------------
 def render_new_customer_tab(df_customers, get_worksheet):
     ws_customers = get_worksheet("Customers")
@@ -41,13 +41,12 @@ def render_new_customer_tab(df_customers, get_worksheet):
                 st.rerun()
 
 # ---------------------------------------------------------
-# 2. ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ
+# 2. TROPOPOISI PELATI
 # ---------------------------------------------------------
 def render_edit_customer_tab(df_customers, get_worksheet):
     ws_customers = get_worksheet("Customers")
     name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
 
-    # 1. KOYMPIA ΣΤΗΝ ΚΟΡΥΦΗ (Δίπλα-δίπλα)
     col_nav, col_empty, col_save = st.columns([1, 1, 1])
     with col_nav:
         btn_home = st.button("🏠 ARXIKI", key="btn_home_edit_cust", use_container_width=True)
@@ -58,7 +57,6 @@ def render_edit_customer_tab(df_customers, get_worksheet):
     with col_save:
         btn_save = st.button("💾 APO8IKEYSI", key="btn_save_edit_cust", type="primary", use_container_width=True)
 
-    # 2. ΤΙΤΛΟΣ & ΑΝΑΖΗΤΗΣΗ
     st.markdown("### ✏️ Tropopoiisi Stoixeiwn Pelati")
 
     if df_customers.empty or name_col not in df_customers.columns:
@@ -77,7 +75,6 @@ def render_edit_customer_tab(df_customers, get_worksheet):
         st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
         st.write(f"✏️ Epexergasia: **{c_name_val}**")
         
-        # Πεδία με δυναμικά keys για άμεση αλλαγή δεδομένων
         e_name = st.text_input("Onomatepwnymo", value=str(c_row_data.get('CuName', c_row_data.get('Name', ''))), key=f"ec_name_{c_name_val}")
         e_mobile1 = st.text_input("Kinito-1", value=str(c_row_data.get('CuPhone', '')), key=f"ec_mob1_{c_name_val}")
         e_mobile2 = st.text_input("Kinito-2", value=str(c_row_data.get('CuMobile', '')), key=f"ec_mob2_{c_name_val}")
@@ -86,7 +83,6 @@ def render_edit_customer_tab(df_customers, get_worksheet):
         e_email = st.text_input("Email", value=str(c_row_data.get('CuEmail', '')), key=f"ec_email_{c_name_val}")
         e_notes = st.text_area("Simeioseis", value=str(c_row_data.get('CuNotes', '')), key=f"ec_notes_{c_name_val}")
         
-        # Εκτέλεση αποθήκευσης όταν πατηθεί το πάνω κουμπί
         if btn_save:
             try:
                 cell = ws_customers.find(c_name_val)
@@ -105,7 +101,7 @@ def render_edit_customer_tab(df_customers, get_worksheet):
                 st.error(f"❌ Sfalma: {e}")
 
 # ---------------------------------------------------------
-# 3. ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛΟΓΟΥ
+# 3. NEO EIDOS KATALOGOY
 # ---------------------------------------------------------
 def render_new_item_tab(df_items, get_worksheet):
     ws_items = get_worksheet("Items")
@@ -129,11 +125,11 @@ def render_new_item_tab(df_items, get_worksheet):
         it_price_m2 = st.number_input("TIMI TETRAGWNIKOY (€/m²)", min_value=0.0, step=0.5)
         
         if submitted:
-            if not it_name:
+            if not it_name.strip():
                 st.error("Valte onoma eidous.")
             else:
                 item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(pd.to_numeric(df_items['ItemID'], errors='coerce').max() or 0) + 1
-                ws_items.append_row([item_id, it_name, it_desc, it_price, it_price_m2])
+                ws_items.append_row([item_id, it_name.strip(), it_desc, it_price, it_price_m2])
                 st.cache_data.clear()
                 st.session_state['active_subview'] = 'menu'
                 st.rerun()
@@ -146,7 +142,6 @@ def render_edit_item_tab(df_items, get_worksheet):
     col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
     col_desc_key = 'Category' if 'Category' in df_items.columns else ('Description' if 'Description' in df_items.columns else None)
 
-    # 1. KOYMPIA ΣΤΗΝ ΚΟΡΥΦΗ
     col_nav, col_empty, col_save = st.columns([1, 1, 1])
     with col_nav:
         btn_home_item = st.button("🏠 ARXIKI", key="btn_home_edit_item", use_container_width=True)
@@ -157,7 +152,6 @@ def render_edit_item_tab(df_items, get_worksheet):
     with col_save:
         btn_save_item = st.button("💾 APO8IKEYSI", key="btn_save_edit_item", type="primary", use_container_width=True)
 
-    # 2. ΤΙΤΛΟΣ & ΑΝΑΖΗΤΗΣΗ
     st.markdown("### ✏️ Tropopoiisi Katalogoy")
 
     if df_items.empty or col_name_key not in df_items.columns:

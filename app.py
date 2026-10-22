@@ -242,7 +242,7 @@ if st.session_state['active_subview'] == 'menu':
     col1, col2 = st.columns(2, gap="large")
     
     with col1:
-        st.markdown("#### 🚚 Τμήμα Χαλιών")
+        st.markdown("##### 🚚 Τμήμα Χαλιών")
        # st.markdown("<p>Παραλαβή & επεξεργασία στοιχείων χαλιών</p>", unsafe_allow_html=True)
         
         if st.button("🚚 ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ", use_container_width=True):
@@ -270,8 +270,8 @@ if st.session_state['active_subview'] == 'menu':
     col_c1, col_c2 = st.columns(2, gap="large")
     
     with col_c1:
-        st.markdown("### 👤 Διαχείριση Πελάτών")
-        st.markdown("<p>Καταχώρηση νέων πελατών & τροποποίηση στοιχείων</p>", unsafe_allow_html=True)
+        st.markdown("##### 👤 Διαχείριση Πελάτών")
+       # st.markdown("<p>Καταχώρηση νέων πελατών & τροποποίηση στοιχείων</p>", unsafe_allow_html=True)
         
         if st.button("➕ Διαχείριση Πελατών (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_new'
@@ -282,8 +282,8 @@ if st.session_state['active_subview'] == 'menu':
             st.rerun()
             
     with col_c2:
-        st.markdown("### 📦 Διαχείριση Καταλόγου Ειδών & Χαλιών")
-        st.markdown("<p>Δημιουργία νέων ειδών/χαλιών & τροποποίηση καταλόγου</p>", unsafe_allow_html=True)
+        st.markdown("##### 📦 Διαχείριση Καταλόγου Ειδών & Χαλιών")
+       # st.markdown("<p>Δημιουργία νέων ειδών/χαλιών & τροποποίηση καταλόγου</p>", unsafe_allow_html=True)
         
         if st.button("➕ Διαχείριση Καταλόγου (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_catalog_new'

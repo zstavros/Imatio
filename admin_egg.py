@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # ---------------------------------------------------------
-# 1. NEA EGGRAFI PELATI
+# 1. ΝΕΑ ΕΓΓΡΑΦΗ ΠΕΛΑΤΗ
 # ---------------------------------------------------------
 def render_new_customer_tab(df_customers, get_worksheet):
     ws_customers = get_worksheet("Customers")
@@ -43,12 +43,10 @@ def render_new_customer_tab(df_customers, get_worksheet):
                 st.rerun()
 
 # ---------------------------------------------------------
-# 2. TROPOPOISI PELATI (Me dynamika keys gia amesi allagi stoixeion)
+# 2. ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ (XWRIS DIPLA KOUMPIA)
 # ---------------------------------------------------------
 def render_edit_customer_tab(df_customers, get_worksheet):
-    ws_customers = get_worksheet("Customers")
-    name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
-
+    # ENA MONO KOUMPI ARXIKI STIN KORYFI
     col_nav, col_space = st.columns([1, 2])
     with col_nav:
         if st.button("🏠 ARXIKI", key="btn_home_edit_cust", use_container_width=True):
@@ -56,6 +54,8 @@ def render_edit_customer_tab(df_customers, get_worksheet):
             st.rerun()
 
     st.markdown("### ✏️ Tropopoiisi Stoixeiwn Pelati")
+    ws_customers = get_worksheet("Customers")
+    name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
 
     if not df_customers.empty and name_col in df_customers.columns:
         valid_customers = df_customers[df_customers[name_col].astype(str).str.strip() != ""]
@@ -68,19 +68,10 @@ def render_edit_customer_tab(df_customers, get_worksheet):
             
             st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
             
-            # Xrisimopoioume forma me dynamiko onoma gia kathe pelati
             with st.form(key=f"form_edit_cust_{c_name_val}"):
-                col_n, col_m, col_s = st.columns([1, 1, 1])
-                with col_n:
-                    if st.form_submit_button("🏠 ARXIKI", use_container_width=True):
-                        st.session_state['active_subview'] = 'menu'
-                        st.rerun()
-                with col_s:
-                    submitted_c = st.form_submit_button("💾 APO8IKEYSI", type="primary", use_container_width=True)
-
                 st.write(f"✏️ Epexergasia: **{c_name_val}**")
                 
-                # Ta keys einai dynamika gia na enimeronontai amesws me tin allagi pelati
+                # Dynamika keys gia na allazoun ta dedomena amesos molis alla3eis pelati!
                 e_name = st.text_input("Onomatepwnymo", value=str(c_row_data.get('CuName', c_row_data.get('Name', ''))), key=f"ec_name_{c_name_val}")
                 e_mobile1 = st.text_input("Kinito-1", value=str(c_row_data.get('CuPhone', '')), key=f"ec_mob1_{c_name_val}")
                 e_mobile2 = st.text_input("Kinito-2", value=str(c_row_data.get('CuMobile', '')), key=f"ec_mob2_{c_name_val}")
@@ -89,7 +80,8 @@ def render_edit_customer_tab(df_customers, get_worksheet):
                 e_email = st.text_input("Email", value=str(c_row_data.get('CuEmail', '')), key=f"ec_email_{c_name_val}")
                 e_notes = st.text_area("Simeioseis", value=str(c_row_data.get('CuNotes', '')), key=f"ec_notes_{c_name_val}")
                 
-                if submitted_c:
+                # ENA MONO KOUMPI APO8IKEYSI MESA STI FORMA
+                if st.form_submit_button("💾 APO8IKEYSI ALLAGWN", type="primary", use_container_width=True):
                     try:
                         cell = ws_customers.find(c_name_val)
                         ws_customers.update_cell(cell.row, df_customers.columns.get_loc(name_col) + 1, e_name)
@@ -107,7 +99,7 @@ def render_edit_customer_tab(df_customers, get_worksheet):
                         st.error(f"❌ Sfalma: {e}")
 
 # ---------------------------------------------------------
-# 3. NEO EIDOS KATALOGOY
+# 3. ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛΟΓΟΥ
 # ---------------------------------------------------------
 def render_new_item_tab(df_items, get_worksheet):
     ws_items = get_worksheet("Items")
@@ -142,13 +134,10 @@ def render_new_item_tab(df_items, get_worksheet):
                 st.rerun()
 
 # ---------------------------------------------------------
-# 4. TROPOPOISI KATALOGOY (Me dynamika keys gia amesi allagi eidous)
+# 4. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ (XWRIS DIPLA KOUMPIA)
 # ---------------------------------------------------------
 def render_edit_item_tab(df_items, get_worksheet):
-    ws_items = get_worksheet("Items")
-    col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
-    col_desc_key = 'Category' if 'Category' in df_items.columns else ('Description' if 'Description' in df_items.columns else None)
-
+    # ENA MONO KOUMPI ARXIKI STIN KORYFI
     col_nav, col_space = st.columns([1, 2])
     with col_nav:
         if st.button("🏠 ARXIKI", key="btn_home_edit_item", use_container_width=True):
@@ -156,6 +145,9 @@ def render_edit_item_tab(df_items, get_worksheet):
             st.rerun()
 
     st.markdown("### ✏️ Tropopoiisi Katalogoy")
+    ws_items = get_worksheet("Items")
+    col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
+    col_desc_key = 'Category' if 'Category' in df_items.columns else ('Description' if 'Description' in df_items.columns else None)
 
     if df_items.empty or col_name_key not in df_items.columns:
         st.info("Den yparxoun apothikeymena eidi.")
@@ -184,14 +176,6 @@ def render_edit_item_tab(df_items, get_worksheet):
         st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
 
         with st.form(key=f"form_edit_item_{real_name}"):
-            col_n, col_m, col_s = st.columns([1, 1, 1])
-            with col_n:
-                if st.form_submit_button("🏠 ARXIKI", use_container_width=True):
-                    st.session_state['active_subview'] = 'menu'
-                    st.rerun()
-            with col_s:
-                submitted_edit = st.form_submit_button("💾 APO8IKEYSI", type="primary", use_container_width=True)
-
             st.write(f"✏️ Epexergasia: **{real_name}**")
             
             new_it_name = st.text_input("Onoma Eidous", value=real_name, key=f"ei_name_{real_name}")
@@ -202,7 +186,7 @@ def render_edit_item_tab(df_items, get_worksheet):
             new_price = st.number_input("TIMI (€)", value=curr_price, min_value=0.0, step=0.5, key=f"ei_price_{real_name}")
             new_price_m2 = st.number_input("TIMI TETRAGWNIKOY (€/m²)", value=curr_price_m2, min_value=0.0, step=0.5, key=f"ei_pricem2_{real_name}")
             
-            if submitted_edit:
+            if st.form_submit_button("💾 APO8IKEYSI ALLAGWN", type="primary", use_container_width=True):
                 try:
                     cell = ws_items.find(real_name)
                     ws_items.update_cell(cell.row, 2, new_it_name)

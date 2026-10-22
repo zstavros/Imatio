@@ -1,13 +1,9 @@
 import streamlit as st
 import pandas as pd
 
-# ---------------------------------------------------------
 # 1. ΝΕΑ ΕΓΓΡΑΦΗ ΠΕΛΑΤΗ
-# ---------------------------------------------------------
 def render_new_customer_tab(df_customers, get_worksheet):
-    st.markdown("### ➕ Νέα Εγγραφή Πελάτη")
     ws_customers = get_worksheet("Customers")
-
     with st.form("new_customer_form", clear_on_submit=True):
         n_name = st.text_input("Ονοματεπώνυμο *")
         n_mobile1 = st.text_input("Κινητό-1 (CuPhone)")
@@ -28,11 +24,8 @@ def render_new_customer_tab(df_customers, get_worksheet):
                 st.cache_data.clear()
                 st.rerun()
 
-# ---------------------------------------------------------
 # 2. ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ
-# ---------------------------------------------------------
 def render_edit_customer_tab(df_customers, get_worksheet):
-    st.markdown("### ✏️ Τροποποίηση Στοιχείων Πελάτη")
     ws_customers = get_worksheet("Customers")
     name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
 
@@ -70,13 +63,9 @@ def render_edit_customer_tab(df_customers, get_worksheet):
                     except Exception as e:
                         st.error(f"❌ Σφάλμα: {e}")
 
-# ---------------------------------------------------------
 # 3. ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛΟΓΟΥ
-# ---------------------------------------------------------
 def render_new_item_tab(df_items, get_worksheet):
-    st.markdown("### ➕ Νέο Είδος Καταλόγου")
     ws_items = get_worksheet("Items")
-
     with st.form("new_item_form", clear_on_submit=True):
         it_name = st.text_input("Όνομα Είδους (π.χ. Μπουφάν)")
         it_desc = st.text_input("Περιγραφή / Κατηγορία")
@@ -93,11 +82,8 @@ def render_new_item_tab(df_items, get_worksheet):
                 st.cache_data.clear()
                 st.rerun()
 
-# ---------------------------------------------------------
 # 4. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ
-# ---------------------------------------------------------
 def render_edit_item_tab(df_items, get_worksheet):
-    st.markdown("### ✏️ Τροποποίηση Καταλόγου")
     ws_items = get_worksheet("Items")
     col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
 
@@ -125,7 +111,6 @@ def render_edit_item_tab(df_items, get_worksheet):
                         ws_items.update_cell(cell.row, 2, new_it_name)
                         ws_items.update_cell(cell.row, 3, new_price)
                         ws_items.update_cell(cell.row, 4, new_price_m2)
-                        
                         st.success("✅ Το είδος ενημερώθηκε επιτυχώς!")
                         st.cache_data.clear()
                         st.rerun()

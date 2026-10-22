@@ -157,7 +157,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                     st.error(f"❌ Σφάλμα: {e}")
 
 
-# --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrEidi) ---
+# --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrItems) ---
 def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
     col_nav, col_space = st.columns([1, 2])
     with col_nav:
@@ -165,7 +165,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
             st.session_state['active_subview'] = 'menu'
             st.rerun()
 
-    st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Ρούχων / Ειδών (TrEidi)")
+    st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Ρούχων / Ειδών (TrItems)")
     
     if df_items_trans.empty:
         st.info("Δεν βρέθηκαν εγγραφές στα Ρούχα.")
@@ -213,7 +213,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         return
 
     st.write(f"Βρέθηκαν **{len(df_filtered)}** ενεργές εγγραφές:")
-    ws = get_worksheet_fn("TrEidi")
+    ws = get_worksheet_fn("TrItems")  # ΔΙΟΡΘΩΣΗ ΕΔΩ
 
     for idx, row in df_filtered.iterrows():
         tr_id = str(row['TransactionID'])
@@ -315,7 +315,7 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
             st.error("❌ Παρακαλώ συμπληρώστε Πελάτη και Είδος!")
         else:
             try:
-                ws = get_worksheet_fn("TrEidi")
+                ws = get_worksheet_fn("TrItems")  # ΔΙΟΡΘΩΣΗ ΕΔΩ
                 data = ws.get_all_records()
                 df = pd.DataFrame(data)
                 

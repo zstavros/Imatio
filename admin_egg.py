@@ -125,72 +125,84 @@ def render_new_item_tab(df_items, get_worksheet):
                 st.rerun()
 
 # ---------------------------------------------------------
-# 4. TROPOPOISI KATALOGOY (Me dynatotita allagis tis katigorias)
+# 4. TROPOPOISI KATALOGOY (Me eniaia koumpiara stin korifi)
 # ---------------------------------------------------------
 def render_edit_item_tab(df_items, get_worksheet):
-    col_nav, col_space = st.columns([1, 2])
-    with col_nav:
-        if st.button("🏠 ARXIKI", key="back_home_edit_item", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
-
-    st.markdown("### ✏️ Tropopoiisi Katalogoy")
     ws_items = get_worksheet("Items")
     col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
     col_desc_key = 'Category' if 'Category' in df_items.columns else ('Description' if 'Description' in df_items.columns else None)
 
     if df_items.empty or col_name_key not in df_items.columns:
+        col_nav, col_space = st.columns([1, 2])
+        with col_nav:
+            if st.button("🏠 ARXIKI", key="back_home_edit_item_empty", use_container_width=True):
+                st.session_state['active_subview'] = 'menu'
+                st.rerun()
         st.info("Den yparxoun apothikeymena eidi.")
+        return
+
+    valid_items = df_items[df_items[col_name_key].astype(str).str.strip() != ""]
+    
+    item_options = ["-- Epilexte eidos --"]
+    item_map = {}
+    for _, r in valid_items.iterrows():
+        name_val = str(r[col_name_key]).strip()
+        cat_val = str(r[col_desc_key]).strip() if col_desc_key and pd.notnull(r[col_desc_key]) else "Rouxa"
+        display_str = f"{name_val} ({cat_val})"
+        item_options.append(display_str)
+        item_map[display_str] = name_val
+
+    # Επιλογή είδους εκτός φόρμας για να γίνεται σωστά το φιλτράρισμα
+    selected_display = st.selectbox("Anazitisi Eidous", item_options, label_visibility="collapsed", key="search_item_selectbox")
+
+    if selected_display and selected_display != "-- Epilexte eidos --":
+        real_name = item_map[selected_display]
+        row_data = valid_items[valid_items[col_name_key].astype(str).str.strip() == real_name].iloc[0]
+        curr_price = float(row_data.get('Price', 0.0) or 0.0) if 'Price' in df_items.columns else 0.0
+        curr_price_m2 = float(row_data.get('Price m2', row_data.get('Price_m2', 0.0)) or 0.0)
+        curr_cat = str(row_data.get(col_desc_key, "Rouxa")) if col_desc_key else "Rouxa"
+
+        st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
+
+        with st.form("edit_item_form"):
+            # Κουμπιά ΑΡΧΙΚΗ και ΑΠΟΘΗΚΕΥΣΗ δίπλα-δίπλα στην κορυφή της φόρμας
+            col_nav, col_empty, col_save = st.columns([1, 1, 1])
+            with col_nav:
+                form_back = st.form_submit_button("🏠 ARXIKI", use_container_width=True)
+            with col_save:
+                submitted_edit = st.form_submit_button("💾 APO8IKEYSI", type="primary", use_container_width=True)
+
+            if form_back:
+                st.session_state['active_subview'] = 'menu'
+                st.rerun()
+
+            st.markdown(f"### ✏️ Epexergasia: {real_name}")
+            
+            new_it_name = st.text_input("Onoma Eidous", value=real_name)
+            
+            cat_index = 0 if curr_cat.strip().lower() == "rouxa" else 1 if curr_cat.strip().lower() == "xalia" else 0
+            new_cat = st.selectbox("Perigrafi / Katigoria", ["Rouxa", "Xalia"], index=cat_index)
+            
+            new_price = st.number_input("TIMI (€)", value=curr_price, min_value=0.0, step=0.5)
+            new_price_m2 = st.number_input("TIMI TETRAGWNIKOY (€/m²)", value=curr_price_m2, min_value=0.0, step=0.5)
+            
+            if submitted_edit:
+                try:
+                    cell = ws_items.find(real_name)
+                    ws_items.update_cell(cell.row, 2, new_it_name)
+                    if col_desc_key:
+                        ws_items.update_cell(cell.row, df_items.columns.get_loc(col_desc_key) + 1, new_cat)
+                    ws_items.update_cell(cell.row, 3, new_price)
+                    ws_items.update_cell(cell.row, 4, new_price_m2)
+                    st.success("✅ To eidos enimerwthike epityxws!")
+                    st.cache_data.clear()
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Sfalma: {e}")
     else:
-        valid_items = df_items[df_items[col_name_key].astype(str).str.strip() != ""]
-        
-        item_options = ["-- Epilexte eidos --"]
-        item_map = {}
-        for _, r in valid_items.iterrows():
-            name_val = str(r[col_name_key]).strip()
-            cat_val = str(r[col_desc_key]).strip() if col_desc_key and pd.notnull(r[col_desc_key]) else "Rouxa"
-            display_str = f"{name_val} ({cat_val})"
-            item_options.append(display_str)
-            item_map[display_str] = name_val
-
-        selected_display = st.selectbox("Anazitisi Eidous", item_options, label_visibility="collapsed", key="search_item_selectbox")
-
-        if selected_display and selected_display != "-- Epilexte eidos --":
-            real_name = item_map[selected_display]
-            row_data = valid_items[valid_items[col_name_key].astype(str).str.strip() == real_name].iloc[0]
-            curr_price = float(row_data.get('Price', 0.0) or 0.0) if 'Price' in df_items.columns else 0.0
-            curr_price_m2 = float(row_data.get('Price m2', row_data.get('Price_m2', 0.0)) or 0.0)
-            curr_cat = str(row_data.get(col_desc_key, "Rouxa")) if col_desc_key else "Rouxa"
-
-            with st.form("edit_item_form"):
-                col_n, col_s = st.columns([1, 1])
-                with col_n:
-                    if st.form_submit_button("🏠 ARXIKI", use_container_width=True):
-                        st.session_state['active_subview'] = 'menu'
-                        st.rerun()
-                with col_s:
-                    submitted_edit = st.form_submit_button("💾 APO8IKEYSI", type="primary", use_container_width=True)
-
-                st.write(f"✏️ Epexergasia: **{real_name}**")
-                new_it_name = st.text_input("Onoma Eidous", value=real_name)
-                
-                # Edo epilegeis kai allazeis tin katigoria an thes
-                cat_index = 0 if curr_cat.strip().lower() == "rouxa" else 1 if curr_cat.strip().lower() == "xalia" else 0
-                new_cat = st.selectbox("Perigrafi / Katigoria", ["Rouxa", "Xalia"], index=cat_index)
-                
-                new_price = st.number_input("TIMI (€)", value=curr_price, min_value=0.0, step=0.5)
-                new_price_m2 = st.number_input("TIMI TETRAGWNIKOY (€/m²)", value=curr_price_m2, min_value=0.0, step=0.5)
-                
-                if submitted_edit:
-                    try:
-                        cell = ws_items.find(real_name)
-                        ws_items.update_cell(cell.row, 2, new_it_name)
-                        if col_desc_key:
-                            ws_items.update_cell(cell.row, df_items.columns.get_loc(col_desc_key) + 1, new_cat)
-                        ws_items.update_cell(cell.row, 3, new_price)
-                        ws_items.update_cell(cell.row, 4, new_price_m2)
-                        st.success("✅ To eidos enimerwthike epityxws!")
-                        st.cache_data.clear()
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"❌ Sfalma: {e}")
+        # Αν δεν έχει επιλεχθεί είδος ακόμα, δείχνουμε μόνο το κουμπί Αρχική επάνω
+        col_nav, col_space = st.columns([1, 2])
+        with col_nav:
+            if st.button("🏠 ARXIKI", key="back_home_edit_item_main", use_container_width=True):
+                st.session_state['active_subview'] = 'menu'
+                st.rerun()

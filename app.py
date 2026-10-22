@@ -178,8 +178,6 @@ subview_titles = {
     'manage_catalog_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ'
 }
 
-current_page_title = subview_titles.get(st.session_state.get('active_subview', 'menu'), '')
-
 # --- HEADER WITH LOGO & DYNAMIC PAGE TITLE ---
 def get_base64_image(image_path):
     if os.path.exists(image_path):
@@ -189,47 +187,25 @@ def get_base64_image(image_path):
 
 logo_b64 = get_base64_image("logo.png")
 
-st.markdown("""
-    <style>
-        .brand-header {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            padding: 12px 20px !important;
-            background-color: #1b6338 !important;
-            border-radius: 10px !important;
-            margin-bottom: 25px !important;
-        }
-        .brand-header-left {
-            display: flex !important;
-            align-items: center !important;
-            gap: 15px !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
+# Ορισμός τίτλου: αν είμαστε στο αρχικό μενού, δείχνει το IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ, αλλιώς τον τίτλο της σελίδας
+current_subview = st.session_state.get('active_subview', 'menu')
+if current_subview == 'menu':
+    header_text = "IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ"
+else:
+    header_text = subview_titles.get(current_subview, "")
 
 if logo_b64:
     header_html = f"""
         <div class="brand-header">
-            <div class="brand-header-left">
-                <img src="data:image/png;base64,{logo_b64}" style="height: 42px; width: auto; object-fit: contain;">
-                <span class="brand-title">IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
-            </div>
-            <div>
-                <span class="brand-title">{current_page_title}</span>
-            </div>
+            <img src="data:image/png;base64,{logo_b64}" style="height: 42px; width: auto; object-fit: contain;">
+            <span class="brand-title">{header_text}</span>
         </div>
     """
 else:
     header_html = f"""
         <div class="brand-header">
-            <div class="brand-header-left">
-                <span style="font-size: 1.6rem;">🧺</span>
-                <span class="brand-title">IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
-            </div>
-            <div>
-                <span class="brand-title">{current_page_title}</span>
-            </div>
+            <span style="font-size: 1.6rem;">🧺</span>
+            <span class="brand-title">{header_text}</span>
         </div>
     """
 
@@ -243,7 +219,6 @@ if st.session_state['active_subview'] == 'menu':
     
     with col1:
         st.markdown("##### 🚚 Τμήμα Χαλιών")
-       # st.markdown("<p>Παραλαβή & επεξεργασία στοιχείων χαλιών</p>", unsafe_allow_html=True)
         
         if st.button("🚚 ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'fast_loading'
@@ -255,7 +230,6 @@ if st.session_state['active_subview'] == 'menu':
 
     with col2:
         st.markdown("##### 👕 Τμήμα Ρούχων & Ειδών")
-        #st.markdown("<p>Παραλαβή & διαχείριση ραφιών/τιμών</p>", unsafe_allow_html=True)
         
         if st.button("👕 ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'item_loading'
@@ -271,19 +245,17 @@ if st.session_state['active_subview'] == 'menu':
     
     with col_c1:
         st.markdown("##### 👤 Διαχείριση Πελάτών")
-       # st.markdown("<p>Καταχώρηση νέων πελατών & τροποποίηση στοιχείων</p>", unsafe_allow_html=True)
         
         if st.button("➕ Διαχείριση Πελατών (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_new'
             st.rerun()
             
-        if st.button("✏️ Διαχείριση Πελάτων (Τροποποίηση)", use_container_width=True):
+        if st.button("✏️ Διαχείριση Πελάτών (Τροποποίηση)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_edit'
             st.rerun()
             
     with col_c2:
         st.markdown("##### 📦 Διαχείριση Καταλόγου Ειδών & Χαλιών")
-       # st.markdown("<p>Δημιουργία νέων ειδών/χαλιών & τροποποίηση καταλόγου</p>", unsafe_allow_html=True)
         
         if st.button("➕ Διαχείριση Καταλόγου (Νέα Εγγραφή)", use_container_width=True):
             st.session_state['active_subview'] = 'manage_catalog_new'

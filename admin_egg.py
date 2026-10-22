@@ -1,10 +1,25 @@
 import streamlit as st
 import pandas as pd
 
+# ---------------------------------------------------------
 # 1. ΝΕΑ ΕΓΓΡΑΦΗ ΠΕΛΑΤΗ
+# ---------------------------------------------------------
 def render_new_customer_tab(df_customers, get_worksheet):
     ws_customers = get_worksheet("Customers")
+
     with st.form("new_customer_form", clear_on_submit=True):
+        col_nav, col_empty, col_save = st.columns([1, 1, 1])
+        
+        with col_nav:
+            if st.form_submit_button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
+                st.session_state['active_subview'] = 'menu'
+                st.rerun()
+
+        with col_save:
+            submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
+
+        st.markdown("### ➕ Νέα Εγγραφή Πελάτη")
+        
         n_name = st.text_input("Ονοματεπώνυμο *")
         n_mobile1 = st.text_input("Κινητό-1 (CuPhone)")
         n_mobile2 = st.text_input("Κινητό-2 (CuMobile)")
@@ -12,7 +27,7 @@ def render_new_customer_tab(df_customers, get_worksheet):
         n_email = st.text_input("Email (CuEmail)")
         n_notes = st.text_area("Σημειώσεις (CuNotes)")
         
-        if st.form_submit_button("💾 Αποθήκευση Νέου Πελάτη", type="primary"):
+        if submitted:
             if not n_name.strip():
                 st.error("❌ Παρακαλώ συμπληρώστε Όνομα.")
             else:
@@ -24,8 +39,17 @@ def render_new_customer_tab(df_customers, get_worksheet):
                 st.cache_data.clear()
                 st.rerun()
 
+# ---------------------------------------------------------
 # 2. ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ
+# ---------------------------------------------------------
 def render_edit_customer_tab(df_customers, get_worksheet):
+    col_nav, col_space = st.columns([1, 2])
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_edit_cust", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
+
+    st.markdown("### ✏️ Τροποποίηση Στοιχείων Πελάτη")
     ws_customers = get_worksheet("Customers")
     name_col = 'CuName' if 'CuName' in df_customers.columns else 'Name'
 
@@ -48,7 +72,7 @@ def render_edit_customer_tab(df_customers, get_worksheet):
                 e_email = st.text_input("Email", value=str(c_row_data.get('CuEmail', '')))
                 e_notes = st.text_area("Σημειώσεις", value=str(c_row_data.get('CuNotes', '')))
                 
-                if st.form_submit_button("🔄 Ενημέρωση Στοιχείων"):
+                if st.form_submit_button("🔄 Ενημέρωση Στοιχείων", type="primary"):
                     try:
                         cell = ws_customers.find(c_name_val)
                         ws_customers.update_cell(cell.row, df_customers.columns.get_loc(name_col) + 1, e_name)
@@ -63,16 +87,31 @@ def render_edit_customer_tab(df_customers, get_worksheet):
                     except Exception as e:
                         st.error(f"❌ Σφάλμα: {e}")
 
+# ---------------------------------------------------------
 # 3. ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛΟΓΟΥ
+# ---------------------------------------------------------
 def render_new_item_tab(df_items, get_worksheet):
     ws_items = get_worksheet("Items")
+
     with st.form("new_item_form", clear_on_submit=True):
+        col_nav, col_empty, col_save = st.columns([1, 1, 1])
+        
+        with col_nav:
+            if st.form_submit_button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
+                st.session_state['active_subview'] = 'menu'
+                st.rerun()
+
+        with col_save:
+            submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
+
+        st.markdown("### ➕ Νέο Είδος Καταλόγου")
+        
         it_name = st.text_input("Όνομα Είδους (π.χ. Μπουφάν)")
         it_desc = st.text_input("Περιγραφή / Κατηγορία")
         it_price = st.number_input("ΤΙΜΗ (€)", min_value=0.0, step=0.5)
         it_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", min_value=0.0, step=0.5)
         
-        if st.form_submit_button("Προσθήκη Είδους"):
+        if submitted:
             if not it_name:
                 st.error("Βάλτε όνομα είδους.")
             else:
@@ -82,8 +121,17 @@ def render_new_item_tab(df_items, get_worksheet):
                 st.cache_data.clear()
                 st.rerun()
 
+# ---------------------------------------------------------
 # 4. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ
+# ---------------------------------------------------------
 def render_edit_item_tab(df_items, get_worksheet):
+    col_nav, col_space = st.columns([1, 2])
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_edit_item", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
+
+    st.markdown("### ✏️ Τροποποίηση Καταλόγου")
     ws_items = get_worksheet("Items")
     col_name_key = 'ItName' if 'ItName' in df_items.columns else 'Name'
 
@@ -105,7 +153,7 @@ def render_edit_item_tab(df_items, get_worksheet):
                 new_price = st.number_input("ΤΙΜΗ (€)", value=curr_price, min_value=0.0, step=0.5)
                 new_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", value=curr_price_m2, min_value=0.0, step=0.5)
                 
-                if st.form_submit_button("Αποθήκευση Αλλαγών"):
+                if st.form_submit_button("Αποθήκευση Αλλαγών", type="primary"):
                     try:
                         cell = ws_items.find(selected_it)
                         ws_items.update_cell(cell.row, 2, new_it_name)

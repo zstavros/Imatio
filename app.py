@@ -243,7 +243,7 @@ if st.session_state['active_subview'] == 'menu':
     
     with col1:
         st.markdown("#### 🚚 Τμήμα Χαλιών")
-        st.markdown("<p>Παραλαβή & επεξεργασία στοιχείων χαλιών</p>", unsafe_allow_html=True)
+       # st.markdown("<p>Παραλαβή & επεξεργασία στοιχείων χαλιών</p>", unsafe_allow_html=True)
         
         if st.button("🚚 ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'fast_loading'
@@ -255,7 +255,7 @@ if st.session_state['active_subview'] == 'menu':
 
     with col2:
         st.markdown("##### 👕 Τμήμα Ρούχων & Ειδών")
-        st.markdown("<p>Παραλαβή & διαχείριση ραφιών/τιμών</p>", unsafe_allow_html=True)
+        #st.markdown("<p>Παραλαβή & διαχείριση ραφιών/τιμών</p>", unsafe_allow_html=True)
         
         if st.button("👕 ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'item_loading'

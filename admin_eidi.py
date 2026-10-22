@@ -112,11 +112,9 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
 
         is_etoimo = (status_val == "Έτοιμο")
         prefix_icon = "🟢 [ΕΤΟΙΜΟ] " if is_etoimo 
-        sep = " │ "  # Καθαρή κάθετη γραμμή
-        expander_label = f"{prefix_icon}ID: #{tr_id}{sep}{c_name} ({phone_show}){sep}Barcode: {code_val}{sep}Thesi: {place_val}{sep}Timh: {price_val}€{sep}Katastasi: {status_val}{sep}{item_name}"
-        else "📌 "
-        sep = " * "  # Καθαρή κάθετη γραμμή
-        expander_label = f"{prefix_icon}ID: #{tr_id}{sep}{c_name} ({phone_show}){sep}Barcode: {code_val}{sep}Thesi: {place_val}{sep}Timh: {price_val}€{sep}Katastasi: {status_val}{sep}{item_name}"
+        sep = " 🟢 * " if is_etoimo else " 🔴 * "
+        expander_label = f"{prefix_icon}ID: #{tr_id}{sep}{c_name} ({phone_show}){sep}Barcode: {code_val}{sep}Θέση: {place_val}{sep}Τιμή: {price_val}€{sep}Κατάσταση: {status_val}{sep}{item_name}"
+        
         with st.expander(expander_label):
             col1, col2, col3, col4, col5 = st.columns(5)
             

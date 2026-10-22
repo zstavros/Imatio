@@ -73,41 +73,33 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                             phones.append(clean_p)
                 cust_phone_map[cust_name] = " ".join(phones)
 
-    # --- ΔΗΜΙΟΥΡΓΙΑ PTYSSOMENIS LISTAS (SELECTBOX) ---
-    search_options = ["-- Όλες οι Εγγραφές --"]
-    unique_search_items = set()
+    # --- ΔΗΜΙΟΥΡΓΙΑ LISTAS ΠΕΛΑΤΩΝ (ΜΟΝΟ ΟΝΟΜΑ & ΤΗΛΕΦΩΝΟ) ---
+    search_options = ["-- Όλοι οι Πελάτες --"]
+    unique_customers = set()
 
     for _, row in df_active.iterrows():
         c_name = str(row.get('CustomerName', '')).strip()
-        code_val = str(row.get('Code', '')).strip()
         phone_show = cust_phone_map.get(c_name, '').strip()
         
-        display_str = f"{c_name}"
-        if phone_show: display_str += f" ({phone_show})"
-        if code_val and code_val != '-': display_str += f" - Barcode: {code_val}"
-        
-        if display_str:
-            unique_search_items.add(display_str)
+        if c_name:
+            display_str = f"{c_name} ({phone_show})" if phone_show else c_name
+            unique_customers.add(display_str)
 
-    search_options.extend(sorted(list(unique_search_items)))
+    search_options.extend(sorted(list(unique_customers)))
 
     search_selection = st.selectbox(
-        "🔎 Αναζήτηση με Όνομα Πελάτη, Κινητό/Τηλέφωνο ή Barcode:",
+        "🔎 Αναζήτηση Πελάτη (Πληκτρολογήστε όνομα ή τηλέφωνο):",
         options=search_options,
         index=0,
         key="search_xalia_selectbox"
     )
 
-    if search_selection != "-- Όλες οι Εγγραφές --":
+    # Φιλτράρισμα: Επιστρέφει ΟΛΕΣ τις εγγραφές του επιλεγμένου πελάτη
+    if search_selection != "-- Όλοι οι Πελάτες --":
         def match_selected(row):
             c_name = str(row.get('CustomerName', '')).strip()
-            code_val = str(row.get('Code', '')).strip()
             phone_show = cust_phone_map.get(c_name, '').strip()
-            
-            display_str = f"{c_name}"
-            if phone_show: display_str += f" ({phone_show})"
-            if code_val and code_val != '-': display_str += f" - Barcode: {code_val}"
-            
+            display_str = f"{c_name} ({phone_show})" if phone_show else c_name
             return display_str == search_selection
 
         df_filtered = df_active[df_active.apply(match_selected, axis=1)]
@@ -237,37 +229,33 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                             phones.append(clean_p)
                 cust_phone_map[cust_name] = " ".join(phones)
 
-    # --- ΔΗΜΙΟΥΡΓΙΑ PTYSSOMENIS LISTAS (SELECTBOX) ---
-    search_options = ["-- Όλες οι Εγγραφές --"]
-    unique_search_items = set()
+    # --- ΔΗΜΙΟΥΡΓΙΑ LISTAS ΠΕΛΑΤΩΝ (ΜΟΝΟ ΟΝΟΜΑ & ΤΗΛΕΦΩΝΟ) ---
+    search_options = ["-- Όλοι οι Πελάτες --"]
+    unique_customers = set()
 
     for _, row in df_active.iterrows():
         c_name = str(row.get('CustomerName', '')).strip()
         phone_show = cust_phone_map.get(c_name, '').strip()
         
-        display_str = f"{c_name}"
-        if phone_show: display_str += f" ({phone_show})"
-        
-        if display_str:
-            unique_search_items.add(display_str)
+        if c_name:
+            display_str = f"{c_name} ({phone_show})" if phone_show else c_name
+            unique_customers.add(display_str)
 
-    search_options.extend(sorted(list(unique_search_items)))
+    search_options.extend(sorted(list(unique_customers)))
 
     search_selection = st.selectbox(
-        "🔎 Αναζήτηση με Όνομα Πελάτη ή Τηλέφωνο:",
+        "🔎 Αναζήτηση Πελάτη (Πληκτρολογήστε όνομα ή τηλέφωνο):",
         options=search_options,
         index=0,
         key="search_items_selectbox"
     )
 
-    if search_selection != "-- Όλες οι Εγγραφές --":
+    # Φιλτράρισμα: Επιστρέφει ΟΛΕΣ τις εγγραφές του επιλεγμένου πελάτη
+    if search_selection != "-- Όλοι οι Πελάτες --":
         def match_selected(row):
             c_name = str(row.get('CustomerName', '')).strip()
             phone_show = cust_phone_map.get(c_name, '').strip()
-            
-            display_str = f"{c_name}"
-            if phone_show: display_str += f" ({phone_show})"
-            
+            display_str = f"{c_name} ({phone_show})" if phone_show else c_name
             return display_str == search_selection
 
         df_filtered = df_active[df_active.apply(match_selected, axis=1)]

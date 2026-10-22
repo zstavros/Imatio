@@ -55,7 +55,11 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
     if df_active.empty:
         st.success("🎉 Δεν υπάρχουν εκκρεμότητες στα χαλιά!")
         return
-
+# Δημιουργία λίστας επιλογών από τις εγγραφές
+search_options = [""] + sorted(list(set([
+    f"{r.get('customer_name', '')} ({r.get('phone', '')}) - Barcode: {r.get('barcode', '')}"
+    for r in active_records if r.get('customer_name')
+])))
     search_query = st.text_input("🔎 Αναζήτηση με Όνομα Πελάτη, Κινητό/Τηλέφωνο ή Barcode:", key="search_xalia_input")
 
     cust_phone_map = {}

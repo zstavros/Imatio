@@ -254,7 +254,7 @@ if st.session_state['active_subview'] == 'menu':
             st.rerun()
 
     with col2:
-        st.markdown("### 👕 Τμήμα Ρούχων & Ειδών")
+        st.markdown("##### 👕 Τμήμα Ρούχων & Ειδών")
         st.markdown("<p>Παραλαβή & διαχείριση ραφιών/τιμών</p>", unsafe_allow_html=True)
         
         if st.button("👕 ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ", use_container_width=True):

@@ -56,8 +56,6 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
         st.success("🎉 Δεν υπάρχουν εκκρεμότητες στα χαλιά!")
         return
 
-    search_query = st.text_input("🔎 Αναζήτηση με Όνομα Πελάτη, Κινητό/Τηλέφωνο ή Barcode:", key="search_xalia_input")
-
     cust_phone_map = {}
     if not df_customers.empty:
         df_cust_copy = df_customers.copy()
@@ -75,17 +73,44 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                             phones.append(clean_p)
                 cust_phone_map[cust_name] = " ".join(phones)
 
-    if search_query:
-        q_raw = search_query.strip().lower()
-        q_clean_num = q_raw.replace(" ", "").replace("-", "").replace("+", "").replace("(", "").replace(")", "")
+    # --- ΔΗΜΙΟΥΡΓΙΑ PTYSSOMENIS LISTAS (SELECTBOX) ---
+    search_options = ["-- Όλες οι Εγγραφές --"]
+    unique_search_items = set()
 
-        def match_row(row):
-            c_name = str(row.get('CustomerName', '')).strip().lower()
-            code_val = str(row.get('Code', '')).strip().lower()
-            phone_val = cust_phone_map.get(str(row.get('CustomerName', '')).strip(), '').lower()
-            return (q_raw in c_name) or (q_raw in code_val) or ((q_clean_num in phone_val) if q_clean_num else False)
+    for _, row in df_active.iterrows():
+        c_name = str(row.get('CustomerName', '')).strip()
+        code_val = str(row.get('Code', '')).strip()
+        phone_show = cust_phone_map.get(c_name, '').strip()
+        
+        display_str = f"{c_name}"
+        if phone_show: display_str += f" ({phone_show})"
+        if code_val and code_val != '-': display_str += f" - Barcode: {code_val}"
+        
+        if display_str:
+            unique_search_items.add(display_str)
 
-        df_filtered = df_active[df_active.apply(match_row, axis=1)]
+    search_options.extend(sorted(list(unique_search_items)))
+
+    search_selection = st.selectbox(
+        "🔎 Αναζήτηση με Όνομα Πελάτη, Κινητό/Τηλέφωνο ή Barcode:",
+        options=search_options,
+        index=0,
+        key="search_xalia_selectbox"
+    )
+
+    if search_selection != "-- Όλες οι Εγγραφές --":
+        def match_selected(row):
+            c_name = str(row.get('CustomerName', '')).strip()
+            code_val = str(row.get('Code', '')).strip()
+            phone_show = cust_phone_map.get(c_name, '').strip()
+            
+            display_str = f"{c_name}"
+            if phone_show: display_str += f" ({phone_show})"
+            if code_val and code_val != '-': display_str += f" - Barcode: {code_val}"
+            
+            return display_str == search_selection
+
+        df_filtered = df_active[df_active.apply(match_selected, axis=1)]
     else:
         df_filtered = df_active
 
@@ -195,8 +220,6 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         st.success("🎉 Δεν υπάρχουν εκκρεμότητες στα ρούχα!")
         return
 
-    search_query = st.text_input("🔎 Αναζήτηση με Όνομα Πελάτη ή Τηλέφωνο:", key="search_items_input")
-
     cust_phone_map = {}
     if not df_customers.empty:
         df_cust_copy = df_customers.copy()
@@ -214,16 +237,40 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                             phones.append(clean_p)
                 cust_phone_map[cust_name] = " ".join(phones)
 
-    if search_query:
-        q_raw = search_query.strip().lower()
-        q_clean_num = q_raw.replace(" ", "").replace("-", "").replace("+", "").replace("(", "").replace(")", "")
+    # --- ΔΗΜΙΟΥΡΓΙΑ PTYSSOMENIS LISTAS (SELECTBOX) ---
+    search_options = ["-- Όλες οι Εγγραφές --"]
+    unique_search_items = set()
 
-        def match_row(row):
-            c_name = str(row.get('CustomerName', '')).strip().lower()
-            phone_val = cust_phone_map.get(str(row.get('CustomerName', '')).strip(), '').lower()
-            return (q_raw in c_name) or ((q_clean_num in phone_val) if q_clean_num else False)
+    for _, row in df_active.iterrows():
+        c_name = str(row.get('CustomerName', '')).strip()
+        phone_show = cust_phone_map.get(c_name, '').strip()
+        
+        display_str = f"{c_name}"
+        if phone_show: display_str += f" ({phone_show})"
+        
+        if display_str:
+            unique_search_items.add(display_str)
 
-        df_filtered = df_active[df_active.apply(match_row, axis=1)]
+    search_options.extend(sorted(list(unique_search_items)))
+
+    search_selection = st.selectbox(
+        "🔎 Αναζήτηση με Όνομα Πελάτη ή Τηλέφωνο:",
+        options=search_options,
+        index=0,
+        key="search_items_selectbox"
+    )
+
+    if search_selection != "-- Όλες οι Εγγραφές --":
+        def match_selected(row):
+            c_name = str(row.get('CustomerName', '')).strip()
+            phone_show = cust_phone_map.get(c_name, '').strip()
+            
+            display_str = f"{c_name}"
+            if phone_show: display_str += f" ({phone_show})"
+            
+            return display_str == search_selection
+
+        df_filtered = df_active[df_active.apply(match_selected, axis=1)]
     else:
         df_filtered = df_active
 

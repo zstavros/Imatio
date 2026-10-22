@@ -167,11 +167,31 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
 
     st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Ρούχων / Ειδών (TrItems)")
     
+    # 1. Όπως στα χαλιά: Αν το dataframe είναι άδειο, φορτώνουμε φρέσκα δεδομένα από το Google Sheet
+    if df_items_trans is None or df_items_trans.empty:
+        try:
+            ws_ti = get_worksheet_fn("TrItems")
+            data_ti = ws_ti.get_all_records()
+            df_items_trans = pd.DataFrame(data_ti) if data_ti else pd.DataFrame()
+            st.session_state['df_tr_items'] = df_items_trans
+        except Exception as e:
+            st.error(f"Σφάλμα φόρτωσης TrItems: {e}")
+            return
+
     if df_items_trans.empty:
         st.info("Δεν βρέθηκαν εγγραφές στα Ρούχα.")
         return
 
-    df_active = df_items_trans[df_items_trans['Status'] != 'Παραδόθηκε'].copy()
+    # Καθαρισμός κενών από τα ονόματα των στηλών
+    df_items_trans.columns = df_items_trans.columns.str.strip()
+
+    # 2. Φιλτράρισμα ενεργών (όσες ΔΕΝ είναι παραδομένες)
+    if 'Status' in df_items_trans.columns:
+        df_active = df_items_trans[
+            df_items_trans['Status'].astype(str).str.strip().str.lower() != 'παραδόθηκε'
+        ].copy()
+    else:
+        df_active = df_items_trans.copy()
     
     if df_active.empty:
         st.success("🎉 Δεν υπάρχουν εκκρεμότητες στα ρούχα!")
@@ -189,10 +209,11 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
             for _, c_row in df_cust_copy.iterrows():
                 cust_name = str(c_row[c_name_col]).strip()
                 phones = []
-                for p_col in ['CuMobile', 'CuPhone', 'Mobile', 'Phone', 'TEL']:
+                for p_col in ['CuMobile', 'CuPhone', 'Mobile', 'Phone', 'TEL', 'Τηλέφωνο']:
                     if p_col in df_cust_copy.columns and pd.notnull(c_row[p_col]):
                         clean_p = str(c_row[p_col]).replace(" ", "").replace("-", "").replace("+", "").replace("(", "").replace(")", "").strip()
-                        if clean_p: phones.append(clean_p)
+                        if clean_p: 
+                            phones.append(clean_p)
                 cust_phone_map[cust_name] = " ".join(phones)
 
     if search_query:
@@ -213,48 +234,53 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         return
 
     st.write(f"Βρέθηκαν **{len(df_filtered)}** ενεργές εγγραφές:")
-    ws = get_worksheet_fn("TrItems")  # ΔΙΟΡΘΩΣΗ ΕΔΩ
+    ws = get_worksheet_fn("TrItems")
 
     for idx, row in df_filtered.iterrows():
-        tr_id = str(row['TransactionID'])
+        tr_id = str(row.get('TransactionID', ''))
         c_name = row.get('CustomerName', 'Άγνωστος')
         phone_show = cust_phone_map.get(c_name, '-')
-        shelf_val = row.get('Shelf', row.get('Place', '-'))
+        # Υποστήριξη είτε Place είτε Shelf
+        place_val = row.get('Place', row.get('Shelf', '-'))
         status_val = row.get('Status', '-')
+        item_name = row.get('ItName', '')
         
         try:
             curr_pr = float(row.get('TotalPrice', 0.0))
         except:
             curr_pr = 0.0
 
-        is_etoimo = (status_val == "Έτοιμο")
+        is_etoimo = (str(status_val).strip().lower() == "έτοιμο")
         prefix_icon = "🟢 [ΕΤΟΙΜΟ] " if is_etoimo else "👕 "
-        expander_label = f"{prefix_icon}ID: #{tr_id} | {c_name} ({phone_show}) | Θέση: {shelf_val} | Τιμή: {curr_pr}€ | Κατάσταση: {status_val} | {row.get('ItName', '')}"
+        expander_label = f"{prefix_icon}ID: #{tr_id} | {c_name} ({phone_show}) | Θέση: {place_val} | Τιμή: {curr_pr}€ | Κατάσταση: {status_val} | {item_name}"
 
         with st.expander(expander_label):
             col1, col2, col3 = st.columns(3)
             
             with col1:
-                new_shelf = st.text_input("Ράφι / Θέση (Shelf)", value=str(shelf_val), key=f"shf_{tr_id}_{idx}")
+                new_place = st.text_input("Ράφι / Θέση", value=str(place_val), key=f"plc_it_{tr_id}_{idx}")
             with col2:
-                new_price = st.number_input("Τιμή (€)", value=curr_pr, step=1.0, key=f"prc_it_{tr_id}_{idx}")
+                new_price = st.number_input("Τιμή (€)", value=curr_pr, step=0.5, key=f"prc_it_{tr_id}_{idx}")
             with col3:
-                curr_st = row.get('Status', STATUS_OPTIONS[0])
+                curr_st = str(status_val).strip()
                 new_st = st.selectbox(
                     "Κατάσταση", STATUS_OPTIONS,
                     index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 0,
                     key=f"st_it_{tr_id}_{idx}"
                 )
 
+            # 3. Αποθήκευση αλλαγών με την ίδια λογική των χαλιών
             if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_it_{tr_id}_{idx}", type="primary", use_container_width=True):
                 try:
-                    id_col = ws.col_values(1)
+                    id_col = [str(x) for x in ws.col_values(1)]
                     sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
-                    cols = df_items_trans.columns.tolist()
-                    shelf_col_name = "Shelf" if "Shelf" in cols else "Place"
+                    cols = [c.strip() for c in ws.row_values(1)]
                     
-                    if shelf_col_name in cols: ws.update_cell(sheet_row, cols.index(shelf_col_name) + 1, new_shelf)
-                    if "TotalPrice" in cols: ws.update_cell(sheet_row, cols.index("TotalPrice") + 1, new_price)
+                    place_col_name = "Place" if "Place" in cols else ("Shelf" if "Shelf" in cols else None)
+                    if place_col_name: 
+                        ws.update_cell(sheet_row, cols.index(place_col_name) + 1, new_place)
+                    if "TotalPrice" in cols: 
+                        ws.update_cell(sheet_row, cols.index("TotalPrice") + 1, new_price)
                     if "Status" in cols:
                         ws.update_cell(sheet_row, cols.index("Status") + 1, new_st)
                         if new_st == "Παραδόθηκε" and "DateOut" in cols:

@@ -111,7 +111,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
             price_val = 0.0
 
         is_etoimo = (status_val == "Έτοιμο")
-        prefix_icon = "🟢 [ΕΤΟΙΜΟ] 📌 " if is_etoimo else "📌 "
+        prefix_icon = "🔵 [ΕΤΟΙΜΟ] 📌 " if is_etoimo else "📌 "
         sep = " 🔷 " if is_etoimo else " 🔶 "
         expander_label = f"{prefix_icon}ID: #{tr_id}{sep}{c_name} ({phone_show}){sep}Barcode: {code_val}{sep}Θέση: {place_val}{sep}Τιμή: {price_val}€{sep}Κατάσταση: {status_val}{sep}{item_name}"
 
@@ -248,8 +248,8 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
             curr_pr = 0.0
 
         is_etoimo = (str(status_val).strip().lower() == "έτοιμο")
-        prefix_icon = "🟢 [ΕΤΟΙΜΟ] 🟩 👕 " if is_etoimo else "🔴 👕 "
-        sep = " 🟢 * " if is_etoimo else " 🔴 * "
+        prefix_icon = "🔵 [ΕΤΟΙΜΟ] 📌 " if is_etoimo else "📌 "
+        sep = " 🔷 " if is_etoimo else " 🔶 "
         expander_label = f"{prefix_icon}ID: #{tr_id}{sep}{c_name} ({phone_show}){sep}Θέση: {place_val}{sep}Τιμή: {curr_pr}€{sep}Κατάσταση: {status_val}{sep}{item_name}"
 
         with st.expander(expander_label):

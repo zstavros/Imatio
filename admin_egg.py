@@ -91,7 +91,7 @@ def render_edit_customer_tab(df_customers, get_worksheet):
                         st.error(f"❌ Sfalma: {e}")
 
 # ---------------------------------------------------------
-# 3. NEO EIDOS KATALOGOY
+# 3. ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛΟΓΟΥ
 # ---------------------------------------------------------
 def render_new_item_tab(df_items, get_worksheet):
     ws_items = get_worksheet("Items")
@@ -100,27 +100,30 @@ def render_new_item_tab(df_items, get_worksheet):
         col_nav, col_empty, col_save = st.columns([1, 1, 1])
         
         with col_nav:
-            if st.form_submit_button("🏠 ARXIKI", use_container_width=True):
+            if st.form_submit_button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
                 st.session_state['active_subview'] = 'menu'
                 st.rerun()
 
         with col_save:
-            submitted = st.form_submit_button("💾 APO8IKEYSI", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
 
-        st.markdown("### ➕ Neo Eidos Katalogoy")
+        st.markdown("### ➕ Νέο Είδος Καταλόγου")
         
-        it_name = st.text_input("Onoma Eidous (p.x. Mpourfan)")
-        it_desc = st.text_input("Perigrafi / Katigoria")
-        it_price = st.number_input("TIMI (€)", min_value=0.0, step=0.5)
-        it_price_m2 = st.number_input("TIMI TETRAGWNIKOY (€/m²)", min_value=0.0, step=0.5)
+        it_name = st.text_input("Όνομα Είδους (π.χ. Μπουφάν)")
+        
+        # Επιλογή κατηγορίας αποκλειστικά ανάμεσα σε Ρούχα και Χαλιά
+        it_desc = st.selectbox("Περιγραφή / Κατηγορία", ["Ρούχα", "Χαλιά"])
+        
+        it_price = st.number_input("ΤΙΜΗ (€)", min_value=0.0, step=0.5)
+        it_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", min_value=0.0, step=0.5)
         
         if submitted:
             if not it_name:
-                st.error("Valte onoma eidous.")
+                st.error("Βάλτε όνομα είδους.")
             else:
                 item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(pd.to_numeric(df_items['ItemID'], errors='coerce').max() or 0) + 1
                 ws_items.append_row([item_id, it_name, it_desc, it_price, it_price_m2])
-                st.success("To eidos prostetheke epityxws!")
+                st.success("Το είδος προστέθηκε επιτυχώς!")
                 st.cache_data.clear()
                 st.rerun()
 

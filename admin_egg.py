@@ -125,7 +125,7 @@ def render_new_item_tab(df_items, get_worksheet):
                 st.rerun()
 
 # ---------------------------------------------------------
-# 4. TROPOPOISI KATALOGOY (Me eniaia koumpiara stin korifi)
+# 4. TROPOPOISI KATALOGOY (Me tin anazitisi mesa sti forma)
 # ---------------------------------------------------------
 def render_edit_item_tab(df_items, get_worksheet):
     ws_items = get_worksheet("Items")
@@ -152,31 +152,43 @@ def render_edit_item_tab(df_items, get_worksheet):
         item_options.append(display_str)
         item_map[display_str] = name_val
 
-    # Επιλογή είδους εκτός φόρμας για να γίνεται σωστά το φιλτράρισμα
-    selected_display = st.selectbox("Anazitisi Eidous", item_options, label_visibility="collapsed", key="search_item_selectbox")
+    # Χρησιμοποιούμε session_state για να θυμόμαστε την επιλογή είδους
+    if 'selected_item_catalog' not in st.session_state:
+        st.session_state['selected_item_catalog'] = "-- Epilexte eidos --"
 
-    if selected_display and selected_display != "-- Epilexte eidos --":
-        real_name = item_map[selected_display]
-        row_data = valid_items[valid_items[col_name_key].astype(str).str.strip() == real_name].iloc[0]
-        curr_price = float(row_data.get('Price', 0.0) or 0.0) if 'Price' in df_items.columns else 0.0
-        curr_price_m2 = float(row_data.get('Price m2', row_data.get('Price_m2', 0.0)) or 0.0)
-        curr_cat = str(row_data.get(col_desc_key, "Rouxa")) if col_desc_key else "Rouxa"
+    with st.form("edit_item_form"):
+        # Κουμπιά ΑΡΧΙΚΗ και ΑΠΟΘΗΚΕΥΣΗ δίπλα-δίπλα στην κορυφή της φόρμας
+        col_nav, col_empty, col_save = st.columns([1, 1, 1])
+        with col_nav:
+            form_back = st.form_submit_button("🏠 ARXIKI", use_container_width=True)
+        with col_save:
+            submitted_edit = st.form_submit_button("💾 APO8IKEYSI", type="primary", use_container_width=True)
 
-        st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
+        if form_back:
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
 
-        with st.form("edit_item_form"):
-            # Κουμπιά ΑΡΧΙΚΗ και ΑΠΟΘΗΚΕΥΣΗ δίπλα-δίπλα στην κορυφή της φόρμας
-            col_nav, col_empty, col_save = st.columns([1, 1, 1])
-            with col_nav:
-                form_back = st.form_submit_button("🏠 ARXIKI", use_container_width=True)
-            with col_save:
-                submitted_edit = st.form_submit_button("💾 APO8IKEYSI", type="primary", use_container_width=True)
+        st.markdown("### ✏️ Tropopoiisi Katalogoy")
+        
+        # Η αναζήτηση είδους πλέον βρίσκεται μέσα στη φόρμα
+        selected_display = st.selectbox(
+            "Anazitisi Eidous", 
+            item_options, 
+            index=item_options.index(st.session_state.get('selected_item_catalog', "-- Epilexte eidos --")) if st.session_state.get('selected_item_catalog', "-- Epilexte eidos --") in item_options else 0,
+            key="search_item_selectbox_inside"
+        )
+        
+        # Ενημέρωση κατάστασης επιλογής
+        st.session_state['selected_item_catalog'] = selected_display
 
-            if form_back:
-                st.session_state['active_subview'] = 'menu'
-                st.rerun()
+        if selected_display and selected_display != "-- Epilexte eidos --":
+            real_name = item_map[selected_display]
+            row_data = valid_items[valid_items[col_name_key].astype(str).str.strip() == real_name].iloc[0]
+            curr_price = float(row_data.get('Price', 0.0) or 0.0) if 'Price' in df_items.columns else 0.0
+            curr_price_m2 = float(row_data.get('Price m2', row_data.get('Price_m2', 0.0)) or 0.0)
+            curr_cat = str(row_data.get(col_desc_key, "Rouxa")) if col_desc_key else "Rouxa"
 
-            st.markdown(f"### ✏️ Epexergasia: {real_name}")
+            st.markdown(f"**Epexergasia:** {real_name}")
             
             new_it_name = st.text_input("Onoma Eidous", value=real_name)
             
@@ -199,10 +211,3 @@ def render_edit_item_tab(df_items, get_worksheet):
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Sfalma: {e}")
-    else:
-        # Αν δεν έχει επιλεχθεί είδος ακόμα, δείχνουμε μόνο το κουμπί Αρχική επάνω
-        col_nav, col_space = st.columns([1, 2])
-        with col_nav:
-            if st.button("🏠 ARXIKI", key="back_home_edit_item_main", use_container_width=True):
-                st.session_state['active_subview'] = 'menu'
-                st.rerun()

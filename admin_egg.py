@@ -36,8 +36,10 @@ def render_new_customer_tab(df_customers, get_worksheet):
                 ws_customers.append_row([
                     cust_id, n_name.strip(), n_address.strip(), n_city.strip(), str(n_mobile1).strip(), str(n_mobile2).strip(), n_email.strip(), n_notes.strip()
                 ])
-                st.success(f"✅ O pelatis **{n_name}** apothikeytike epityxws!")
                 st.cache_data.clear()
+                st.success(f"✅ O pelatis **{n_name}** apothikeytike epityxws!")
+                # Epistrofi stin arxiki
+                st.session_state['active_subview'] = 'menu'
                 st.rerun()
 
 # ---------------------------------------------------------
@@ -88,8 +90,12 @@ def render_edit_customer_tab(df_customers, get_worksheet):
                     ws_customers.update_cell(cell.row, 4, e_city)
                     ws_customers.update_cell(cell.row, 7, e_email)
                     ws_customers.update_cell(cell.row, 8, e_notes)
-                    st.success("✅ Enimerwthike epityxws!")
+                    
                     st.cache_data.clear()
+                    st.success("✅ Enimerwthike epityxws!")
+                    
+                    # Epistrofi stin arxiki
+                    st.session_state['active_subview'] = 'menu'
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Sfalma: {e}")

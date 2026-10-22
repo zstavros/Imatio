@@ -7,6 +7,7 @@ import base64
 
 import admin_fast
 import admin_eidi
+import admin_egg
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
@@ -302,31 +303,28 @@ elif st.session_state['active_subview'] == 'edit_items':
 
 # 6. ΝΕΑ ΕΓΓΡΑΦΗ ΠΕΛΑΤΗ
 elif st.session_state['active_subview'] == 'manage_customers_new':
-    st.markdown("### ➕ Νέα Εγγραφή Πελάτη")
-    with st.form("new_customer_form"):
-        c_name = st.text_input("Ονοματεπώνυμο Πελάτη (CuName)")
-        c_phone = st.text_input("Τηλέφωνο (CuPhone)")
-        c_mobile = st.text_input("Κινητό (CuMobile)")
-        c_address = st.text_input("Διεύθυνση (CuAddress)")
-        c_city = st.text_input("Πόλη (CuCity)")
-        c_email = st.text_input("Email (CuEmail)")
-        submit_cust = st.form_submit_button("Αποθήκευση Πελάτη", type="primary")
-        
-        if submit_cust:
-            if c_name:
-                try:
-                    ws_c = get_worksheet("Customers")
-                    next_id = len(st.session_state['df_customers']) + 1
-                    row_data = [next_id, c_name, c_address, c_city, c_phone, c_mobile, c_email]
-                    ws_c.append_row(row_data)
-                    load_all_data()
-                    st.success(f"Ο πελάτης '{c_name}' αποθηκεύτηκε επιτυχώς!")
-                except Exception as ex:
-                    st.error(f"Σφάλμα αποθήκευσης: {ex}")
-            else:
-                st.warning("Παρακαλώ συμπληρώστε τουλάχιστον το όνομα του πελάτη.")
+    admin_egg.render_new_customer_tab(
+        st.session_state.get('df_customers', pd.DataFrame()), 
+        get_worksheet
+    )
 
-# 7. ΛΟΙΠΕΣ ΦΟΡΜΕΣ
-elif st.session_state['active_subview'] in ['manage_customers_edit', 'manage_catalog_new', 'manage_catalog_edit']:
-    st.markdown("### ⚙️ Διαχείριση Ενότητας")
-    st.info("Η συγκεκριμένη φόρμα είναι έτοιμη για υλοποίηση.")
+# 7. ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ
+elif st.session_state['active_subview'] == 'manage_customers_edit':
+    admin_egg.render_edit_customer_tab(
+        st.session_state.get('df_customers', pd.DataFrame()), 
+        get_worksheet
+    )
+
+# 8. ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛΟΓΟΥ
+elif st.session_state['active_subview'] == 'manage_catalog_new':
+    admin_egg.render_new_item_tab(
+        st.session_state.get('df_items', pd.DataFrame()), 
+        get_worksheet
+    )
+
+# 9. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ
+elif st.session_state['active_subview'] == 'manage_catalog_edit':
+    admin_egg.render_edit_item_tab(
+        st.session_state.get('df_items', pd.DataFrame()), 
+        get_worksheet
+    )

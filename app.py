@@ -276,10 +276,17 @@ elif st.session_state['active_subview'] == 'fast_loading':
         get_worksheet
     )
 
-# 3. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ
+# 3. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (Refresh gia na fainetai kai στο κινητό)
 elif st.session_state['active_subview'] == 'edit_xalia':
+    st.cache_data.clear()  # Katharizei tin mnimi gia na min kollaei sto kinito!
+    
+    ws_tx = get_worksheet("TrXalia")
+    data_tx = ws_tx.get_all_records()
+    df_fresh_tx = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
+    st.session_state['df_tr_xalia'] = df_fresh_tx
+    
     admin_eidi.render_edit_xalia_tab(
-        st.session_state.get('df_tr_xalia', pd.DataFrame()),
+        df_fresh_tx,
         st.session_state.get('df_customers', pd.DataFrame()),
         st.session_state.get('df_items', pd.DataFrame()),
         get_worksheet

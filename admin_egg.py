@@ -11,26 +11,26 @@ def render_new_customer_tab(df_customers, get_worksheet):
         col_nav, col_empty, col_save = st.columns([1, 1, 1])
         
         with col_nav:
-            if st.form_submit_button("🏠 ARXIKI", use_container_width=True):
+            if st.form_submit_button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
                 st.session_state['active_subview'] = 'menu'
                 st.rerun()
 
         with col_save:
-            submitted = st.form_submit_button("💾 APO8IKEYSI", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("💾 SAVE", type="primary", use_container_width=True)
 
-        st.markdown("### ➕ Nea Eggrafi Pelati")
+        #st.markdown("### ➕ Nea Eggrafi Pelati")
         
-        n_name = st.text_input("Onomatepwnymo *")
-        n_mobile1 = st.text_input("Kinito-1 (CuPhone)")
-        n_mobile2 = st.text_input("Kinito-2 (CuMobile)")
-        n_address = st.text_input("Dieythynsi (CuAddress)")
-        n_city = st.text_input("Poli (CuCity)")
-        n_email = st.text_input("Email (CuEmail)")
-        n_notes = st.text_area("Simeioseis (CuNotes)")
+        n_name = st.text_input("ΕΠΩΝΥΜΙΑ")
+        n_mobile1 = st.text_input("ΤΗΛΕΦΩΝΟ-1")
+        n_mobile2 = st.text_input("ΤΗΛΕΦΩΝΟ-2")
+        n_address = st.text_input("ΔΙΕΥΘΥΝΣΗ")
+        n_city = st.text_input("ΠΟΛΗ")
+        n_email = st.text_input("EMAIL")
+        n_notes = st.text_area("ΣΗΜΕΙΩΣΕΙΣ")
         
         if submitted:
             if not n_name.strip():
-                st.error("❌ Parakalw symplirwste Onoma.")
+                st.error("❌ Παρακαλώ συμπληρώστε το όνομα.")
             else:
                 cust_id = 1 if df_customers.empty or 'CustomerID' not in df_customers.columns else int(pd.to_numeric(df_customers['CustomerID'], errors='coerce').max() or 0) + 1
                 ws_customers.append_row([
@@ -49,39 +49,39 @@ def render_edit_customer_tab(df_customers, get_worksheet):
 
     col_nav, col_empty, col_save = st.columns([1, 1, 1])
     with col_nav:
-        btn_home = st.button("🏠 ARXIKI", key="btn_home_edit_cust", use_container_width=True)
+        btn_home = st.button("🏠 ΑΡΧΙΚΗ", key="btn_home_edit_cust", use_container_width=True)
         if btn_home:
             st.session_state['active_subview'] = 'menu'
             st.rerun()
 
     with col_save:
-        btn_save = st.button("💾 APO8IKEYSI", key="btn_save_edit_cust", type="primary", use_container_width=True)
+        btn_save = st.button("💾 SAVE", key="btn_save_edit_cust", type="primary", use_container_width=True)
 
-    st.markdown("### ✏️ Tropopoiisi Stoixeiwn Pelati")
+   # st.markdown("### ✏️ Tropopoiisi Stoixeiwn Pelati")
 
     if df_customers.empty or name_col not in df_customers.columns:
         st.info("Den vrethikan apothikeymenoi pelates.")
         return
 
     valid_customers = df_customers[df_customers[name_col].astype(str).str.strip() != ""]
-    cust_options = ["-- Epilexte pelati gia epexergasia --"] + [f"{r[name_col]} ({r.get('CuPhone', r.get('CuMobile', ''))})" for _, r in valid_customers.iterrows()]
+    cust_options = ["-- Επιλέξτε πελάτη για επεξεργασία --"] + [f"{r[name_col]} ({r.get('CuPhone', r.get('CuMobile', ''))})" for _, r in valid_customers.iterrows()]
 
     selected_c = st.selectbox("Anazitisi Pelati", cust_options, label_visibility="collapsed", key="search_cust_selectbox")
 
-    if selected_c and selected_c != "-- Epilexte pelati gia epexergasia --":
+    if selected_c and selected_c != "-- Επιλέξτε πελάτη για επεξεργασία --":
         c_name_val = selected_c.split(" (")[0]
         c_row_data = valid_customers[valid_customers[name_col] == c_name_val].iloc[0]
         
         st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
         st.write(f"✏️ Epexergasia: **{c_name_val}**")
         
-        e_name = st.text_input("Onomatepwnymo", value=str(c_row_data.get('CuName', c_row_data.get('Name', ''))), key=f"ec_name_{c_name_val}")
-        e_mobile1 = st.text_input("Kinito-1", value=str(c_row_data.get('CuPhone', '')), key=f"ec_mob1_{c_name_val}")
-        e_mobile2 = st.text_input("Kinito-2", value=str(c_row_data.get('CuMobile', '')), key=f"ec_mob2_{c_name_val}")
-        e_address = st.text_input("Dieythynsi", value=str(c_row_data.get('CuAddress', '')), key=f"ec_addr_{c_name_val}")
-        e_city = st.text_input("Poli", value=str(c_row_data.get('CuCity', '')), key=f"ec_city_{c_name_val}")
-        e_email = st.text_input("Email", value=str(c_row_data.get('CuEmail', '')), key=f"ec_email_{c_name_val}")
-        e_notes = st.text_area("Simeioseis", value=str(c_row_data.get('CuNotes', '')), key=f"ec_notes_{c_name_val}")
+        e_name = st.text_input("ΕΠΩΝΥΜΙΑ", value=str(c_row_data.get('CuName', c_row_data.get('Name', ''))), key=f"ec_name_{c_name_val}")
+        e_mobile1 = st.text_input("ΤΗΛΕΦΩΝΟ-1", value=str(c_row_data.get('CuPhone', '')), key=f"ec_mob1_{c_name_val}")
+        e_mobile2 = st.text_input("ΤΗΕΛΦΩΝΟ-2", value=str(c_row_data.get('CuMobile', '')), key=f"ec_mob2_{c_name_val}")
+        e_address = st.text_input("ΔΙΕΥΘΥΝΣΗ", value=str(c_row_data.get('CuAddress', '')), key=f"ec_addr_{c_name_val}")
+        e_city = st.text_input("ΠΟΛΗ", value=str(c_row_data.get('CuCity', '')), key=f"ec_city_{c_name_val}")
+        e_email = st.text_input("EMAIL", value=str(c_row_data.get('CuEmail', '')), key=f"ec_email_{c_name_val}")
+        e_notes = st.text_area("ΣΗΜΕΙΩΣΕΙΣ", value=str(c_row_data.get('CuNotes', '')), key=f"ec_notes_{c_name_val}")
         
         if btn_save:
             try:
@@ -110,23 +110,23 @@ def render_new_item_tab(df_items, get_worksheet):
         col_nav, col_empty, col_save = st.columns([1, 1, 1])
         
         with col_nav:
-            if st.form_submit_button("🏠 ARXIKI", use_container_width=True):
+            if st.form_submit_button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
                 st.session_state['active_subview'] = 'menu'
                 st.rerun()
 
         with col_save:
-            submitted = st.form_submit_button("💾 APO8IKEYSI", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("💾 SAVE", type="primary", use_container_width=True)
 
         st.markdown("### ➕ Neo Eidos Katalogoy")
         
-        it_name = st.text_input("Onoma Eidous (p.x. Mpourfan)")
-        it_desc = st.selectbox("Perigrafi / Katigoria", ["Rouxa", "Xalia"])
-        it_price = st.number_input("TIMI (€)", min_value=0.0, step=0.5)
-        it_price_m2 = st.number_input("TIMI TETRAGWNIKOY (€/m²)", min_value=0.0, step=0.5)
+        it_name = st.text_input("ΠΕΡΙΓΡΑΦΗ ΕΙΔΟΥΣ")
+        it_desc = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ ", ["Rouxa", "Xalia"])
+        it_price = st.number_input("ΤΙΜΗ (€)", min_value=0.0, step=0.5)
+        it_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", min_value=0.0, step=0.5)
         
         if submitted:
             if not it_name.strip():
-                st.error("Valte onoma eidous.")
+                st.error("Βάλτε είδος.")
             else:
                 item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(pd.to_numeric(df_items['ItemID'], errors='coerce').max() or 0) + 1
                 ws_items.append_row([item_id, it_name.strip(), it_desc, it_price, it_price_m2])
@@ -144,18 +144,18 @@ def render_edit_item_tab(df_items, get_worksheet):
 
     col_nav, col_empty, col_save = st.columns([1, 1, 1])
     with col_nav:
-        btn_home_item = st.button("🏠 ARXIKI", key="btn_home_edit_item", use_container_width=True)
+        btn_home_item = st.button("🏠 ΑΡΧΙΚΗ", key="btn_home_edit_item", use_container_width=True)
         if btn_home_item:
             st.session_state['active_subview'] = 'menu'
             st.rerun()
 
     with col_save:
-        btn_save_item = st.button("💾 APO8IKEYSI", key="btn_save_edit_item", type="primary", use_container_width=True)
+        btn_save_item = st.button("💾 SAVE", key="btn_save_edit_item", type="primary", use_container_width=True)
 
-    st.markdown("### ✏️ Tropopoiisi Katalogoy")
+    #st.markdown("### ✏️ Tropopoiisi Katalogoy")
 
     if df_items.empty or col_name_key not in df_items.columns:
-        st.info("Den yparxoun apothikeymena eidi.")
+        st.info("Δεν υπάρχουν καταχωρημένα είδη.")
         return
 
     valid_items = df_items[df_items[col_name_key].astype(str).str.strip() != ""]
@@ -181,13 +181,13 @@ def render_edit_item_tab(df_items, get_worksheet):
         st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
         st.write(f"✏️ Epexergasia: **{real_name}**")
         
-        new_it_name = st.text_input("Onoma Eidous", value=real_name, key=f"ei_name_{real_name}")
+        new_it_name = st.text_input("ΠΕΡΙΓΡΑΦΗ ΕΙΔΟΥΣ", value=real_name, key=f"ei_name_{real_name}")
         
         cat_index = 0 if curr_cat.strip().lower() == "rouxa" else 1 if curr_cat.strip().lower() == "xalia" else 0
-        new_cat = st.selectbox("Perigrafi / Katigoria", ["Rouxa", "Xalia"], index=cat_index, key=f"ei_cat_{real_name}")
+        new_cat = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ", ["Rouxa", "Xalia"], index=cat_index, key=f"ei_cat_{real_name}")
         
-        new_price = st.number_input("TIMI (€)", value=curr_price, min_value=0.0, step=0.5, key=f"ei_price_{real_name}")
-        new_price_m2 = st.number_input("TIMI TETRAGWNIKOY (€/m²)", value=curr_price_m2, min_value=0.0, step=0.5, key=f"ei_pricem2_{real_name}")
+        new_price = st.number_input("ΤΙΜΗ (€)", value=curr_price, min_value=0.0, step=0.5, key=f"ei_price_{real_name}")
+        new_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", value=curr_price_m2, min_value=0.0, step=0.5, key=f"ei_pricem2_{real_name}")
         
         if btn_save_item:
             try:

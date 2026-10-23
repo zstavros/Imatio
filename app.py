@@ -170,13 +170,13 @@ if 'active_subview' not in st.session_state:
 # --- ROUTING & MENU MAP FOR HEADER TITLE ---
 subview_titles = {
     'fast_loading': 'ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ',
-    'edit_xalia': 'ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ',
-    'item_loading': 'ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ',
-    'edit_items': 'ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ',
+    'edit_xalia': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΧΑΛΙΩΝ',
+    'item_loading': 'ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ',
+    'edit_items': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΡΟΥΧΩΝ',
     'manage_customers_new': 'ΝΕΑ ΕΓΓΡΑΦΗ ΠΕΛΑΤΗ',
     'manage_customers_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ',
     'manage_catalog_new': 'ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛΟΓΟΥ',
-    'manage_catalog_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ'
+    'manage_catalog_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΕΙΔΩΝ-ΧΑΛΙΩΝ'
 }
 
 # --- HEADER WITH LOGO & DYNAMIC PAGE TITLE ---
@@ -232,7 +232,7 @@ if st.session_state['active_subview'] == 'menu':
     with col2:
         st.markdown("##### 👕 Τμήμα Ρούχων & Ειδών")
         
-        if st.button("👕 ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ", use_container_width=True):
+        if st.button("👕 ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'item_loading'
             st.rerun()
             
@@ -245,24 +245,24 @@ if st.session_state['active_subview'] == 'menu':
     col_c1, col_c2 = st.columns(2, gap="large")
     
     with col_c1:
-        st.markdown("##### 👤 Διαχείριση Πελάτών")
+        st.markdown("##### 👤 Διαχείριση Πελατών")
         
-        if st.button("➕ Διαχείριση Πελατών (Νέα Εγγραφή)", use_container_width=True):
+        if st.button("➕ ΝΕΟΣ ΠΕΛΑΤΗΣ", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_new'
             st.rerun()
             
-        if st.button("✏️ Διαχείριση Πελάτών (Τροποποίηση)", use_container_width=True):
+        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'manage_customers_edit'
             st.rerun()
             
     with col_c2:
-        st.markdown("##### 📦 Διαχείριση Καταλόγου Ειδών & Χαλιών")
+        st.markdown("##### 📦 Διαχείριση Ειδών & Χαλιών")
         
-        if st.button("➕ Διαχείριση Καταλόγου (Νέα Εγγραφή)", use_container_width=True):
+        if st.button("➕ ΝΕΑ ΕΙΔΗ & ΧΑΛΙΑ", use_container_width=True):
             st.session_state['active_subview'] = 'manage_catalog_new'
             st.rerun()
             
-        if st.button("✏️ Διαχείριση Καταλόγου (Τροποποίηση)", use_container_width=True):
+        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΕΙΔΩΝ & ΧΑΛΙΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'manage_catalog_edit'
             st.rerun()
 

@@ -29,7 +29,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
             st.session_state['active_subview'] = 'menu'
             st.rerun()
 
-    st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Χαλιών (TrXalia)")
+    #st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Χαλιών (TrXalia)")
     
     if df_xalia.empty:
         st.info("Δεν βρέθηκαν εγγραφές στα Χαλιά.")

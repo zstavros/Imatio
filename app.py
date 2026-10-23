@@ -173,9 +173,9 @@ subview_titles = {
     'edit_xalia': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΧΑΛΙΩΝ',
     'item_loading': 'ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ',
     'edit_items': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΡΟΥΧΩΝ',
-    'manage_customers_new': 'ΝΕΑ ΕΓΓΡΑΦΗ ΠΕΛΑΤΗ',
+    'manage_customers_new': 'ΝΕΟΣ ΠΕΛΑΤΗΣ',
     'manage_customers_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ',
-    'manage_catalog_new': 'ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛΟΓΟΥ',
+    'manage_catalog_new': 'ΝΕΑ ΕΙΔΗ & ΧΑΛΙΑ',
     'manage_catalog_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΕΙΔΩΝ-ΧΑΛΙΩΝ'
 }
 
@@ -230,7 +230,7 @@ if st.session_state['active_subview'] == 'menu':
             st.rerun()
 
     with col2:
-        st.markdown("##### 👕 Τμήμα Ρούχων & Ειδών")
+        st.markdown("##### 👕 Τμήμα Ρούχων")
         
         if st.button("👕 ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'item_loading'

@@ -357,7 +357,7 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
                 st.rerun()
 
         with col_save:
-            submitted = st.form_submit_button("💾 ΑΠΟΘΗΚΕΥΣΗ", use_container_width=True)
+            submitted = st.form_submit_button("💾 SAVE", use_container_width=True)
 
         st.markdown("### 👕 Καταχώρηση Ρούχων & Ειδών")
         

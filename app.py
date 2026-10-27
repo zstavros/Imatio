@@ -1,349 +1,171 @@
 import streamlit as st
 import pandas as pd
-import gspread
-from google.oauth2.service_account import Credentials
-import os
-import base64
 
-import admin_fast
-import admin_eidi
-import admin_egg
+# ==========================================
+# 1. ΡΥΘΜΙΣΗ ΣΕΛΙΔΑΣ & SESSION STATE
+# ==========================================
+st.set_page_config(page_title="Καθαριστήριο - Διαχείριση", page_icon="🧺", layout="wide")
 
-st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
+if "user_role" not in st.session_state:
+    st.session_state["user_role"] = None  # 'admin' ή 'customer'
+if "user_email" not in st.session_state:
+    st.session_state["user_email"] = None
 
-# --- STRICT CUSTOM STYLING ---
-st.markdown("""
-    <style>
-        /* Απόκρυψη επάνω μπάρας (Share, GitHub, 3 τελείες, κλπ.) */
-        header {visibility: hidden;}
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        
-        /* Απόκρυψη του Manage app badge/button */
-        .viewerBadge_link__1S137 {display: none !important;}
-        div[class*="viewerBadge"] {display: none !important;}
-        
-        .block-container {
-            padding-top: 1.5rem !important;
-            padding-bottom: 2rem !important;
-            max-width: 1200px;
-        }
+# ==========================================
+# 2. ΣΥΝΔΕΣΗ GOOGLE OAUTH & ΔΙΑΧΕΙΡΙΣΗ
+# ==========================================
+def check_google_login():
+    """Ελέγχει το Google Auth μέσω st.login() ή Streamlit Secrets."""
+    # Αν ο χρήστης έχει ήδη συνδεθεί μέσω Streamlit OAuth
+    if hasattr(st, "user") and st.user.is_logged_in:
+        email = st.user.email
+        allowed_admins = st.secrets["google_oauth"]["admin_emails"]
+        if email in allowed_admins:
+            st.session_state["user_role"] = "admin"
+            st.session_state["user_email"] = email
+            return True
+        else:
+            st.error(f"⛔ Το email {email} δεν έχει δικαιώματα διαχειριστή.")
+            return False
+    return False
 
-        .brand-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px 20px;
-            background-color: #1b6338;
-            border-radius: 10px;
-            margin-bottom: 25px;
-        }
+# ==========================================
+# 3. ΑΡΧΙΚΗ ΟΘΟΝΗ (LOGIN SCREEN)
+# ==========================================
+if st.session_state["user_role"] is None:
+    st.title("🧺 Καλώς Ήρθατε στο Καθαριστήριο")
+    st.subheader("Παρακαλώ επιλέξτε την ιδιότητά σας για να συνεχίσετε:")
+    st.markdown("---")
 
-        .brand-title {
-            font-size: 1.4rem !important;
-            font-weight: 800 !important;
-            color: #ffffff !important;
-            margin: 0 !important;
-        }
+    col1, col2 = st.columns(2)
 
-        /* ΓΕΝΙΚΟ ΣΤΥΛ ΓΙΑ ΟΛΑ ΤΑ ΚΟΥΜΠΙΑ (ΣΚΟΥΡΟ ΜΠΛΕ ΦΟΝΤΟ) */
-        .stButton > button,
-        div[data-testid="stFormSubmitButton"] > button {
-            background-color: #36456b !important;
-            color: #ffffff !important;
-            border-radius: 8px !important;
-            border: none !important;
-            font-weight: 500 !important;
-            height: 42px !important;
-            min-height: 42px !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            width: 100% !important;
-            box-shadow: none !important;
-        }
-
-        .stButton > button p,
-        .stButton > button div,
-        div[data-testid="stFormSubmitButton"] > button p,
-        div[data-testid="stFormSubmitButton"] > button div {
-            font-size: 0.92rem !important;
-            font-weight: 500 !important;
-            color: #ffffff !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            text-align: center !important;
-        }
-
-        .stButton > button:hover,
-        div[data-testid="stFormSubmitButton"] > button:hover {
-            background-color: #28334f !important;
-        }
-
-        /* ΑΦΑΙΡΕΣΗ ΠΕΡΙΓΡΑΜΜΑΤΟΣ ΚΑΙ ΠΛΑΙΣΙΟΥ ΦΟΡΜΑΣ */
-        div[data-testid="stForm"] {
-            border: none !important;
-            padding: 0px !important;
-            background-color: transparent !important;
-        }
-
-        /* Γαλάζιο φόντο ΜΟΝΟ στις καρτέλες του αρχικού μενού */
-        .menu-cards div[data-testid="stColumn"] {
-            background-color: #6c8ebf !important;
-            border-radius: 14px;
-            padding: 16px 18px !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
-        .menu-cards div[data-testid="stColumn"] h3, 
-        .menu-cards div[data-testid="stColumn"] h4 {
-            font-size: 1.15rem !important;
-            font-weight: 700 !important;
-            color: #000000 !important;
-            margin-top: 0px !important;
-            margin-bottom: 2px !important;
-            padding-bottom: 0px !important;
-        }
-
-        .menu-cards div[data-testid="stColumn"] p {
-            font-size: 0.88rem !important;
-            color: #111111 !important;
-            font-weight: 400 !important;
-            margin-top: 0px !important;
-            margin-bottom: 8px !important;
-            line-height: 1.2 !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- GOOGLE SHEETS CONNECTION ---
-@st.cache_resource
-def get_gspread_client():
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scope)
-    return gspread.authorize(creds)
-
-def get_worksheet(sheet_name):
-    client = get_gspread_client()
-    SPREADSHEET_ID = "18_Rke4EW04J0QaTw2PBgU1Q-NLgT7G2l3yR0NvX1jmE"
-    sh = client.open_by_key(SPREADSHEET_ID)
-    return sh.worksheet(sheet_name)
-
-# --- ROBUST DATA LOADING ---
-def load_all_data():
-    try:
-        ws_c = get_worksheet("Customers")
-        data_c = ws_c.get_all_records()
-        st.session_state['df_customers'] = pd.DataFrame(data_c) if data_c else pd.DataFrame(columns=["CustomerID", "CuName", "CuPhone", "CuAddress"])
-    except Exception as e:
-        st.session_state['df_customers'] = pd.DataFrame(columns=["CustomerID", "CuName", "CuPhone", "CuAddress"])
-        st.error(f"Σφάλμα φόρτωσης Customers: {e}")
-
-    try:
-        ws_i = get_worksheet("Items")
-        data_i = ws_i.get_all_records()
-        st.session_state['df_items'] = pd.DataFrame(data_i) if data_i else pd.DataFrame()
-    except:
-        st.session_state['df_items'] = pd.DataFrame()
-
-    try:
-        ws_tx = get_worksheet("TrXalia")
-        data_tx = ws_tx.get_all_records()
-        st.session_state['df_tr_xalia'] = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
-    except:
-        st.session_state['df_tr_xalia'] = pd.DataFrame()
-
-    try:
-        ws_ti = get_worksheet("TrItems")
-        data_ti = ws_ti.get_all_records()
-        st.session_state['df_tr_items'] = pd.DataFrame(data_ti) if data_ti else pd.DataFrame()
-    except:
-        st.session_state['df_tr_items'] = pd.DataFrame()
-
-if 'df_customers' not in st.session_state or st.session_state['df_customers'].empty:
-    load_all_data()
-
-# --- ROUTING & MENU ---
-if 'active_subview' not in st.session_state:
-    st.session_state['active_subview'] = 'menu'
-
-# --- ROUTING & MENU MAP FOR HEADER TITLE ---
-subview_titles = {
-    'fast_loading': 'ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ',
-    'edit_xalia': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΧΑΛΙΩΝ',
-    'item_loading': 'ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ',
-    'edit_items': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΡΟΥΧΩΝ',
-    'manage_customers_new': 'ΝΕΟΣ ΠΕΛΑΤΗΣ',
-    'manage_customers_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ',
-    'manage_catalog_new': 'ΝΕΑ ΕΙΔΗ & ΧΑΛΙΑ',
-    'manage_catalog_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΕΙΔΩΝ-ΧΑΛΙΩΝ'
-}
-
-# --- HEADER WITH LOGO & DYNAMIC PAGE TITLE ---
-def get_base64_image(image_path):
-    if os.path.exists(image_path):
-        with open(image_path, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode()
-    return ""
-
-logo_b64 = get_base64_image("logo.png")
-
-# Ορισμός τίτλου: αν είμαστε στο αρχικό μενού, δείχνει το IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ, αλλιώς τον τίτλο της σελίδας
-current_subview = st.session_state.get('active_subview', 'menu')
-if current_subview == 'menu':
-    header_text = "IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ"
-else:
-    header_text = subview_titles.get(current_subview, "")
-
-if logo_b64:
-    header_html = f"""
-        <div class="brand-header">
-            <img src="data:image/png;base64,{logo_b64}" style="height: 42px; width: auto; object-fit: contain;">
-            <span class="brand-title">{header_text}</span>
-        </div>
-    """
-else:
-    header_html = f"""
-        <div class="brand-header">
-            <span style="font-size: 1.6rem;">🧺</span>
-            <span class="brand-title">{header_text}</span>
-        </div>
-    """
-
-st.markdown(header_html, unsafe_allow_html=True)
-
-# 1. ΑΡΧΙΚΗ ΚΑΡΤΕΛΑ ΜΕΝΟΥ
-if st.session_state['active_subview'] == 'menu':
-    st.markdown('<div class="menu-cards">', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2, gap="large")
-    
+    # 📱 ΕΙΣΟΔΟΣ ΠΕΛΑΤΗ
     with col1:
-        st.markdown("##### 🚚 Τμήμα Χαλιών")
+        st.info("### 📱 Είμαι Πελάτης")
+        st.write("Δείτε άμεσα την κατάσταση των ρούχων & χαλιών σας με το κινητό σας.")
+        phone_input = st.text_input("Πληκτρολογήστε το Κινητό Τηλέφωνο:", placeholder="6912345678")
         
-        if st.button("🚚 ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'fast_loading'
-            st.rerun()
-            
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ & ΠΑΡΑΔΟΣΗ ΧΑΛΙΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'edit_xalia'
-            st.rerun()
+        if st.button("🔎 Αναζήτηση Παραγγελίας", type="primary"):
+            if phone_input.strip():
+                st.session_state["user_role"] = "customer"
+                st.session_state["customer_phone"] = phone_input.strip()
+                st.rerun()
+            else:
+                st.warning("Παρακαλώ εισάγετε έναν έγκυρο αριθμό τηλεφώνου.")
 
+    # 🔑 ΕΙΣΟΔΟΣ ΔΙΑΧΕΙΡΙΣΤΗ
     with col2:
-        st.markdown("##### 👕 Τμήμα Ρούχων")
+        st.success("### 🔑 Είσοδος Διαχειριστή")
+        st.write("Πρόσβαση σε όλες τις λειτουργίες, καταχωρίσεις και οικονομικές αναφορές.")
         
-        if st.button("👕 ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'item_loading'
-            st.rerun()
-            
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ & ΠΑΡΑΔΟΣΗ ΡΟΥΧΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'edit_items'
-            st.rerun()
+        # Αν χρησιμοποιείται το νέο st.login της Streamlit (έκδοση 1.40+)
+        if hasattr(st, "login"):
+            if st.button("🔐 Σύνδεση με Google", key="google_login_btn"):
+                st.login()
+        else:
+            # Εναλλακτική χειροκίνητη επιβεβαίωση / fallback
+            st.write("Πατήστε για ταυτοποίηση μέσω Google:")
+            if check_google_login():
+                st.rerun()
 
-    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
-
-    col_c1, col_c2 = st.columns(2, gap="large")
+# ==========================================
+# 4. ΟΘΟΝΗ ΠΕΛΑΤΗ (CUSTOMER VIEW)
+# ==========================================
+elif st.session_state["user_role"] == "customer":
+    phone = st.session_state.get("customer_phone", "")
     
-    with col_c1:
-        st.markdown("##### 👤 Διαχείριση Πελατών")
+    st.sidebar.title(f"👤 Πελάτης: {phone}")
+    if st.sidebar.button("🚪 Έξοδος"):
+        st.session_state["user_role"] = None
+        st.rerun()
+
+    st.title("📦 Τα Έτοιμα Είδη Σας")
+    st.write(f"Αναζήτηση για το τηλέφωνο: **{phone}**")
+    st.markdown("---")
+
+    # ΕΔΩ ΦΟΡΤΩΝΟΝΤΑΙ ΤΑ ΔΕΔΟΜΕΝΑ ΑΠΟ GOOGLE SHEETS
+    # Παράδειγμα προσομοίωσης:
+    ready_items = [
+        {"Είδος": "Παντελόνι", "Τύπος": "Ρούχο", "Κατάσταση": "Έτοιμο", "Ημ. Παραλαβής": "2026-10-25"},
+        {"Είδος": "Χαλί Μάλλινο", "Τύπος": "Χαλί", "Κατάσταση": "Έτοιμο", "Ημ. Παραλαβής": "2026-10-26"},
+    ]
+    
+    if ready_items:
+        df_ready = pd.DataFrame(ready_items)
+        st.dataframe(df_ready, use_container_width=True)
+        st.success("✨ Τα παραπάνω είδη είναι έτοιμα! Μπορείτε να περάσετε από το κατάστημα για παραλαβή.")
+    else:
+        st.info("Δεν βρέθηκαν έτοιμα είδη για αυτό το τηλέφωνο αυτή τη στιγμή.")
+
+# ==========================================
+# 5. ΟΘΟΝΗ ΔΙΑΧΕΙΡΙΣΤΗ (ADMIN DASHBOARD)
+# ==========================================
+elif st.session_state["user_role"] == "admin":
+    admin_email = st.session_state.get("user_email", "Admin")
+    
+    st.sidebar.title("🛡️ Πάνελ Διαχειριστή")
+    st.sidebar.caption(f"Συνδέθηκε ως: {admin_email}")
+    
+    menu = st.sidebar.radio(
+        "Πλοήγηση Μενού:",
+        ["📊 Αναφορές & Στατιστικά", "📝 Καταχώριση Παραγγελίας", "🚚 Παραδόσεις / Παραλαβές", "👥 Πελάτες"]
+    )
+    
+    if st.sidebar.button("🚪 Αποσύνδεση"):
+        if hasattr(st, "logout"):
+            st.logout()
+        st.session_state["user_role"] = None
+        st.rerun()
+
+    # --------------------------------------
+    # ΕΝΟΤΗΤΑ: ΑΝΑΦΟΡΕΣ & ΣΤΑΤΙΣΤΙΚΑ
+    # --------------------------------------
+    if menu == "📊 Αναφορές & Στατιστικά":
+        st.title("📊 Αναφορές & Στατιστικά Επιχείρησης")
+        st.markdown("---")
+
+        # Φίλτρο Περιόδου
+        period = st.selectbox("Επιλέξτε Χρονική Περίοδο:", ["Ημερήσια", "Εβδομαδιαία", "Μηνιαία", "Ετήσια"])
+
+        st.subheader(f"📈 Οικονομικός Τζίρος ({period})")
+        col_m1, col_m2, col_m3 = st.columns(3)
+        col_m1.metric("Έσοδα από Χαλιά", "450 €", "+12%")
+        col_m2.metric("Έσοδα από Ρούχα", "320 €", "+5%")
+        col_m3.metric("Συνολικός Τζίρος", "770 €", "+9%")
+
+        st.markdown("---")
         
-        if st.button("➕ ΝΕΟΣ ΠΕΛΑΤΗΣ", use_container_width=True):
-            st.session_state['active_subview'] = 'manage_customers_new'
-            st.rerun()
+        col_left, col_right = st.columns(2)
+
+        # TOP 10 ΠΕΛΑΤΕΣ
+        with col_left:
+            st.subheader("🏆 Top-10 Πελάτες")
+            top_customers = pd.DataFrame({
+                "Πελάτης": ["Γιώργος Π.", "Μαρία Κ.", "Νίκος Α.", "Ελένη Δ.", "Κώστας Μ."],
+                "Συχνότητα": [12, 10, 8, 7, 5],
+                "Συνολικός Τζίρος (€)": [450, 380, 310, 260, 200]
+            })
+            st.dataframe(top_customers, use_container_width=True)
+
+        # TOP 5 ΕΙΔΗ (ΧΑΛΙΑ & ΡΟΥΧΑ)
+        with col_right:
+            st.subheader("🥇 Top-5 Δημοφιλή Είδη")
+            tab_carpets, tab_clothes = st.tabs(["🧶 Χαλιά", "👔 Ρούχα"])
             
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'manage_customers_edit'
-            st.rerun()
-            
-    with col_c2:
-        st.markdown("##### 📦 Διαχείριση Ειδών & Χαλιών")
-        
-        if st.button("➕ ΝΕΑ ΕΙΔΗ & ΧΑΛΙΑ", use_container_width=True):
-            st.session_state['active_subview'] = 'manage_catalog_new'
-            st.rerun()
-            
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΕΙΔΩΝ & ΧΑΛΙΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'manage_catalog_edit'
-            st.rerun()
+            with tab_carpets:
+                top_carpets = pd.DataFrame({
+                    "Είδος Χαλιού": ["Μάλλινο", "Μηχανής", "Μεταξωτό", "Διάδρομος", "Ψάθα"],
+                    "Τεμάχια": [85, 62, 40, 35, 18]
+                })
+                st.dataframe(top_carpets, use_container_width=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+            with tab_clothes:
+                top_clothes = pd.DataFrame({
+                    "Είδος Ρούχου": ["Κοστούμι", "Παντελόνι", "Παπλωμα", "Πουκάμισο", "Μπουφάν"],
+                    "Τεμάχια": [140, 115, 90, 85, 60]
+                })
+                st.dataframe(top_clothes, use_container_width=True)
 
-# 2. ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ
-elif st.session_state['active_subview'] == 'fast_loading':
-    admin_fast.render_fast_loading_tab(
-        st.session_state.get('df_customers', pd.DataFrame()),
-        st.session_state.get('df_items', pd.DataFrame()),
-        get_worksheet
-    )
-
-# 3. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (Refresh gia na fainetai kai στο κινητό)
-elif st.session_state['active_subview'] == 'edit_xalia':
-    st.cache_data.clear()  # Katharizei tin mnimi gia na min kollaei sto kinito!
-    
-    ws_tx = get_worksheet("TrXalia")
-    data_tx = ws_tx.get_all_records()
-    df_fresh_tx = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
-    st.session_state['df_tr_xalia'] = df_fresh_tx
-    
-    admin_eidi.render_edit_xalia_tab(
-        df_fresh_tx,
-        st.session_state.get('df_customers', pd.DataFrame()),
-        st.session_state.get('df_items', pd.DataFrame()),
-        get_worksheet
-    )
-
-# 4. ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ
-elif st.session_state['active_subview'] == 'item_loading':
-    admin_eidi.render_item_loading_tab(
-        st.session_state.get('df_customers', pd.DataFrame()),
-        st.session_state.get('df_items', pd.DataFrame()),
-        get_worksheet
-    )
-
-# 5. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ
-elif st.session_state['active_subview'] == 'edit_items':
-    admin_eidi.render_edit_items_tab(
-        st.session_state.get('df_tr_items', pd.DataFrame()),
-        st.session_state.get('df_customers', pd.DataFrame()),
-        get_worksheet
-    )
-
-# 6. ΝΕΑ ΕΓΓΡΑΦΗ ΠΕΛΑΤΗ
-elif st.session_state['active_subview'] == 'manage_customers_new':
-    admin_egg.render_new_customer_tab(
-        st.session_state.get('df_customers', pd.DataFrame()), 
-        get_worksheet
-    )
-
-# 7. ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ
-elif st.session_state['active_subview'] == 'manage_customers_edit':
-    st.cache_data.clear()
-    ws_cust = get_worksheet("Customers")
-    fresh_cust_data = ws_cust.get_all_records()
-    df_fresh_customers = pd.DataFrame(fresh_cust_data) if fresh_cust_data else pd.DataFrame()
-    st.session_state['df_customers'] = df_fresh_customers
-    
-    admin_egg.render_edit_customer_tab(
-        df_fresh_customers, 
-        get_worksheet
-    )
-
-# 8. ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛOGOY
-elif st.session_state['active_subview'] == 'manage_catalog_new':
-    admin_egg.render_new_item_tab(
-        st.session_state.get('df_items', pd.DataFrame()), 
-        get_worksheet
-    )
-
-# 9. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ
-elif st.session_state['active_subview'] == 'manage_catalog_edit':
-    st.cache_data.clear()
-    ws_items = get_worksheet("Items")
-    fresh_items_data = ws_items.get_all_records()
-    df_fresh_items = pd.DataFrame(fresh_items_data) if fresh_items_data else pd.DataFrame()
-    st.session_state['df_items'] = df_fresh_items
-    
-    admin_egg.render_edit_item_tab(
-        df_fresh_items, 
-        get_worksheet
-    )
+    else:
+        st.title(f"📌 Ενότητα: {menu}")
+        st.info("Εδώ βρίσκονται οι υπόλοιπες λειτουργίες του προγράμματος.")

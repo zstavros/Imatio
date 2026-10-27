@@ -96,7 +96,7 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
         pass
 
     with col_btn:
-        submitted = st.button("💾 ΑΠΟΘΗΚΕΥΣΗ", type="primary", use_container_width=True)
+        submitted = st.button("💾 SAVE", type="primary", use_container_width=True)
 
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 

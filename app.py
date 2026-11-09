@@ -466,14 +466,14 @@ elif st.session_state['active_subview'] == 'analytics':
     
     col_top_cust, col_top_items = st.columns(2, gap="large")
 
-    # 3. Δοκιμή Συνάρτηση για τα TOP (ΜΟΝΟ με Status "Παραδόθηκε", χωρίς περιορισμό ημερομηνίας)
+    # 3. Δοκιμή Συνάρτηση για τα TOP (ΜΟΝΟ με Status "Έτοιμο", χωρίς περιορισμό ημερομηνίας)
     def process_df_top(df):
         if df.empty:
             return pd.DataFrame()
         df_filtered = df.copy()
         
         if 'Status' in df_filtered.columns:
-            df_filtered = df_filtered[df_filtered['Status'].astype(str).str.strip() == "Παραδόθηκε"]
+            df_filtered = df_filtered[df_filtered['Status'].astype(str).str.strip() == "Έτοιμο"]
 
         if 'TotalPrice' in df_filtered.columns:
             df_filtered['Price'] = pd.to_numeric(df_filtered['TotalPrice'], errors='coerce').fillna(0)

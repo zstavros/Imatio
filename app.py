@@ -366,14 +366,12 @@ elif st.session_state['active_subview'] == 'manage_catalog_edit':
 elif st.session_state['active_subview'] == 'analytics':
     st.cache_data.clear()
     
-    # Φόρτωση φρέσκων δεδομένων
     df_xalia = st.session_state.get('df_tr_xalia', pd.DataFrame())
     df_items = st.session_state.get('df_tr_items', pd.DataFrame())
     df_cust = st.session_state.get('df_customers', pd.DataFrame())
 
     today = date.today()
 
-    # Προετοιμασία session state για τα φίλτρα ημερομηνιών
     if 'date_from' not in st.session_state:
         st.session_state['date_from'] = today.replace(day=1)
     if 'date_to' not in st.session_state:
@@ -381,7 +379,6 @@ elif st.session_state['active_subview'] == 'analytics':
 
     st.subheader("📅 Επιλογή Χρονικού Διαστήματος")
 
-    # Γρήγορα Κουμπιά Επιλογής
     c1, c2, c3 = st.columns(3)
     with c1:
         if st.button("📆 ΣΗΜΕΡΑ", use_container_width=True):
@@ -401,43 +398,43 @@ elif st.session_state['active_subview'] == 'analytics':
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Πεδία επιλογής εύρους ημερομηνιών
     f_col1, f_col2 = st.columns(2)
     with f_col1:
         date_from = st.date_input("Από Ημερομηνία:", value=st.session_state['date_from'])
     with f_col2:
         date_to = st.date_input("Έως Ημερομηνία:", value=st.session_state['date_to'])
 
-    # Μετατροπή ημερομηνιών σε Timestamp
     t_from = pd.to_datetime(date_from)
     t_to = pd.to_datetime(date_to) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
 
-    # Συνάρτηση Φιλτραρίσματος & Υπολογισμού (με ενσωματωμένο το φίλτρο Status = "Παραδόθηκε")
-    def process_df(df, date_col='Date', price_col='Price'):
-        if df.empty or date_col not in df.columns:
+    # Συνάρτηση Φιλτραρίσματος με βάση τις στήλες της εικόνας
+    def process_df(df):
+        if df.empty:
             return pd.DataFrame()
-        df_copy = df.copy()
-        df_copy[date_col] = pd.to_datetime(df_copy[date_col], errors='coerce')
+        df_filtered = df.copy()
         
-        # Φιλτράρισμα με βάση τις ημερομηνίες
-        df_filtered = df_copy[(df_copy[date_col] >= t_from) & (df_copy[date_col] <= t_to)]
-        
-        # ΦΙΛΤΡΟ STATUS: Κρατάμε μόνο όσα έχουν Status "Παραδόθηκε"
+        # 1. Ημερομηνία (χρησιμοποιούμε το DateIn)
+        if 'DateIn' in df_filtered.columns:
+            df_filtered['DateIn'] = pd.to_datetime(df_filtered['DateIn'], errors='coerce')
+            df_filtered = df_filtered[(df_filtered['DateIn'] >= t_from) & (df_filtered['DateIn'] <= t_to)]
+
+        # 2. Φίλτρο Status = "Παραδόθηκε"
         if 'Status' in df_filtered.columns:
             df_filtered = df_filtered[df_filtered['Status'].astype(str).str.strip() == "Παραδόθηκε"]
 
-        # Μετατροπή της τιμής σε αριθμό
-        if price_col in df_filtered.columns:
-            df_filtered[price_col] = pd.to_numeric(df_filtered[price_col], errors='coerce').fillna(0)
+        # 3. Τιμή (χρησιμοποιούμε το TotalPrice)
+        if 'TotalPrice' in df_filtered.columns:
+            df_filtered['Price'] = pd.to_numeric(df_filtered['TotalPrice'], errors='coerce').fillna(0)
+        else:
+            df_filtered['Price'] = 0.0
             
         return df_filtered
 
-    filtered_xalia = process_df(df_xalia, date_col='Date', price_col='Price')
-    filtered_items = process_df(df_items, date_col='Date', price_col='Price')
+    filtered_xalia = process_df(df_xalia)
+    filtered_items = process_df(df_items)
 
-    # Υπολογισμός Τζίρων
-    revenue_xalia = filtered_xalia['Price'].sum() if not filtered_xalia.empty and 'Price' in filtered_xalia.columns else 0.0
-    revenue_items = filtered_items['Price'].sum() if not filtered_items.empty and 'Price' in filtered_items.columns else 0.0
+    revenue_xalia = filtered_xalia['Price'].sum() if not filtered_xalia.empty else 0.0
+    revenue_items = filtered_items['Price'].sum() if not filtered_items.empty else 0.0
     total_revenue = revenue_xalia + revenue_items
 
     st.markdown("---")
@@ -450,62 +447,60 @@ elif st.session_state['active_subview'] == 'analytics':
 
     st.markdown("---")
     
-    # 🏆 TOP 10 ΠΕΛΑΤΩΝ & TOP 5 ΕΙΔΩΝ
     col_top_cust, col_top_items = st.columns(2, gap="large")
 
+    # 🏆 TOP 10 ΠΕΛΑΤΩΝ (με βάση το CustomerName)
     with col_top_cust:
         st.subheader("🏆 Top-10 Πελάτες (Παραδόθηκε)")
         
         combined_orders = []
-        if not filtered_xalia.empty and 'CustomerID' in filtered_xalia.columns:
-            combined_orders.append(filtered_xalia[['CustomerID', 'Price']])
-        if not filtered_items.empty and 'CustomerID' in filtered_items.columns:
-            combined_orders.append(filtered_items[['CustomerID', 'Price']])
+        for df_f in [filtered_xalia, filtered_items]:
+            if not df_f.empty and 'CustomerName' in df_f.columns:
+                combined_orders.append(df_f[['CustomerName', 'Price']])
+            elif not df_f.empty and 'CustomerID' in df_f.columns:
+                combined_orders.append(df_f[['CustomerID', 'Price']].rename(columns={'CustomerID': 'CustomerName'}))
             
         if combined_orders:
             df_combined = pd.concat(combined_orders, ignore_index=True)
-            df_combined['CustomerID'] = df_combined['CustomerID'].astype(str)
+            df_combined['CustomerName'] = df_combined['CustomerName'].astype(str).str.strip()
             
-            grouped = df_combined.groupby('CustomerID').agg(
+            grouped = df_combined.groupby('CustomerName').agg(
                 Συχνότητα=('Price', 'count'),
                 Τζίρος=('Price', 'sum')
             ).reset_index()
-
-            if not df_cust.empty and 'CustomerID' in df_cust.columns:
-                df_cust_copy = df_cust.copy()
-                df_cust_copy['CustomerID'] = df_cust_copy['CustomerID'].astype(str)
-                grouped = grouped.merge(df_cust_copy[['CustomerID', 'CuName']], on='CustomerID', how='left')
-                grouped['Πελάτης'] = grouped['CuName'].fillna(grouped['CustomerID'])
-            else:
-                grouped['Πελάτης'] = grouped['CustomerID']
 
             tab_freq, tab_rev = st.tabs(["🔢 Ανά Συχνότητα", "💶 Ανά Τζίρο (€)"])
             
             with tab_freq:
                 top_freq = grouped.sort_values(by='Συχνότητα', ascending=False).head(10)
-                st.dataframe(top_freq[['Πελάτης', 'Συχνότητα', 'Τζίρος']], use_container_width=True, hide_index=True)
+                top_freq = top_freq.rename(columns={'CustomerName': 'Πελάτης'})
+                st.dataframe(top_freq, use_container_width=True, hide_index=True)
                 
             with tab_rev:
                 top_rev = grouped.sort_values(by='Τζίρος', ascending=False).head(10)
-                st.dataframe(top_rev[['Πελάτης', 'Τζίρος', 'Συχνότητα']], use_container_width=True, hide_index=True)
+                top_rev = top_rev.rename(columns={'CustomerName': 'Πελάτης'})
+                st.dataframe(top_rev, use_container_width=True, hide_index=True)
         else:
             st.info("Δεν υπάρχουν ολοκληρωμένες συναλλαγές για την περίοδο αυτή.")
 
+    # 🥇 TOP 5 ΕΙΔΩΝ (με βάση το ItName)
     with col_top_items:
         st.subheader("🥇 Top-5 Δημοφιλή Είδη (Παραδόθηκε)")
         tab_c_items, tab_r_items = st.tabs(["🧶 Χαλιά", "👔 Ρούχα"])
 
         with tab_c_items:
-            if not filtered_xalia.empty and 'ItemName' in filtered_xalia.columns:
-                top_xalia = filtered_xalia.groupby('ItemName').size().reset_index(name='Τεμάχια')
+            if not filtered_xalia.empty and 'ItName' in filtered_xalia.columns:
+                top_xalia = filtered_xalia.groupby('ItName').size().reset_index(name='Τεμάχια')
+                top_xalia = top_xalia.rename(columns={'ItName': 'Είδος Χαλιού'})
                 top_xalia = top_xalia.sort_values(by='Τεμάχια', ascending=False).head(5)
                 st.dataframe(top_xalia, use_container_width=True, hide_index=True)
             else:
                 st.info("Δεν βρέθηκαν δεδομένα για χαλιά.")
 
         with tab_r_items:
-            if not filtered_items.empty and 'ItemName' in filtered_items.columns:
-                top_rouxa = filtered_items.groupby('ItemName').size().reset_index(name='Τεμάχια')
+            if not filtered_items.empty and 'ItName' in filtered_items.columns:
+                top_rouxa = filtered_items.groupby('ItName').size().reset_index(name='Τεμάχια')
+                top_rouxa = top_rouxa.rename(columns={'ItName': 'Είδος Ρούχου'})
                 top_rouxa = top_rouxa.sort_values(by='Τεμάχια', ascending=False).head(5)
                 st.dataframe(top_rouxa, use_container_width=True, hide_index=True)
             else:

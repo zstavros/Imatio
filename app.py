@@ -355,11 +355,14 @@ elif st.session_state['active_subview'] == 'manage_catalog_edit':
     )
 
 # 10. 📊 ΕΝΟΤΗΤΑ ΑΝΑΦΟΡΩΝ & ΣΤΑΤΙΣΤΙΚΩΝ
+# 10. 📊 ΕΝΟΤΗΤΑ ΑΝΑΦΟΡΩΝ & ΣΤΑΤΙΣΤΙΚΩΝ
 elif st.session_state['active_subview'] == 'analytics':
-    # 🏠 ΚΟΥΜΠΙ ΑΡΧΙΚΗΣ ΜΟΝΟ ΓΙΑ ΤΙΣ ΑΝΑΦΟΡΕΣ (Ανάμεσα στο πράσινο header και το περιεχόμενο)
-    if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
-        st.session_state['active_subview'] = 'menu'
-        st.rerun()
+    # 🏠 ΚΟΥΜΠΙ ΑΡΧΙΚΗΣ ΣΕ ΜΙΚΡΟ ΜΕΓΕΘΟΣ
+    col_btn, _ = st.columns([1, 4])
+    with col_btn:
+        if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
     st.cache_data.clear()

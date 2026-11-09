@@ -196,14 +196,6 @@ if current_subview == 'menu':
 else:
     header_text = subview_titles.get(current_subview, "")
 
-# Κουμπί Επιστροφής αν δεν είμαστε στο αρχικό μενού
-if current_subview != 'menu':
-    col_back, col_head = st.columns([1, 6])
-    with col_back:
-        if st.button("⬅️ Αρχικό Μενού", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
-
 if logo_b64:
     header_html = f"""
         <div class="brand-header">

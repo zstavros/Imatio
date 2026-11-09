@@ -580,32 +580,25 @@ elif st.session_state['active_subview'] == 'ready_orders':
     combined_ready = pd.concat([ready_xalia, ready_items], ignore_index=True)
 
     if not combined_ready.empty:
-        if not df_cust.empty and 'CustomerID' in df_cust.columns and 'CustomerID' in combined_ready.columns:
-            df_cust_c = df_cust.copy()
-            df_cust_c['CustomerID'] = df_cust_c['CustomerID'].astype(str)
-            combined_ready['CustomerID'] = combined_ready['CustomerID'].astype(str)
-            combined_ready = combined_ready.merge(df_cust_c, on='CustomerID', how='left', suffixes=('', '_cust'))
-
-        cust_name_col = 'CustomerName' if 'CustomerName' in combined_ready.columns else ('CuName' if 'CuName' in combined_ready.columns else None)
-        phone_col = 'CuPhone' if 'CuPhone' in combined_ready.columns else ('Phone' if 'Phone' in combined_ready.columns else None)
-        item_col = 'ItName' if 'ItName' in combined_ready.columns else ('ItemName' if 'ItemName' in combined_ready.columns else 'Τύπος')
-
         report_data = []
         for _, row in combined_ready.iterrows():
-            c_name = row.get(cust_name_col, row.get('CustomerID', 'Άγνωστος'))
-            p_num = row.get(phone_col, "")
-            if not p_num and not df_cust.empty and cust_name_col in df_cust.columns:
-                match_c = df_cust[df_cust[cust_name_col].astype(str).str.strip() == str(c_name).strip()]
-                if not match_c.empty and 'CuPhone' in match_c.columns:
-                    p_num = match_c['CuPhone'].values[0]
-
-            it_n = row.get(item_col, "Είδος")
+            c_name = str(row.get('CustomerName', '')).strip()
+            it_n = row.get('ItName', 'Είδος')
             t_val = row.get('Price', 0.0)
             t_type = row.get('Τύπος', '')
 
+            # Αναζήτηση τηλεφώνου στο φύλλο Customers βάσει του CuName
+            p_num = "Δεν καταχωρήθηκε"
+            if not df_cust.empty and 'CuName' in df_cust.columns:
+                match_c = df_cust[df_cust['CuName'].astype(str).str.strip() == c_name]
+                if not match_c.empty and 'CuPhone' in match_c.columns:
+                    val_phone = match_c['CuPhone'].values[0]
+                    if pd.notna(val_phone) and str(val_phone).strip() != "":
+                        p_num = str(val_phone).strip()
+
             report_data.append({
-                'Πελάτης': c_name,
-                'Τηλέφωνο': p_num if p_num else 'Δεν καταχωρήθηκε',
+                'Πελάτης': c_name if c_name else 'Άγνωστος',
+                'Τηλέφωνο': p_num,
                 'Κατηγορία': t_type,
                 'Είδος': it_n,
                 'Αξία (€)': t_val

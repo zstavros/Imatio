@@ -356,6 +356,12 @@ elif st.session_state['active_subview'] == 'manage_catalog_edit':
 
 # 10. 📊 ΕΝΟΤΗΤΑ ΑΝΑΦΟΡΩΝ & ΣΤΑΤΙΣΤΙΚΩΝ
 elif st.session_state['active_subview'] == 'analytics':
+    # 🏠 ΚΟΥΜΠΙ ΑΡΧΙΚΗΣ ΜΟΝΟ ΓΙΑ ΤΙΣ ΑΝΑΦΟΡΕΣ (Ανάμεσα στο πράσινο header και το περιεχόμενο)
+    if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
+        st.session_state['active_subview'] = 'menu'
+        st.rerun()
+    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+
     st.cache_data.clear()
     
     df_xalia = st.session_state.get('df_tr_xalia', pd.DataFrame())
@@ -438,7 +444,6 @@ elif st.session_state['active_subview'] == 'analytics':
     filtered_xalia_rev = process_df_revenue(df_xalia)
     filtered_items_rev = process_df_revenue(df_items)
 
-    # Τα Top θα υπολογίζονται από όλα τα "Παραδόθηκε" συνολικά
     filtered_xalia_top = process_df_top(df_xalia)
     filtered_items_top = process_df_top(df_items)
 
@@ -458,7 +463,7 @@ elif st.session_state['active_subview'] == 'analytics':
     
     col_top_cust, col_top_items = st.columns(2, gap="large")
 
-    # 🏆 TOP 10 ΠΕΛΑΤΩΝ (Συνολικά για όσους έχουν παραδοθεί)
+    # 🏆 TOP 10 ΠΕΛΑΤΩΝ
     with col_top_cust:
         st.subheader("🏆 Top-10 Πελάτες (Συνολικά Παραδομένα)")
         
@@ -492,7 +497,7 @@ elif st.session_state['active_subview'] == 'analytics':
         else:
             st.info("Δεν υπάρχουν ολοκληρωμένες συναλλαγές.")
 
-    # 🥇 TOP 5 ΕΙΔΩΝ (Συνολικά για όσους έχουν παραδοθεί)
+    # 🥇 TOP 5 ΕΙΔΩΝ
     with col_top_items:
         st.subheader("🥇 Top-5 Δημοφιλή Είδη (Συνολικά Παραδομένα)")
         tab_c_items, tab_r_items = st.tabs(["🧶 Χαλιά", "👔 Ρούχα"])

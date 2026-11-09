@@ -466,6 +466,44 @@ elif st.session_state['active_subview'] == 'analytics':
     
     col_top_cust, col_top_items = st.columns(2, gap="large")
 
+    # 3. Δοκιμή Συνάρτηση για τα TOP (ΜΟΝΟ με Status "Παραδόθηκε", χωρίς περιορισμό ημερομηνίας)
+    def process_df_top(df):
+        if df.empty:
+            return pd.DataFrame()
+        df_filtered = df.copy()
+        
+        if 'Status' in df_filtered.columns:
+            df_filtered = df_filtered[df_filtered['Status'].astype(str).str.strip() == "Παραδόθηκε"]
+
+        if 'TotalPrice' in df_filtered.columns:
+            df_filtered['Price'] = pd.to_numeric(df_filtered['TotalPrice'], errors='coerce').fillna(0)
+        else:
+            df_filtered['Price'] = 0.0
+            
+        return df_filtered
+
+    filtered_xalia_rev = process_df_revenue(df_xalia)
+    filtered_items_rev = process_df_revenue(df_items)
+
+    filtered_xalia_top = process_df_top(df_xalia)
+    filtered_items_top = process_df_top(df_items)
+
+    revenue_xalia = filtered_xalia_rev['Price'].sum() if not filtered_xalia_rev.empty else 0.0
+    revenue_items = filtered_items_rev['Price'].sum() if not filtered_items_rev.empty else 0.0
+    total_revenue = revenue_xalia + revenue_items
+
+    st.markdown("---")
+    st.subheader(f"💰 Παραδόθηκαν  ({date_from.strftime('%d/%m/%Y')} - {date_to.strftime('%d/%m/%Y')})")
+    
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Έσοδα από Χαλιά", f"{revenue_xalia:,.2f} €")
+    m2.metric("Έσοδα από Ρούχα", f"{revenue_items:,.2f} €")
+    m3.metric("Συνολικός Τζίρος", f"{total_revenue:,.2f} €")
+
+    st.markdown("---")
+    
+    col_top_cust, col_top_items = st.columns(2, gap="large")
+
     # 🏆 TOP 10 ΠΕΛΑΤΩΝ
     with col_top_cust:
         st.subheader("🏆 Top-10 Πελάτες (Συνολικά Παραδομένα)")

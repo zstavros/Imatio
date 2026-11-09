@@ -455,7 +455,7 @@ elif st.session_state['active_subview'] == 'analytics':
     total_revenue = revenue_xalia + revenue_items
 
     st.markdown("---")
-    st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({date_from.strftime('%d/%m/%Y')} - {date_to.strftime('%d/%m/%Y')})")
+    st.subheader(f"💰 Παραδόθηκαν  ({date_from.strftime('%d/%m/%Y')} - {date_to.strftime('%d/%m/%Y')})")
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Έσοδα από Χαλιά", f"{revenue_xalia:,.2f} €")

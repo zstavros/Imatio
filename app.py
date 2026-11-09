@@ -377,7 +377,7 @@ elif st.session_state['active_subview'] == 'analytics':
     if 'date_to' not in st.session_state:
         st.session_state['date_to'] = today
 
-    st.subheader("📅 Επιλογή Χρονικού Διαστήματος")
+    st.subheader("📅 Επιλογή Χρονικού Διαστήματος (για τα Οικονομικά)")
 
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -407,22 +407,19 @@ elif st.session_state['active_subview'] == 'analytics':
     t_from = pd.to_datetime(date_from)
     t_to = pd.to_datetime(date_to) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
 
-    # Συνάρτηση Φιλτραρίσματος με βάση τις στήλες της εικόνας
-    def process_df(df):
+    # 1. Συνάρτηση για τα Οικονομικά (με ημερομηνίες + Status)
+    def process_df_revenue(df):
         if df.empty:
             return pd.DataFrame()
         df_filtered = df.copy()
         
-        # 1. Ημερομηνία (χρησιμοποιούμε το DateIn)
         if 'DateIn' in df_filtered.columns:
             df_filtered['DateIn'] = pd.to_datetime(df_filtered['DateIn'], errors='coerce')
             df_filtered = df_filtered[(df_filtered['DateIn'] >= t_from) & (df_filtered['DateIn'] <= t_to)]
 
-        # 2. Φίλτρο Status = "Παραδόθηκε"
         if 'Status' in df_filtered.columns:
             df_filtered = df_filtered[df_filtered['Status'].astype(str).str.strip() == "Παραδόθηκε"]
 
-        # 3. Τιμή (χρησιμοποιούμε το TotalPrice)
         if 'TotalPrice' in df_filtered.columns:
             df_filtered['Price'] = pd.to_numeric(df_filtered['TotalPrice'], errors='coerce').fillna(0)
         else:
@@ -430,11 +427,31 @@ elif st.session_state['active_subview'] == 'analytics':
             
         return df_filtered
 
-    filtered_xalia = process_df(df_xalia)
-    filtered_items = process_df(df_items)
+    # 2. Συνάρτηση για τα TOP (ΜΟΝΟ με Status "Παραδόθηκε", χωρίς περιορισμό ημερομηνίας)
+    def process_df_top(df):
+        if df.empty:
+            return pd.DataFrame()
+        df_filtered = df.copy()
+        
+        if 'Status' in df_filtered.columns:
+            df_filtered = df_filtered[df_filtered['Status'].astype(str).str.strip() == "Παραδόθηκε"]
 
-    revenue_xalia = filtered_xalia['Price'].sum() if not filtered_xalia.empty else 0.0
-    revenue_items = filtered_items['Price'].sum() if not filtered_items.empty else 0.0
+        if 'TotalPrice' in df_filtered.columns:
+            df_filtered['Price'] = pd.to_numeric(df_filtered['TotalPrice'], errors='coerce').fillna(0)
+        else:
+            df_filtered['Price'] = 0.0
+            
+        return df_filtered
+
+    filtered_xalia_rev = process_df_revenue(df_xalia)
+    filtered_items_rev = process_df_revenue(df_items)
+
+    # Τα Top θα υπολογίζονται από όλα τα "Παραδόθηκε" συνολικά
+    filtered_xalia_top = process_df_top(df_xalia)
+    filtered_items_top = process_df_top(df_items)
+
+    revenue_xalia = filtered_xalia_rev['Price'].sum() if not filtered_xalia_rev.empty else 0.0
+    revenue_items = filtered_items_rev['Price'].sum() if not filtered_items_rev.empty else 0.0
     total_revenue = revenue_xalia + revenue_items
 
     st.markdown("---")
@@ -449,12 +466,12 @@ elif st.session_state['active_subview'] == 'analytics':
     
     col_top_cust, col_top_items = st.columns(2, gap="large")
 
-    # 🏆 TOP 10 ΠΕΛΑΤΩΝ (με βάση το CustomerName)
+    # 🏆 TOP 10 ΠΕΛΑΤΩΝ (Συνολικά για όσους έχουν παραδοθεί)
     with col_top_cust:
-        st.subheader("🏆 Top-10 Πελάτες (Παραδόθηκε)")
+        st.subheader("🏆 Top-10 Πελάτες (Συνολικά Παραδομένα)")
         
         combined_orders = []
-        for df_f in [filtered_xalia, filtered_items]:
+        for df_f in [filtered_xalia_top, filtered_items_top]:
             if not df_f.empty and 'CustomerName' in df_f.columns:
                 combined_orders.append(df_f[['CustomerName', 'Price']])
             elif not df_f.empty and 'CustomerID' in df_f.columns:
@@ -481,16 +498,16 @@ elif st.session_state['active_subview'] == 'analytics':
                 top_rev = top_rev.rename(columns={'CustomerName': 'Πελάτης'})
                 st.dataframe(top_rev, use_container_width=True, hide_index=True)
         else:
-            st.info("Δεν υπάρχουν ολοκληρωμένες συναλλαγές για την περίοδο αυτή.")
+            st.info("Δεν υπάρχουν ολοκληρωμένες συναλλαγές.")
 
-    # 🥇 TOP 5 ΕΙΔΩΝ (με βάση το ItName)
+    # 🥇 TOP 5 ΕΙΔΩΝ (Συνολικά για όσους έχουν παραδοθεί)
     with col_top_items:
-        st.subheader("🥇 Top-5 Δημοφιλή Είδη (Παραδόθηκε)")
+        st.subheader("🥇 Top-5 Δημοφιλή Είδη (Συνολικά Παραδομένα)")
         tab_c_items, tab_r_items = st.tabs(["🧶 Χαλιά", "👔 Ρούχα"])
 
         with tab_c_items:
-            if not filtered_xalia.empty and 'ItName' in filtered_xalia.columns:
-                top_xalia = filtered_xalia.groupby('ItName').size().reset_index(name='Τεμάχια')
+            if not filtered_xalia_top.empty and 'ItName' in filtered_xalia_top.columns:
+                top_xalia = filtered_xalia_top.groupby('ItName').size().reset_index(name='Τεμάχια')
                 top_xalia = top_xalia.rename(columns={'ItName': 'Είδος Χαλιού'})
                 top_xalia = top_xalia.sort_values(by='Τεμάχια', ascending=False).head(5)
                 st.dataframe(top_xalia, use_container_width=True, hide_index=True)
@@ -498,8 +515,8 @@ elif st.session_state['active_subview'] == 'analytics':
                 st.info("Δεν βρέθηκαν δεδομένα για χαλιά.")
 
         with tab_r_items:
-            if not filtered_items.empty and 'ItName' in filtered_items.columns:
-                top_rouxa = filtered_items.groupby('ItName').size().reset_index(name='Τεμάχια')
+            if not filtered_items_top.empty and 'ItName' in filtered_items_top.columns:
+                top_rouxa = filtered_items_top.groupby('ItName').size().reset_index(name='Τεμάχια')
                 top_rouxa = top_rouxa.rename(columns={'ItName': 'Είδος Ρούχου'})
                 top_rouxa = top_rouxa.sort_values(by='Τεμάχια', ascending=False).head(5)
                 st.dataframe(top_rouxa, use_container_width=True, hide_index=True)

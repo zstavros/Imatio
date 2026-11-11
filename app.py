@@ -143,6 +143,23 @@ def parse_price(val):
     except:
         return 0.0
 
+# --- ΕΛΛΗΝΙΚΗ ΜΟΡΦΟΠΟΙΗΣΗ ΗΜΕΡΟΜΗΝΙΑΣ (ΟΛΟΓΡΑΦΩΣ) ---
+def format_greek_date(dt):
+    if pd.isna(dt):
+        return ""
+    months_gr = {
+        1: "ΙΑΝΟΥΑΡΙΟΥ", 2: "ΦΕΒΡΟΥΑΡΙΟΥ", 3: "ΜΑΡΤΙΟΥ", 4: "ΑΠΡΙΛΙΟΥ",
+        5: "ΜΑΪΟΥ", 6: "ΙΟΥΝΙΟΥ", 7: "ΙΟΥΛΙΟΥ", 8: "ΑΥΓΟΥΣΤΟΥ",
+        9: "ΣΕΠΤΕΜΒΡΙΟΥ", 10: "ΟΚΤΩΒΡΙΟΥ", 11: "ΝΟΕΜΒΡΙΟΥ", 12: "ΔΕΚΕΜΒΡΙΟΥ"
+    }
+    try:
+        day = dt.day
+        month = months_gr.get(dt.month, "")
+        year = dt.year
+        return f"{day} {month} {year}"
+    except:
+        return str(dt)
+
 # --- FAST DATA LOADING ---
 def load_all_data():
     try:
@@ -401,9 +418,9 @@ elif st.session_state['active_subview'] == 'analytics':
     
     f_col1, f_col2 = st.columns(2)
     with f_col1:
-        date_from = st.date_input("Από Ημερομηνία (DD/MM/YYYY):", value=st.session_state['date_from'])
+        date_from = st.date_input("Από Ημερομηνία:", value=st.session_state['date_from'])
     with f_col2:
-        date_to = st.date_input("Έως Ημερομηνία (DD/MM/YYYY):", value=st.session_state['date_to'])
+        date_to = st.date_input("Έως Ημερομηνία:", value=st.session_state['date_to'])
 
     t_from = pd.to_datetime(date_from)
     t_to = pd.to_datetime(date_to) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
@@ -413,7 +430,6 @@ elif st.session_state['active_subview'] == 'analytics':
             return pd.DataFrame()
         df_filtered = df.copy()
         
-        # Φιλτράρισμα βάσει DateOut με dayfirst=True για αποφυγή μπερδέματος ημερας/μηνα
         if 'DateOut' in df_filtered.columns:
             df_filtered['DateOut'] = pd.to_datetime(df_filtered['DateOut'], errors='coerce', dayfirst=True)
             df_filtered = df_filtered[(df_filtered['DateOut'] >= t_from) & (df_filtered['DateOut'] <= t_to)]
@@ -453,8 +469,12 @@ elif st.session_state['active_subview'] == 'analytics':
     revenue_items = filtered_items_rev['Price'].sum() if not filtered_items_rev.empty else 0.0
     total_revenue = revenue_xalia + revenue_items
 
+    # Εμφάνιση των ημερομηνιών ολογράφως στα ελληνικά στον τίτλο
+    str_from_gr = format_greek_date(pd.to_datetime(date_from))
+    str_to_gr = format_greek_date(pd.to_datetime(date_to))
+
     st.markdown("---")
-    st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({date_from.strftime('%d/%m/%Y')} - {date_to.strftime('%d/%m/%Y')})")
+    st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({str_from_gr} - {str_to_gr})")
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Έσοδα από Χαλιά", f"{revenue_xalia:,.2f} €")

@@ -179,7 +179,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
             st.session_state['active_subview'] = 'menu'
             st.rerun()
 
-    st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Ρούχων / Ειδών (TrItems)")
+   # st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Ρούχων / Ειδών (TrItems)")
     
     if df_items_trans is None or df_items_trans.empty:
         try:

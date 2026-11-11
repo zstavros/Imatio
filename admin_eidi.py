@@ -21,6 +21,22 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# --- ΒΟΗΘΗΤΙΚΗ ΣΥΝΑΡΤΗΣΗ ΓΙΑ ΑΣΦΑΛΗ ΑΝΑΓΝΩΣΗ ΤΙΜΩΝ ---
+def parse_price_safe(val):
+    if pd.isna(val) or val == "" or val is None:
+        return 0.0
+    if isinstance(val, (int, float)):
+        return float(val)
+    s_val = str(val).strip().replace('€', '').replace(' ', '')
+    if not s_val:
+        return 0.0
+    s_val = s_val.replace('.', '').replace(',', '.') if ',' in s_val and '.' in s_val else s_val.replace(',', '.')
+    try:
+        return float(s_val)
+    except:
+        return 0.0
+
+
 # --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia - Ενεργές) ---
 def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
     col_nav, col_space = st.columns([1, 2])
@@ -33,7 +49,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
         st.info("Δεν βρέθηκαν εγγραφές στα Χαλιά.")
         return
 
-    df_active = df_xalia[df_xalia['Status'] != 'Παραδόθηκε'].copy()
+    df_active = df_xalia[df_xalia['Status'].astype(str).str.strip().str.lower() != 'παραδόθηκε'].copy()
     
     if not df_items.empty:
         df_items.columns = df_items.columns.str.strip()
@@ -118,12 +134,9 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
         item_name = row.get('ItName', '')
         phone_show = cust_phone_map.get(c_name, '-')
         
-        try:
-            price_val = float(row.get('TotalPrice', 0.0))
-        except:
-            price_val = 0.0
+        price_val = parse_price_safe(row.get('TotalPrice', 0.0))
 
-        is_etoimo = (status_val == "Έτοιμο")
+        is_etoimo = (str(status_val).strip().lower() == "έτοιμο")
         prefix_icon = "🔵 [ΕΤΟΙΜΟ] " if is_etoimo else "📌 "
         sep = " 🔹 " if is_etoimo else " 🔸 "
         expander_label = f"{prefix_icon}ID: #{tr_id}{sep}{c_name} ({phone_show}){sep}Barcode: {code_val}{sep}Θέση: {place_val}{sep}Τιμή: {price_val}€{sep}Κατάσταση: {status_val}{sep}{item_name}"
@@ -149,7 +162,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
 
             if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_x_{tr_id}_{idx}", type="primary", use_container_width=True):
                 try:
-                    id_col = ws.col_values(1)
+                    id_col = [str(x) for x in ws.col_values(1)]
                     sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
                     cols = df_xalia.columns.tolist()
 
@@ -171,7 +184,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                     st.error(f"❌ Σφάλμα: {e}")
 
 
-# --- 1Β. ΠΑΡΑΔΟΜΕΝΑ ΧΑΛΙΑ (Με ίδια οθόνη & φίλτρα, μόνο Παραδομένα) ---
+# --- 1Β. ΠΑΡΑΔΟΜΕΝΑ ΧΑΛΙΑ (Με δυνατότητα διόρθωσης & επαναφοράς) ---
 def render_delivered_xalia_tab(df_xalia, df_customers, get_worksheet_fn):
     col_nav, col_space = st.columns([1, 2])
     with col_nav:
@@ -254,25 +267,51 @@ def render_delivered_xalia_tab(df_xalia, df_customers, get_worksheet_fn):
         phone_show = cust_phone_map.get(c_name, '-')
         date_out = row.get('DateOut', '-')
         
-        try:
-            price_val = float(row.get('TotalPrice', 0.0))
-        except:
-            price_val = 0.0
+        price_val = parse_price_safe(row.get('TotalPrice', 0.0))
 
         expander_label = f"✅ ID: #{tr_id} 🔹 {c_name} ({phone_show}) 🔹 Barcode: {code_val} 🔹 Τιμή: {price_val}€ 🔹 Παράδοση: {date_out} 🔹 {item_name}"
 
         with st.expander(expander_label):
             col1, col2, col3, col4, col5 = st.columns(5)
+            
             with col1:
-                st.text_input("Μήκος (m)", value=str(row.get('Length', '')), disabled=True, key=f"d_len_{tr_id}_{idx}")
+                new_len = st.text_input("Μήκος (m)", value=str(row.get('Length', '')), key=f"d_len_{tr_id}_{idx}")
             with col2:
-                st.text_input("Ύψος (m)", value=str(row.get('Height', '')), disabled=True, key=f"d_hei_{tr_id}_{idx}")
+                new_hei = st.text_input("Ύψος (m)", value=str(row.get('Height', '')), key=f"d_hei_{tr_id}_{idx}")
             with col3:
-                st.text_input("Θέση", value=str(place_val), disabled=True, key=f"d_plc_{tr_id}_{idx}")
+                new_place = st.text_input("Θέση", value=str(place_val), key=f"d_plc_{tr_id}_{idx}")
             with col4:
-                st.number_input("Τιμή (€)", value=price_val, disabled=True, key=f"d_prc_{tr_id}_{idx}")
+                new_price = st.number_input("Τιμή (€)", value=price_val, step=1.0, key=f"d_prc_{tr_id}_{idx}")
             with col5:
-                st.text_input("Κατάσταση", value=str(status_val), disabled=True, key=f"d_st_{tr_id}_{idx}")
+                curr_st = row.get('Status', STATUS_OPTIONS[0])
+                new_st = st.selectbox(
+                    "Κατάσταση", STATUS_OPTIONS,
+                    index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 0,
+                    key=f"d_st_x_{tr_id}_{idx}"
+                )
+
+            if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_dx_{tr_id}_{idx}", type="primary", use_container_width=True):
+                try:
+                    id_col = [str(x) for x in ws.col_values(1)]
+                    sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
+                    cols = df_xalia.columns.tolist()
+
+                    if "Length" in cols: ws.update_cell(sheet_row, cols.index("Length") + 1, new_len)
+                    if "Height" in cols: ws.update_cell(sheet_row, cols.index("Height") + 1, new_hei)
+                    
+                    place_col_name = "Place" if "Place" in cols else ("Shelf" if "Shelf" in cols else None)
+                    if place_col_name: ws.update_cell(sheet_row, cols.index(place_col_name) + 1, new_place)
+                    if "TotalPrice" in cols: ws.update_cell(sheet_row, cols.index("TotalPrice") + 1, new_price)
+                    if "Status" in cols:
+                        ws.update_cell(sheet_row, cols.index("Status") + 1, new_st)
+                        if new_st != "Παραδόθηκε" and "DateOut" in cols:
+                            ws.update_cell(sheet_row, cols.index("DateOut") + 1, "")
+
+                    st.session_state['df_tr_xalia'] = pd.DataFrame(ws.get_all_records())
+                    st.success("✅ Επιτυχής ενημέρωση!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Σφάλμα: {e}")
 
 
 # --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrItems - Ενεργές) ---
@@ -373,10 +412,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         status_val = row.get('Status', '-')
         item_name = row.get('ItName', '')
         
-        try:
-            curr_pr = float(row.get('TotalPrice', 0.0))
-        except:
-            curr_pr = 0.0
+        curr_pr = parse_price_safe(row.get('TotalPrice', 0.0))
 
         is_etoimo = (str(status_val).strip().lower() == "έτοιμο")
         prefix_icon = "🔵 [ΕΤΟΙΜΟ] " if is_etoimo else "📌 "
@@ -421,7 +457,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                     st.error(f"❌ Σφάλμα: {e}")
 
 
-# --- 2Β. ΠΑΡΑΔΟΜΕΝΑ ΡΟΥΧΑ (Με ίδια οθόνη & φίλτρα, μόνο Παραδομένα) ---
+# --- 2Β. ΠΑΡΑΔΟΜΕΝΑ ΡΟΥΧΑ (Με δυνατότητα διόρθωσης & επαναφοράς) ---
 def render_delivered_items_tab(df_items_trans, df_customers, get_worksheet_fn):
     col_nav, col_space = st.columns([1, 2])
     with col_nav:
@@ -509,6 +545,7 @@ def render_delivered_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         return
 
     st.write(f"Βρέθηκαν **{len(df_filtered)}** παραδομένες εγγραφές ρούχων:")
+    ws = get_worksheet_fn("TrItems")
 
     for idx, row in df_filtered.iterrows():
         tr_id = str(row.get('TransactionID', ''))
@@ -519,21 +556,46 @@ def render_delivered_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         item_name = row.get('ItName', '')
         date_out = row.get('DateOut', '-')
         
-        try:
-            curr_pr = float(row.get('TotalPrice', 0.0))
-        except:
-            curr_pr = 0.0
+        curr_pr = parse_price_safe(row.get('TotalPrice', 0.0))
 
         expander_label = f"✅ ID: #{tr_id} 🔹 {c_name} ({phone_show}) 🔹 Θέση: {place_val} 🔹 Τιμή: {curr_pr}€ 🔹 Παράδοση: {date_out} 🔹 {item_name}"
 
         with st.expander(expander_label):
             col1, col2, col3 = st.columns(3)
+            
             with col1:
-                st.text_input("Ράφι / Θέση", value=str(place_val), disabled=True, key=f"d_plc_it_{tr_id}_{idx}")
+                new_place = st.text_input("Ράφι / Θέση", value=str(place_val), key=f"d_plc_it_{tr_id}_{idx}")
             with col2:
-                st.number_input("Τιμή (€)", value=curr_pr, disabled=True, key=f"d_prc_it_{tr_id}_{idx}")
+                new_price = st.number_input("Τιμή (€)", value=curr_pr, step=0.5, key=f"d_prc_it_{tr_id}_{idx}")
             with col3:
-                st.text_input("Κατάσταση", value=str(status_val), disabled=True, key=f"d_st_it_{tr_id}_{idx}")
+                curr_st = str(status_val).strip()
+                new_st = st.selectbox(
+                    "Κατάσταση", STATUS_OPTIONS,
+                    index=STATUS_OPTIONS.index(curr_st) if curr_st in STATUS_OPTIONS else 0,
+                    key=f"d_st_it_{tr_id}_{idx}"
+                )
+
+            if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_di_{tr_id}_{idx}", type="primary", use_container_width=True):
+                try:
+                    id_col = [str(x) for x in ws.col_values(1)]
+                    sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
+                    cols = [c.strip() for c in ws.row_values(1)]
+                    
+                    place_col_name = "Place" if "Place" in cols else ("Shelf" if "Shelf" in cols else None)
+                    if place_col_name: 
+                        ws.update_cell(sheet_row, cols.index(place_col_name) + 1, new_place)
+                    if "TotalPrice" in cols: 
+                        ws.update_cell(sheet_row, cols.index("TotalPrice") + 1, new_price)
+                    if "Status" in cols:
+                        ws.update_cell(sheet_row, cols.index("Status") + 1, new_st)
+                        if new_st != "Παραδόθηκε" and "DateOut" in cols:
+                            ws.update_cell(sheet_row, cols.index("DateOut") + 1, "")
+
+                    st.session_state['df_tr_items'] = pd.DataFrame(ws.get_all_records())
+                    st.success("✅ Επιτυχής ενημέρωση!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Σφάλμα: {e}")
 
 
 # --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---

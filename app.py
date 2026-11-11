@@ -130,22 +130,25 @@ def get_worksheet(sheet_name):
     sh = client.open_by_key(SPREADSHEET_ID)
     return sh.worksheet(sheet_name)
 
-# --- ROBUST PRICE PARSER (Για να διαβάζει κόμματα και τελείες στα ποσά) ---
+# --- ROBUST PRICE PARSER ---
 def parse_price(val):
     if pd.isna(val) or val == "":
         return 0.0
-    s_val = str(val).strip()
     
-    if ',' in s_val and '.' in s_val:
-        if s_val.rfind(',') > s_val.rfind('.'):
-            s_val = s_val.replace('.', '').replace(',', '.')
+    # Μετατροπή σε string και αφαίρεση τυχόν περιττών χαρακτήρων (π.χ. σύμβολα ευρώ, κενά)
+    s_val = str(val).strip().replace('€', '').strip()
+    
+    # Αν έχει κόμμα, το κάνουμε τελεία για να το καταλάβει η Python/Pandas
+    if ',' in s_val:
+        # Αν έχει και τελεία και κόμμα (π.χ. 1.250,50)
+        if '.' in s_val:
+            if s_val.rfind(',') > s_val.rfind('.'):
+                s_val = s_val.replace('.', '').replace(',', '.')
+            else:
+                s_val = s_val.replace(',', '')
         else:
-            s_val = s_val.replace(',', '')
-    elif ',' in s_val:
-        if s_val.count(',') == 1:
+            # Αν έχει μόνο κόμμα (π.χ. 12,5), το κάνουμε τελεία (12.5)
             s_val = s_val.replace(',', '.')
-        else:
-            s_val = s_val.replace(',', '')
             
     try:
         return float(s_val)

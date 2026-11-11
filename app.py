@@ -475,7 +475,7 @@ elif st.session_state['active_subview'] == 'analytics':
     str_to_gr = format_greek_date(pd.to_datetime(date_to))
 
     st.markdown("---")
-    st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({str_from_gr} - {str_to_gr})")
+    #st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({str_from_gr} - {str_to_gr})")
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Έσοδα από Χαλιά", f"{revenue_xalia:,.2f} €")

@@ -377,13 +377,18 @@ elif st.session_state['active_subview'] == 'manage_catalog_edit':
     )
 
 elif st.session_state['active_subview'] == 'analytics':
-    # ΑΥΤΟΜΑΤΗ ΑΝΑΝΕΩΣΗ (ΦΡΕΣΚΑΡΙΣΜΑ) ΔΕΔΟΜΕΝΩΝ ΧΩΡΙΣ F5
-    load_all_data()
+    # DIAVAZETAI EK NEOU APOLYTA STOCHEMENA MONO OTAN PATATAI TO EIKONIDIO/KOUMPI ANAFORON
     try:
-        ws_tx_fresh = get_worksheet("TrXalia")
-        st.session_state['df_tr_xalia'] = pd.DataFrame(ws_tx_fresh.get_all_records())
-        ws_ti_fresh = get_worksheet("TrItems")
-        st.session_state['df_tr_items'] = pd.DataFrame(ws_ti_fresh.get_all_records())
+        ws_tx = get_worksheet("TrXalia")
+        data_tx = ws_tx.get_all_records()
+        st.session_state['df_tr_xalia'] = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
+    except:
+        pass
+
+    try:
+        ws_ti = get_worksheet("TrItems")
+        data_ti = ws_ti.get_all_records()
+        st.session_state['df_tr_items'] = pd.DataFrame(data_ti) if data_ti else pd.DataFrame()
     except:
         pass
 
@@ -553,9 +558,6 @@ elif st.session_state['active_subview'] == 'analytics':
                 st.info("Δεν βρέθηκαν δεδομένα για ρούχα.")
 
 elif st.session_state['active_subview'] == 'ready_orders':
-    # ΑΥΤΟΜΑΤΗ ΑΝΑΝΕΩΣΗ (ΦΡΕΣΚΑΡΙΣΜΑ) ΚΑΙ ΕΔΩ
-    load_all_data()
-
     col_btn, _ = st.columns([1, 4])
     with col_btn:
         if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):

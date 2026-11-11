@@ -138,7 +138,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
             with col3:
                 new_place = st.text_input("Θέση", value=str(place_val), key=f"plc_{tr_id}_{idx}")
             with col4:
-                new_price_str = st.text_input("Τιμή (€)", value=str(price_val), key=f"prc_{tr_id}_{idx}")
+                new_price = st.number_input("Τιμή (€)", value=price_val, step=1.0, key=f"prc_{tr_id}_{idx}")
             with col5:
                 curr_st = row.get('Status', STATUS_OPTIONS[0])
                 new_st = st.selectbox(
@@ -148,17 +148,6 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                 )
 
             if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_x_{tr_id}_{idx}", type="primary", use_container_width=True):
-                # ΑΥΣΤΗΡΟΣ ΕΛΕΓΧΟΣ: ΜΠΛΟΚΑΡΙΣΜΑ ΑΝ ΕΧΕΙ ΚΟΜΜΑ
-                if "," in new_price_str:
-                    st.error("❌ ΑΠΑΓΟΡΕΥΕΤΑΙ ΤΟ ΚΟΜΜΑ! Χρησιμοποιήστε μόνο τελεία (.) για τα δεκαδικά.")
-                    st.stop()
-
-                try:
-                    new_price = float(new_price_str.strip())
-                except ValueError:
-                    st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός.")
-                    st.stop()
-
                 try:
                     id_col = ws.col_values(1)
                     sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
@@ -298,7 +287,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
             with col1:
                 new_place = st.text_input("Ράφι / Θέση", value=str(place_val), key=f"plc_it_{tr_id}_{idx}")
             with col2:
-                new_price_str = st.text_input("Τιμή (€)", value=str(curr_pr), key=f"prc_it_{tr_id}_{idx}")
+                new_price = st.number_input("Τιμή (€)", value=curr_pr, step=0.5, key=f"prc_it_{tr_id}_{idx}")
             with col3:
                 curr_st = str(status_val).strip()
                 new_st = st.selectbox(
@@ -308,17 +297,6 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                 )
 
             if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_it_{tr_id}_{idx}", type="primary", use_container_width=True):
-                # ΑΥΣΤΗΡΟΣ ΕΛΕΓΧΟΣ: ΜΠΛΟΚΑΡΙΣΜΑ ΑΝ ΕΧΕΙ ΚΟΜΜΑ
-                if "," in new_price_str:
-                    st.error("❌ ΑΠΑΓΟΡΕΥΕΤΑΙ ΤΟ ΚΟΜΜΑ! Χρησιμοποιήστε μόνο τελεία (.) για τα δεκαδικά.")
-                    st.stop()
-
-                try:
-                    new_price = float(new_price_str.strip())
-                except ValueError:
-                    st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός.")
-                    st.stop()
-
                 try:
                     id_col = [str(x) for x in ws.col_values(1)]
                     sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
@@ -380,26 +358,13 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
         sel_cust = st.selectbox("Πελάτης", cust_choices)
         sel_item = st.selectbox("Είδος", item_choices)
         shelf = st.text_input("Ράφι / Θέση")
-        
-        price_str = st.text_input("Τιμή (€)", value="0.0")
-        
+        price = st.number_input("Τιμή (€)", min_value=0.0, step=0.5)
         status = st.selectbox("Εργασία / Κατάσταση", ["Πλύσιμο", "Στεγνό Καθάρισμα", "Σιδέρωμα"])
 
     if submitted:
-        # ΑΥΣΤΗΡΟΣ ΕΛΕΓΧΟΣ: ΜΠΛΟΚΑΡΙΣΜΑ ΑΝ ΕΧΕΙ ΚΟΜΜΑ
-        if "," in price_str:
-            st.error("❌ ΑΠΑΓΟΡΕΥΕΤΑΙ ΤΟ ΚΟΜΜΑ! Χρησιμοποιήστε μόνο τελεία (.) για τα δεκαδικά.")
-            st.stop()
-
         if sel_cust == "-- Επιλέξτε Πελάτη --" or sel_item == "-- Επιλέξτε Είδος --":
             st.error("❌ Παρακαλώ συμπληρώστε Πελάτη και Είδος!")
         else:
-            try:
-                price = float(price_str.strip())
-            except ValueError:
-                st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός.")
-                st.stop()
-
             try:
                 ws = get_worksheet_fn("TrItems")
                 data = ws.get_all_records()

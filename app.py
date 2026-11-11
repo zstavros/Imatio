@@ -130,6 +130,28 @@ def get_worksheet(sheet_name):
     sh = client.open_by_key(SPREADSHEET_ID)
     return sh.worksheet(sheet_name)
 
+# --- ROBUST PRICE PARSER (Για να διαβάζει κόμματα και τελείες στα ποσά) ---
+def parse_price(val):
+    if pd.isna(val) or val == "":
+        return 0.0
+    s_val = str(val).strip()
+    
+    if ',' in s_val and '.' in s_val:
+        if s_val.rfind(',') > s_val.rfind('.'):
+            s_val = s_val.replace('.', '').replace(',', '.')
+        else:
+            s_val = s_val.replace(',', '')
+    elif ',' in s_val:
+        if s_val.count(',') == 1:
+            s_val = s_val.replace(',', '.')
+        else:
+            s_val = s_val.replace(',', '')
+            
+    try:
+        return float(s_val)
+    except:
+        return 0.0
+
 # --- ROBUST DATA LOADING ---
 def load_all_data():
     try:
@@ -427,7 +449,7 @@ elif st.session_state['active_subview'] == 'analytics':
             df_filtered = df_filtered[df_filtered['Status'].astype(str).str.strip() == "Παραδόθηκε"]
 
         if 'TotalPrice' in df_filtered.columns:
-            df_filtered['Price'] = pd.to_numeric(df_filtered['TotalPrice'], errors='coerce').fillna(0)
+            df_filtered['Price'] = df_filtered['TotalPrice'].apply(parse_price)
         else:
             df_filtered['Price'] = 0.0
             
@@ -443,7 +465,7 @@ elif st.session_state['active_subview'] == 'analytics':
             df_filtered = df_filtered[df_filtered['Status'].astype(str).str.strip() == "Παραδόθηκε"]
 
         if 'TotalPrice' in df_filtered.columns:
-            df_filtered['Price'] = pd.to_numeric(df_filtered['TotalPrice'], errors='coerce').fillna(0)
+            df_filtered['Price'] = df_filtered['TotalPrice'].apply(parse_price)
         else:
             df_filtered['Price'] = 0.0
             
@@ -554,7 +576,7 @@ elif st.session_state['active_subview'] == 'ready_orders':
             return pd.DataFrame()
 
         if 'TotalPrice' in df_f.columns:
-            df_f['Price'] = pd.to_numeric(df_f['TotalPrice'], errors='coerce').fillna(0)
+            df_f['Price'] = df_f['TotalPrice'].apply(parse_price)
         else:
             df_f['Price'] = 0.0
 

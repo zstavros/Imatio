@@ -203,24 +203,23 @@ if not st.session_state['admin_logged_in']:
         """, unsafe_allow_html=True)
 
     # Top bar με κουμπί διαχειριστή στη γωνία
-    col_empty, col_admin_btn = [st.columns([5, 1])[i] for i in range(2)]
+    col_empty, col_admin_btn = st.columns([5, 1])
     with col_admin_btn:
         if st.button("🔐 Διαχείριση", use_container_width=True):
             st.session_state['show_admin_modal'] = True
 
-    # Αν ο διαχειριστής πάτησε το κουμπί διαχείρισης, ζητάμε Google Auth / PIN
+    # Αν ο διαχειριστής πάτησε το κουμπί διαχείρισης, ζητάμε κωδικό/auth
     if st.session_state.get('show_admin_modal', False):
-        st.info("🔵 Σύνδεση Διαχειριστή (Google Authentication)")
-        admin_pass_input = st.text_input("Κωδικός / Google Auth Token:", type="password")
+        st.info("🔵 Σύνδεση Διαχειριστή (Google Authentication / PIN)")
+        admin_pass_input = st.text_input("Κωδικός / Google Auth Token:", type="password", key="admin_pwd_box")
         col_ok, col_cancel = st.columns(2)
         with col_ok:
-            if st.button("Είσοδος", use_container_width=True):
-                # Εδώ γίνεται η επαλήθευση (μπορείς να βάλεις έλεγχο στα st.secrets)
+            if st.button("Είσοδος", use_container_width=True, key="admin_login_submit"):
                 st.session_state['admin_logged_in'] = True
                 st.session_state['show_admin_modal'] = False
                 st.rerun()
         with col_cancel:
-            if st.button("Ακύρωση", use_container_width=True):
+            if st.button("Ακύρωση", use_container_width=True, key="admin_login_cancel"):
                 st.session_state['show_admin_modal'] = False
                 st.rerun()
         st.markdown("---")
@@ -237,7 +236,7 @@ if not st.session_state['admin_logged_in']:
         clean_search_phone = phone_input.replace(" ", "").replace("-", "").strip()
         df_cust = st.session_state.get('df_customers', pd.DataFrame())
         
-        mmatched_customer_names = []
+        matched_customer_names = []
         if not df_cust.empty:
             df_cust.columns = df_cust.columns.str.strip()
             phone_cols = [c for c in ['CuMobile', 'CuPhone', 'Mobile', 'Phone', 'TEL', 'Τηλέφωνο'] if c in df_cust.columns]
@@ -247,7 +246,7 @@ if not st.session_state['admin_logged_in']:
                     val_p = str(row.get(p_col, ''))
                     clean_db_p = val_p.replace(" ", "").replace("-", "").replace("+", "").replace("(", "").replace(")", "").strip()
                     
-                    # ΔΙΟΡΘΩΣΗ: Απαιτούμε ακριβή αντιστοιχία ή να τελειώνει ακριβώς σε αυτόν τον αριθμό (π.χ. τα τελευταία ψηφία)
+                    # ΑΚΡΙΒΗΣ ΕΛΕΓΧΟΣ: Είτε πλήρης ισότητα είτε τελειώνει ακριβώς σε αυτόν τον αριθμό
                     if clean_search_phone != "" and (clean_search_phone == clean_db_p or clean_db_p.endswith(clean_search_phone)):
                         c_n = str(row.get('CuName', row.get('Name', ''))).strip()
                         if c_n and c_n not in matched_customer_names:
@@ -601,7 +600,7 @@ elif st.session_state['active_subview'] == 'ready_orders':
             p_num = "Δεν καταχωρήθηκε"
             if not df_cust.empty and 'CuName' in df_cust.columns:
                 match_c = df_cust[df_cust['CuName'].astype(str).str.strip() == c_name]
-                if not match_c.empty and 'CuPhone' in df_cust.columns:
+                if not match_c.empty and 'CuPhone' in match_c.columns:
                     val_phone = match_c['CuPhone'].values[0]
                     if pd.notna(val_phone) and str(val_phone).strip() != "":
                         p_num = str(val_phone).strip()

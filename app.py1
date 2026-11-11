@@ -15,12 +15,10 @@ st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="co
 # --- STRICT CUSTOM STYLING ---
 st.markdown("""
     <style>
-        /* Απόκρυψη επάνω μπάρας (Share, GitHub, 3 τελείες, κλπ.) */
         header {visibility: hidden;}
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         
-        /* Απόκρυψη του Manage app badge/button */
         .viewerBadge_link__1S137 {display: none !important;}
         div[class*="viewerBadge"] {display: none !important;}
         
@@ -47,7 +45,6 @@ st.markdown("""
             margin: 0 !important;
         }
 
-        /* ΓΕΝΙΚΟ ΣΤΥΛ ΓΙΑ ΟΛΑ ΤΑ ΚΟΥΜΠΙΑ (ΣΚΟΥΡΟ ΜΠΛΕ ΦΟΝΤΟ) */
         .stButton > button,
         div[data-testid="stFormSubmitButton"] > button {
             background-color: #36456b !important;
@@ -81,14 +78,12 @@ st.markdown("""
             background-color: #28334f !important;
         }
 
-        /* ΑΦΑΙΡΕΣΗ ΠΕΡΙΓΡΑΜΜΑΤΟΣ ΚΑΙ ΠΛΑΙΣΙΟΥ ΦΟΡΜΑΣ */
         div[data-testid="stForm"] {
             border: none !important;
             padding: 0px !important;
             background-color: transparent !important;
         }
 
-        /* Γαλάζιο φόντο ΜΟΝΟ στις καρτέλες του αρχικού μενού */
         .menu-cards div[data-testid="stColumn"] {
             background-color: #6c8ebf !important;
             border-radius: 14px;
@@ -130,7 +125,42 @@ def get_worksheet(sheet_name):
     sh = client.open_by_key(SPREADSHEET_ID)
     return sh.worksheet(sheet_name)
 
-# --- ROBUST DATA LOADING ---
+# --- LIGHT & FAST PRICE PARSER ---
+def parse_price(val):
+    if pd.isna(val) or val == "" or val is None:
+        return 0.0
+    if isinstance(val, (int, float)):
+        return float(val)
+        
+    s_val = str(val).strip().replace('€', '').replace(' ', '')
+    if not s_val:
+        return 0.0
+
+    s_val = s_val.replace('.', '').replace(',', '.') if ',' in s_val and '.' in s_val else s_val.replace(',', '.')
+
+    try:
+        return float(s_val)
+    except:
+        return 0.0
+
+# --- ΕΛΛΗΝΙΚΗ ΜΟΡΦΟΠΟΙΗΣΗ ΗΜΕΡΟΜΗΝΙΑΣ (ΟΛΟΓΡΑΦΩΣ) ---
+def format_greek_date(dt):
+    if pd.isna(dt):
+        return ""
+    months_gr = {
+        1: "ΙΑΝΟΥΑΡΙΟΥ", 2: "ΦΕΒΡΟΥΑΡΙΟΥ", 3: "ΜΑΡΤΙΟΥ", 4: "ΑΠΡΙΛΙΟΥ",
+        5: "ΜΑΪΟΥ", 6: "ΙΟΥΝΙΟΥ", 7: "ΙΟΥΛΙΟΥ", 8: "ΑΥΓΟΥΣΤΟΥ",
+        9: "ΣΕΠΤΕΜΒΡΙΟΥ", 10: "ΟΚΤΩΒΡΙΟΥ", 11: "ΝΟΕΜΒΡΙΟΥ", 12: "ΔΕΚΕΜΒΡΙΟΥ"
+    }
+    try:
+        day = dt.day
+        month = months_gr.get(dt.month, "")
+        year = dt.year
+        return f"{day} {month} {year}"
+    except:
+        return str(dt)
+
+# --- FAST DATA LOADING ---
 def load_all_data():
     try:
         ws_c = get_worksheet("Customers")
@@ -138,7 +168,6 @@ def load_all_data():
         st.session_state['df_customers'] = pd.DataFrame(data_c) if data_c else pd.DataFrame(columns=["CustomerID", "CuName", "CuPhone", "CuAddress"])
     except Exception as e:
         st.session_state['df_customers'] = pd.DataFrame(columns=["CustomerID", "CuName", "CuPhone", "CuAddress"])
-        st.error(f"Σφάλμα φόρτωσης Customers: {e}")
 
     try:
         ws_i = get_worksheet("Items")
@@ -168,12 +197,13 @@ if 'df_customers' not in st.session_state or st.session_state['df_customers'].em
 if 'active_subview' not in st.session_state:
     st.session_state['active_subview'] = 'menu'
 
-# --- ROUTING & MENU MAP FOR HEADER TITLE ---
 subview_titles = {
     'fast_loading': 'ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ',
     'edit_xalia': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΧΑΛΙΩΝ',
+    'delivered_xalia': 'ΠΑΡΑΔΟΜΕΝΑ ΧΑΛΙΑ',
     'item_loading': 'ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ',
     'edit_items': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΡΟΥΧΩΝ',
+    'delivered_items': 'ΠΑΡΑΔΟΜΕΝΑ ΡΟΥΧΑ',
     'manage_customers_new': 'ΝΕΟΣ ΠΕΛΑΤΗΣ',
     'manage_customers_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ',
     'manage_catalog_new': 'ΝΕΑ ΕΙΔΗ & ΧΑΛΙΑ',
@@ -182,7 +212,6 @@ subview_titles = {
     'ready_orders': 'ΕΤΟΙΜΑ ΠΡΟΣ ΠΑΡΑΔΟΣΗ'
 }
 
-# --- HEADER WITH LOGO & DYNAMIC PAGE TITLE ---
 def get_base64_image(image_path):
     if os.path.exists(image_path):
         with open(image_path, "rb") as img_file:
@@ -229,7 +258,11 @@ if st.session_state['active_subview'] == 'menu':
         if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ & ΠΑΡΑΔΟΣΗ ΧΑΛΙΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'edit_xalia'
             st.rerun()
-
+        
+        if st.button("✅ ΠΑΡΑΔΟΜΕΝΑ ΧΑΛΙΑ", use_container_width=True):
+            st.session_state['active_subview'] = 'delivered_xalia'
+            st.rerun()
+    
     with col2:
         st.markdown("##### 👕 Τμήμα Ρούχων")
         if st.button("👕 ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ", use_container_width=True):
@@ -239,7 +272,11 @@ if st.session_state['active_subview'] == 'menu':
         if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ & ΠΑΡΑΔΟΣΗ ΡΟΥΧΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'edit_items'
             st.rerun()
-
+        
+        if st.button("✅ ΠΑΡΑΔΟΜΕΝΑ ΡΟΥΧΑ", use_container_width=True):
+            st.session_state['active_subview'] = 'delivered_items'
+            st.rerun()
+    
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
     col_c1, col_c2 = st.columns(2, gap="large")
@@ -266,11 +303,12 @@ if st.session_state['active_subview'] == 'menu':
 
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
-    # 📊 ΚΑΡΤΕΛΕΣ: ΑΝΑΦΟΡΕΣ & ΕΤΟΙΜΑ
     col_an1, col_an2 = st.columns(2, gap="large")
     with col_an1:
         st.markdown("##### 📊 Αναφορές & Στατιστικά")
         if st.button("📈 ΠΡΟΒΟΛΗ ΑΝΑΦΟΡΩΝ & ΤΖΙΡΟΥ", use_container_width=True):
+            st.session_state['date_from'] = date.today()
+            st.session_state['date_to'] = date.today()
             st.session_state['active_subview'] = 'analytics'
             st.rerun()
             
@@ -282,7 +320,6 @@ if st.session_state['active_subview'] == 'menu':
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 2. ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ
 elif st.session_state['active_subview'] == 'fast_loading':
     admin_fast.render_fast_loading_tab(
         st.session_state.get('df_customers', pd.DataFrame()),
@@ -290,9 +327,7 @@ elif st.session_state['active_subview'] == 'fast_loading':
         get_worksheet
     )
 
-# 3. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ
 elif st.session_state['active_subview'] == 'edit_xalia':
-    st.cache_data.clear()
     ws_tx = get_worksheet("TrXalia")
     data_tx = ws_tx.get_all_records()
     df_fresh_tx = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
@@ -305,7 +340,6 @@ elif st.session_state['active_subview'] == 'edit_xalia':
         get_worksheet
     )
 
-# 4. ΠΑΡΑΛΑΒΗ ΕΙΔΩΝ
 elif st.session_state['active_subview'] == 'item_loading':
     admin_eidi.render_item_loading_tab(
         st.session_state.get('df_customers', pd.DataFrame()),
@@ -313,24 +347,44 @@ elif st.session_state['active_subview'] == 'item_loading':
         get_worksheet
     )
 
-# 5. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ
 elif st.session_state['active_subview'] == 'edit_items':
     admin_eidi.render_edit_items_tab(
         st.session_state.get('df_tr_items', pd.DataFrame()),
         st.session_state.get('df_customers', pd.DataFrame()),
         get_worksheet
     )
+    
+elif st.session_state['active_subview'] == 'delivered_xalia':
+    ws_tx = get_worksheet("TrXalia")
+    data_tx = ws_tx.get_all_records()
+    df_fresh_tx = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
+    st.session_state['df_tr_xalia'] = df_fresh_tx
+    
+    admin_eidi.render_delivered_xalia_tab(
+        df_fresh_tx,
+        st.session_state.get('df_customers', pd.DataFrame()),
+        get_worksheet
+    )
 
-# 6. ΝΕΑ ΕΓΓΡΑΦΗ ΠΕΛΑΤΗ
+elif st.session_state['active_subview'] == 'delivered_items':
+    ws_ti = get_worksheet("TrItems")
+    data_ti = ws_ti.get_all_records()
+    df_fresh_ti = pd.DataFrame(data_ti) if data_ti else pd.DataFrame()
+    st.session_state['df_tr_items'] = df_fresh_ti
+    
+    admin_eidi.render_delivered_items_tab(
+        df_fresh_ti,
+        st.session_state.get('df_customers', pd.DataFrame()),
+        get_worksheet
+    )
+
 elif st.session_state['active_subview'] == 'manage_customers_new':
     admin_egg.render_new_customer_tab(
         st.session_state.get('df_customers', pd.DataFrame()), 
         get_worksheet
     )
 
-# 7. ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ
 elif st.session_state['active_subview'] == 'manage_customers_edit':
-    st.cache_data.clear()
     ws_cust = get_worksheet("Customers")
     fresh_cust_data = ws_cust.get_all_records()
     df_fresh_customers = pd.DataFrame(fresh_cust_data) if fresh_cust_data else pd.DataFrame()
@@ -341,16 +395,13 @@ elif st.session_state['active_subview'] == 'manage_customers_edit':
         get_worksheet
     )
 
-# 8. ΝΕΟ ΕΙΔΟΣ ΚΑΤΑΛΟΓΟΥ
 elif st.session_state['active_subview'] == 'manage_catalog_new':
     admin_egg.render_new_item_tab(
         st.session_state.get('df_items', pd.DataFrame()), 
         get_worksheet
     )
 
-# 9. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ
 elif st.session_state['active_subview'] == 'manage_catalog_edit':
-    st.cache_data.clear()
     ws_items = get_worksheet("Items")
     fresh_items_data = ws_items.get_all_records()
     df_fresh_items = pd.DataFrame(fresh_items_data) if fresh_items_data else pd.DataFrame()
@@ -361,7 +412,6 @@ elif st.session_state['active_subview'] == 'manage_catalog_edit':
         get_worksheet
     )
 
-# 10. 📊 ΕΝΟΤΗΤΑ ΑΝΑΦΟΡΩΝ & ΣΤΑΤΙΣΤΙΚΩΝ
 elif st.session_state['active_subview'] == 'analytics':
     col_btn, _ = st.columns([1, 4])
     with col_btn:
@@ -369,8 +419,6 @@ elif st.session_state['active_subview'] == 'analytics':
             st.session_state['active_subview'] = 'menu'
             st.rerun()
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
-
-    st.cache_data.clear()
     
     df_xalia = st.session_state.get('df_tr_xalia', pd.DataFrame())
     df_items = st.session_state.get('df_tr_items', pd.DataFrame())
@@ -379,11 +427,11 @@ elif st.session_state['active_subview'] == 'analytics':
     today = date.today()
 
     if 'date_from' not in st.session_state:
-        st.session_state['date_from'] = today.replace(day=1)
+        st.session_state['date_from'] = today
     if 'date_to' not in st.session_state:
         st.session_state['date_to'] = today
 
-    st.subheader("📅 Επιλογή Χρονικού Διαστήματος (για τα Οικονομικά)")
+    st.subheader("📅 Επιλογή Χρονικού Διαστήματος")
 
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -407,33 +455,33 @@ elif st.session_state['active_subview'] == 'analytics':
     f_col1, f_col2 = st.columns(2)
     with f_col1:
         date_from = st.date_input("Από Ημερομηνία:", value=st.session_state['date_from'])
+        st.markdown(f"📌 **Επιλεγμένη:** `{format_greek_date(pd.to_datetime(date_from))}`")
     with f_col2:
         date_to = st.date_input("Έως Ημερομηνία:", value=st.session_state['date_to'])
+        st.markdown(f"📌 **Επιλεγμένη:** `{format_greek_date(pd.to_datetime(date_to))}`")
 
     t_from = pd.to_datetime(date_from)
     t_to = pd.to_datetime(date_to) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
 
-    # 1. Συνάρτηση για τα Οικονομικά (με ημερομηνίες + Status)
     def process_df_revenue(df):
         if df.empty:
             return pd.DataFrame()
         df_filtered = df.copy()
         
-        if 'DateIn' in df_filtered.columns:
-            df_filtered['DateIn'] = pd.to_datetime(df_filtered['DateIn'], errors='coerce')
-            df_filtered = df_filtered[(df_filtered['DateIn'] >= t_from) & (df_filtered['DateIn'] <= t_to)]
+        if 'DateOut' in df_filtered.columns:
+            df_filtered['DateOut'] = pd.to_datetime(df_filtered['DateOut'], errors='coerce', dayfirst=True)
+            df_filtered = df_filtered[(df_filtered['DateOut'] >= t_from) & (df_filtered['DateOut'] <= t_to)]
 
         if 'Status' in df_filtered.columns:
             df_filtered = df_filtered[df_filtered['Status'].astype(str).str.strip() == "Παραδόθηκε"]
 
         if 'TotalPrice' in df_filtered.columns:
-            df_filtered['Price'] = pd.to_numeric(df_filtered['TotalPrice'], errors='coerce').fillna(0)
+            df_filtered['Price'] = df_filtered['TotalPrice'].apply(parse_price)
         else:
             df_filtered['Price'] = 0.0
             
         return df_filtered
 
-    # 2. Συνάρτηση για τα TOP (ΜΟΝΟ με Status "Παραδόθηκε", χωρίς περιορισμό ημερομηνίας)
     def process_df_top(df):
         if df.empty:
             return pd.DataFrame()
@@ -443,7 +491,7 @@ elif st.session_state['active_subview'] == 'analytics':
             df_filtered = df_filtered[df_filtered['Status'].astype(str).str.strip() == "Παραδόθηκε"]
 
         if 'TotalPrice' in df_filtered.columns:
-            df_filtered['Price'] = pd.to_numeric(df_filtered['TotalPrice'], errors='coerce').fillna(0)
+            df_filtered['Price'] = df_filtered['TotalPrice'].apply(parse_price)
         else:
             df_filtered['Price'] = 0.0
             
@@ -459,8 +507,11 @@ elif st.session_state['active_subview'] == 'analytics':
     revenue_items = filtered_items_rev['Price'].sum() if not filtered_items_rev.empty else 0.0
     total_revenue = revenue_xalia + revenue_items
 
+    str_from_gr = format_greek_date(pd.to_datetime(date_from))
+    str_to_gr = format_greek_date(pd.to_datetime(date_to))
+
     st.markdown("---")
-    st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({date_from.strftime('%d/%m/%Y')} - {date_to.strftime('%d/%m/%Y')})")
+  # st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({str_from_gr} - {str_to_gr})")
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Έσοδα από Χαλιά", f"{revenue_xalia:,.2f} €")
@@ -471,9 +522,8 @@ elif st.session_state['active_subview'] == 'analytics':
     
     col_top_cust, col_top_items = st.columns(2, gap="large")
 
-    # 🏆 TOP 10 ΠΕΛΑΤΩΝ
     with col_top_cust:
-        st.subheader("🏆 Top-10 Πελάτες (Συνολικά Παραδομένα)")
+        st.subheader("🏆 Top-10 Πελάτες")
         
         combined_orders = []
         for df_f in [filtered_xalia_top, filtered_items_top]:
@@ -505,30 +555,52 @@ elif st.session_state['active_subview'] == 'analytics':
         else:
             st.info("Δεν υπάρχουν ολοκληρωμένες συναλλαγές.")
 
-    # 🥇 TOP 5 ΕΙΔΩΝ
     with col_top_items:
-        st.subheader("🥇 Top-5 Δημοφιλή Είδη (Συνολικά Παραδομένα)")
+        st.subheader("🥇 Top-5 Δημοφιλή Είδη")
         tab_c_items, tab_r_items = st.tabs(["🧶 Χαλιά", "👔 Ρούχα"])
 
         with tab_c_items:
             if not filtered_xalia_top.empty and 'ItName' in filtered_xalia_top.columns:
-                top_xalia = filtered_xalia_top.groupby('ItName').size().reset_index(name='Τεμάχια')
-                top_xalia = top_xalia.rename(columns={'ItName': 'Είδος Χαλιού'})
-                top_xalia = top_xalia.sort_values(by='Τεμάχια', ascending=False).head(5)
-                st.dataframe(top_xalia, use_container_width=True, hide_index=True)
+                grouped_xalia = filtered_xalia_top.groupby('ItName').agg(
+                    Τεμάχια=('Price', 'count'),
+                    Τζίρος=('Price', 'sum')
+                ).reset_index()
+
+                tab_x_qty, tab_x_rev = st.tabs(["🔢 Ανά Τεμάχια", "💶 Ανά Τζίρο (€)"])
+                
+                with tab_x_qty:
+                    top_xalia_qty = grouped_xalia.sort_values(by='Τεμάχια', ascending=False).head(5)
+                    top_xalia_qty = top_xalia_qty.rename(columns={'ItName': 'Είδος Χαλιού'})
+                    st.dataframe(top_xalia_qty, use_container_width=True, hide_index=True)
+                    
+                with tab_x_rev:
+                    top_xalia_rev = grouped_xalia.sort_values(by='Τζίρος', ascending=False).head(5)
+                    top_xalia_rev = top_xalia_rev.rename(columns={'ItName': 'Είδος Χαλιού'})
+                    st.dataframe(top_xalia_rev, use_container_width=True, hide_index=True)
             else:
                 st.info("Δεν βρέθηκαν δεδομένα για χαλιά.")
 
         with tab_r_items:
             if not filtered_items_top.empty and 'ItName' in filtered_items_top.columns:
-                top_rouxa = filtered_items_top.groupby('ItName').size().reset_index(name='Τεμάχια')
-                top_rouxa = top_rouxa.rename(columns={'ItName': 'Είδος Ρούχου'})
-                top_rouxa = top_rouxa.sort_values(by='Τεμάχια', ascending=False).head(5)
-                st.dataframe(top_rouxa, use_container_width=True, hide_index=True)
+                grouped_rouxa = filtered_items_top.groupby('ItName').agg(
+                    Τεμάχια=('Price', 'count'),
+                    Τζίρος=('Price', 'sum')
+                ).reset_index()
+
+                tab_r_qty, tab_r_rev = st.tabs(["🔢 Ανά Τεμάχια", "💶 Ανά Τζίρο (€)"])
+                
+                with tab_r_qty:
+                    top_rouxa_qty = grouped_rouxa.sort_values(by='Τεμάχια', ascending=False).head(5)
+                    top_rouxa_qty = top_rouxa_qty.rename(columns={'ItName': 'Είδος Ρούχου'})
+                    st.dataframe(top_rouxa_qty, use_container_width=True, hide_index=True)
+                    
+                with tab_r_rev:
+                    top_rouxa_rev = grouped_rouxa.sort_values(by='Τζίρος', ascending=False).head(5)
+                    top_rouxa_rev = top_rouxa_rev.rename(columns={'ItName': 'Είδος Ρούχου'})
+                    st.dataframe(top_rouxa_rev, use_container_width=True, hide_index=True)
             else:
                 st.info("Δεν βρέθηκαν δεδομένα για ρούχα.")
 
-# 11. 📦 ΕΝΟΤΗΤΑ: ΤΙ ΕΧΟΥΜΕ ΑΠΟ ΕΤΟΙΜΑ
 elif st.session_state['active_subview'] == 'ready_orders':
     col_btn, _ = st.columns([1, 4])
     with col_btn:
@@ -536,8 +608,6 @@ elif st.session_state['active_subview'] == 'ready_orders':
             st.session_state['active_subview'] = 'menu'
             st.rerun()
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
-
-    st.cache_data.clear()
     
     df_xalia = st.session_state.get('df_tr_xalia', pd.DataFrame())
     df_items = st.session_state.get('df_tr_items', pd.DataFrame())
@@ -554,7 +624,7 @@ elif st.session_state['active_subview'] == 'ready_orders':
             return pd.DataFrame()
 
         if 'TotalPrice' in df_f.columns:
-            df_f['Price'] = pd.to_numeric(df_f['TotalPrice'], errors='coerce').fillna(0)
+            df_f['Price'] = df_f['TotalPrice'].apply(parse_price)
         else:
             df_f['Price'] = 0.0
 
@@ -568,14 +638,14 @@ elif st.session_state['active_subview'] == 'ready_orders':
     rev_ready_items = ready_items['Price'].sum() if not ready_items.empty else 0.0
     total_ready_rev = rev_ready_xalia + rev_ready_items
 
-    st.subheader("💰 Τζίρος & Αξία Έτοιμων Παραγγελιών")
+   # st.subheader("💰 Τζίρος & Αξία Έτοιμων Παραγγελιών")
     rm1, rm2, rm3 = st.columns(3)
     rm1.metric("Έτοιμα Χαλιά", f"{rev_ready_xalia:,.2f} €")
     rm2.metric("Έτοιμα Ρούχα", f"{rev_ready_items:,.2f} €")
     rm3.metric("Συνολική Αξία Έτοιμων", f"{total_ready_rev:,.2f} €")
 
     st.markdown("---")
-    st.subheader("📋 Αναλυτική Λίστα Πελατών με Έτοιμη Δουλειά")
+    st.subheader("📋 Έτοιμα προς παράδοση")
 
     combined_ready = pd.concat([ready_xalia, ready_items], ignore_index=True)
 
@@ -587,7 +657,6 @@ elif st.session_state['active_subview'] == 'ready_orders':
             t_val = row.get('Price', 0.0)
             t_type = row.get('Τύπος', '')
 
-            # Αναζήτηση τηλεφώνου στο φύλλο Customers βάσει του CuName
             p_num = "Δεν καταχωρήθηκε"
             if not df_cust.empty and 'CuName' in df_cust.columns:
                 match_c = df_cust[df_cust['CuName'].astype(str).str.strip() == c_name]

@@ -275,9 +275,9 @@ if not st.session_state['admin_logged_in']:
             for _, r in rx_matched.iterrows():
                 results.append({
                     'Κατηγορία': '🧶 Χαλιά',
-                    'Είδος (ItName)': r.get('ItName', '-'),
-                    'Ημερομηνία Παραλαβής (DateIn)': r.get('DateIn', '-'),
-                    'Συνολική Τιμή (TotalPrice)': parse_price(r.get('TotalPrice', 0.0))
+                    'Είδος': r.get('ItName', '-'),
+                    'Ημερομηνία Παραλαβής': r.get('DateIn', '-'),
+                    'Συνολική Τιμή': parse_price(r.get('TotalPrice', 0.0))
                 })
 
         if not ready_items.empty:
@@ -285,9 +285,9 @@ if not st.session_state['admin_logged_in']:
             for _, r in ri_matched.iterrows():
                 results.append({
                     'Κατηγορία': '👔 Ρούχα',
-                    'Είδος (ItName)': r.get('ItName', '-'),
-                    'Ημερομηνία Παραλαβής (DateIn)': r.get('DateIn', '-'),
-                    'Συνολική Τιμή (TotalPrice)': parse_price(r.get('TotalPrice', 0.0))
+                    'Είδος': r.get('ItName', '-'),
+                    'Ημερομηνία Παραλαβής': r.get('DateIn', '-'),
+                    'Συνολική Τιμή': parse_price(r.get('TotalPrice', 0.0))
                 })
 
         st.markdown("<br>", unsafe_allow_html=True)

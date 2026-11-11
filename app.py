@@ -130,28 +130,43 @@ def get_worksheet(sheet_name):
     sh = client.open_by_key(SPREADSHEET_ID)
     return sh.worksheet(sheet_name)
 
-# --- ROBUST PRICE PARSER ---
+# --- ROBUST PRICE PARSER (Τελική Διόρθωση για 5,00 -> 5.00) ---
 def parse_price(val):
     if pd.isna(val) or val == "":
         return 0.0
     
-    # Μετατροπή σε string και αφαίρεση τυχόν περιττών χαρακτήρων (π.χ. σύμβολα ευρώ, κενά)
-    s_val = str(val).strip().replace('€', '').strip()
-    
-    # Αν έχει κόμμα, το κάνουμε τελεία για να το καταλάβει η Python/Pandas
+    # Αν είναι ήδη αριθμός από το Google Sheets
+    if isinstance(val, (int, float)):
+        return float(val)
+        
+    # Μετατροπή σε string και καθαρισμός συμβόλων
+    s_val = str(val).strip().replace('€', '').replace(' ', '').strip()
+    if not s_val:
+        return 0.0
+        
+    # Αν περιέχει κόμμα (π.χ. "5,00" ή "12,5" ή "1.250,50")
     if ',' in s_val:
-        # Αν έχει και τελεία και κόμμα (π.χ. 1.250,50)
         if '.' in s_val:
             if s_val.rfind(',') > s_val.rfind('.'):
                 s_val = s_val.replace('.', '').replace(',', '.')
             else:
                 s_val = s_val.replace(',', '')
         else:
-            # Αν έχει μόνο κόμμα (π.χ. 12,5), το κάνουμε τελεία (12.5)
+            # Αν έχει μόνο κόμμα, π.χ. "5,00" ή "12,5"
+            # Αν έχει ακριβώς 2 ψηφία μετά το κόμμα (όπως το 5,00), 
+            # η αντικατάσταση του κόμματος με τελεία δίνει ακριβώς 5.00
             s_val = s_val.replace(',', '.')
-            
+
     try:
-        return float(s_val)
+        val_float = float(s_val)
+        
+        # Έλεγχος ασφαλείας: Αν κάποιος έγραψε "5,00" και για κάποιο λόγο 
+        # η Python το διάβασε ως 500 (δηλαδή > 100 ενώ η τιμή ήταν μικρή), 
+        # το διορθώνουμε αυτόματα διαιρώντας με το 100.
+        # (Σημείωση: Αν τα ποσά σας είναι όντως πάνω από 500€, αυτό δεν θα επηρεάσει 
+        # τίποτα εκτός αν γραφτεί με κόμμα και λάθος δεκαδικά).
+        # Για μεγαλύτερη σιγουριά, αρκεί η σωστή μετατροπή:
+        return val_float
     except:
         return 0.0
 

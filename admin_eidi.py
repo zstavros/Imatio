@@ -138,7 +138,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
             with col3:
                 new_place = st.text_input("Θέση", value=str(place_val), key=f"plc_{tr_id}_{idx}")
             with col4:
-                new_price_str = st.text_input("Τιμή (€) (με τελεία)", value=str(price_val), key=f"prc_{tr_id}_{idx}")
+                new_price_str = st.text_input("Τιμή (€)", value=str(price_val), key=f"prc_{tr_id}_{idx}")
             with col5:
                 curr_st = row.get('Status', STATUS_OPTIONS[0])
                 new_st = st.selectbox(
@@ -151,7 +151,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                 try:
                     new_price = float(new_price_str.strip().replace(',', '.'))
                 except ValueError:
-                    st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 12.50).")
+                    st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός.")
                     return
 
                 try:
@@ -293,7 +293,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
             with col1:
                 new_place = st.text_input("Ράφι / Θέση", value=str(place_val), key=f"plc_it_{tr_id}_{idx}")
             with col2:
-                new_price_str = st.text_input("Τιμή (€) (με τελεία)", value=str(curr_pr), key=f"prc_it_{tr_id}_{idx}")
+                new_price_str = st.text_input("Τιμή (€)", value=str(curr_pr), key=f"prc_it_{tr_id}_{idx}")
             with col3:
                 curr_st = str(status_val).strip()
                 new_st = st.selectbox(
@@ -306,7 +306,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                 try:
                     new_price = float(new_price_str.strip().replace(',', '.'))
                 except ValueError:
-                    st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 12.50).")
+                    st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός.")
                     return
 
                 try:
@@ -371,8 +371,7 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
         sel_item = st.selectbox("Είδος", item_choices)
         shelf = st.text_input("Ράφι / Θέση")
         
-        # Χρήση text_input για αποφυγή κόμματος και υποχρεωτική χρήση τελείας
-        price_str = st.text_input("Τιμή (€) (Χρησιμοποιήστε τελεία π.χ. 5.50)", value="0.0")
+        price_str = st.text_input("Τιμή (€)", value="0.0")
         
         status = st.selectbox("Εργασία / Κατάσταση", ["Πλύσιμο", "Στεγνό Καθάρισμα", "Σιδέρωμα"])
 
@@ -383,7 +382,7 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
             try:
                 price = float(price_str.strip().replace(',', '.'))
             except ValueError:
-                st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 5.50).")
+                st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός.")
                 return
 
             try:

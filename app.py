@@ -130,21 +130,17 @@ def get_worksheet(sheet_name):
     sh = client.open_by_key(SPREADSHEET_ID)
     return sh.worksheet(sheet_name)
 
-# --- ROBUST PRICE PARSER (Τελική Διόρθωση για 5,00 -> 5.00) ---
+# --- ROBUST PRICE PARSER ---
 def parse_price(val):
-    if pd.isna(val) or val == "":
+    if pd.isna(val) or val == "" or val is None:
         return 0.0
-    
-    # Αν είναι ήδη αριθμός από το Google Sheets
     if isinstance(val, (int, float)):
         return float(val)
         
-    # Μετατροπή σε string και καθαρισμός συμβόλων
-    s_val = str(val).strip().replace('€', '').replace(' ', '').strip()
+    s_val = str(val).strip().replace('€', '').replace(' ', '')
     if not s_val:
         return 0.0
-        
-    # Αν περιέχει κόμμα (π.χ. "5,00" ή "12,5" ή "1.250,50")
+
     if ',' in s_val:
         if '.' in s_val:
             if s_val.rfind(',') > s_val.rfind('.'):
@@ -152,21 +148,10 @@ def parse_price(val):
             else:
                 s_val = s_val.replace(',', '')
         else:
-            # Αν έχει μόνο κόμμα, π.χ. "5,00" ή "12,5"
-            # Αν έχει ακριβώς 2 ψηφία μετά το κόμμα (όπως το 5,00), 
-            # η αντικατάσταση του κόμματος με τελεία δίνει ακριβώς 5.00
             s_val = s_val.replace(',', '.')
 
     try:
-        val_float = float(s_val)
-        
-        # Έλεγχος ασφαλείας: Αν κάποιος έγραψε "5,00" και για κάποιο λόγο 
-        # η Python το διάβασε ως 500 (δηλαδή > 100 ενώ η τιμή ήταν μικρή), 
-        # το διορθώνουμε αυτόματα διαιρώντας με το 100.
-        # (Σημείωση: Αν τα ποσά σας είναι όντως πάνω από 500€, αυτό δεν θα επηρεάσει 
-        # τίποτα εκτός αν γραφτεί με κόμμα και λάθος δεκαδικά).
-        # Για μεγαλύτερη σιγουριά, αρκεί η σωστή μετατροπή:
-        return val_float
+        return float(s_val)
     except:
         return 0.0
 
@@ -174,29 +159,28 @@ def parse_price(val):
 def load_all_data():
     try:
         ws_c = get_worksheet("Customers")
-        data_c = ws_c.get_all_records()
+        data_c = ws_c.get_all_records(numeric_values=True)
         st.session_state['df_customers'] = pd.DataFrame(data_c) if data_c else pd.DataFrame(columns=["CustomerID", "CuName", "CuPhone", "CuAddress"])
     except Exception as e:
         st.session_state['df_customers'] = pd.DataFrame(columns=["CustomerID", "CuName", "CuPhone", "CuAddress"])
-        st.error(f"Σφάλμα φόρτωσης Customers: {e}")
 
     try:
         ws_i = get_worksheet("Items")
-        data_i = ws_i.get_all_records()
+        data_i = ws_i.get_all_records(numeric_values=True)
         st.session_state['df_items'] = pd.DataFrame(data_i) if data_i else pd.DataFrame()
     except:
         st.session_state['df_items'] = pd.DataFrame()
 
     try:
         ws_tx = get_worksheet("TrXalia")
-        data_tx = ws_tx.get_all_records()
+        data_tx = ws_tx.get_all_records(numeric_values=True)
         st.session_state['df_tr_xalia'] = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
     except:
         st.session_state['df_tr_xalia'] = pd.DataFrame()
 
     try:
         ws_ti = get_worksheet("TrItems")
-        data_ti = ws_ti.get_all_records()
+        data_ti = ws_ti.get_all_records(numeric_values=True)
         st.session_state['df_tr_items'] = pd.DataFrame(data_ti) if data_ti else pd.DataFrame()
     except:
         st.session_state['df_tr_items'] = pd.DataFrame()
@@ -334,7 +318,7 @@ elif st.session_state['active_subview'] == 'fast_loading':
 elif st.session_state['active_subview'] == 'edit_xalia':
     st.cache_data.clear()
     ws_tx = get_worksheet("TrXalia")
-    data_tx = ws_tx.get_all_records()
+    data_tx = ws_tx.get_all_records(numeric_values=True)
     df_fresh_tx = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
     st.session_state['df_tr_xalia'] = df_fresh_tx
     
@@ -372,7 +356,7 @@ elif st.session_state['active_subview'] == 'manage_customers_new':
 elif st.session_state['active_subview'] == 'manage_customers_edit':
     st.cache_data.clear()
     ws_cust = get_worksheet("Customers")
-    fresh_cust_data = ws_cust.get_all_records()
+    fresh_cust_data = ws_cust.get_all_records(numeric_values=True)
     df_fresh_customers = pd.DataFrame(fresh_cust_data) if fresh_cust_data else pd.DataFrame()
     st.session_state['df_customers'] = df_fresh_customers
     
@@ -392,7 +376,7 @@ elif st.session_state['active_subview'] == 'manage_catalog_new':
 elif st.session_state['active_subview'] == 'manage_catalog_edit':
     st.cache_data.clear()
     ws_items = get_worksheet("Items")
-    fresh_items_data = ws_items.get_all_records()
+    fresh_items_data = ws_items.get_all_records(numeric_values=True)
     df_fresh_items = pd.DataFrame(fresh_items_data) if fresh_items_data else pd.DataFrame()
     st.session_state['df_items'] = df_fresh_items
     

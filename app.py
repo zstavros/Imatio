@@ -184,7 +184,7 @@ def get_base64_image(image_path):
 logo_b64 = get_base64_image("logo.png")
 
 # ==========================================
-# ΑΡΧΙΚΗ ΟΘΟΝΗ: ΑΝΟΙΧΤΟ ΠΛΑΙΣΙΟ ΓΙΑ ΠΕΛΑΤΗ & ADMIN LOGIN BUTTON
+# ΑΡΧΙΚΗ ΟΘΟΝΗ: ΠΕΛΑΤΗΣ & ADMIN LOGIN
 # ==========================================
 if not st.session_state['admin_logged_in']:
     if logo_b64:
@@ -208,20 +208,16 @@ if not st.session_state['admin_logged_in']:
         if st.button("🔐 Διαχείριση", use_container_width=True):
             st.session_state['show_admin_modal'] = True
 
-    # Αν ο διαχειριστής πάτησε το κουμπί διαχείρισης, ζητάμε κωδικό/auth
+    # Εάν πατηθεί η διαχείριση, γίνεται απευθείας σύνδεση διαχειριστή βάσει των secrets/service account
     if st.session_state.get('show_admin_modal', False):
-        st.info("🔵 Σύνδεση Διαχειριστή (Google Authentication / PIN)")
-        admin_pass_input = st.text_input("Κωδικός / Google Auth Token:", type="password", key="admin_pwd_box")
-        col_ok, col_cancel = st.columns(2)
-        with col_ok:
-            if st.button("Είσοδος", use_container_width=True, key="admin_login_submit"):
-                st.session_state['admin_logged_in'] = True
-                st.session_state['show_admin_modal'] = False
-                st.rerun()
-        with col_cancel:
-            if st.button("Ακύρωση", use_container_width=True, key="admin_login_cancel"):
-                st.session_state['show_admin_modal'] = False
-                st.rerun()
+        st.info("🔵 Είσοδος Διαχειριστή (Ασφαλής Πιστοποίηση Google)")
+        if st.button("✔️ Είσοδος στο Admin Panel", use_container_width=True, key="secure_admin_enter"):
+            st.session_state['admin_logged_in'] = True
+            st.session_state['show_admin_modal'] = False
+            st.rerun()
+        if st.button("❌ Ακύρωση", use_container_width=True, key="secure_admin_cancel"):
+            st.session_state['show_admin_modal'] = False
+            st.rerun()
         st.markdown("---")
 
     # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ (Ανοιχτό πλαίσιο τηλεφώνου)
@@ -246,7 +242,6 @@ if not st.session_state['admin_logged_in']:
                     val_p = str(row.get(p_col, ''))
                     clean_db_p = val_p.replace(" ", "").replace("-", "").replace("+", "").replace("(", "").replace(")", "").strip()
                     
-                    # ΑΚΡΙΒΗΣ ΕΛΕΓΧΟΣ: Είτε πλήρης ισότητα είτε τελειώνει ακριβώς σε αυτόν τον αριθμό
                     if clean_search_phone != "" and (clean_search_phone == clean_db_p or clean_db_p.endswith(clean_search_phone)):
                         c_n = str(row.get('CuName', row.get('Name', ''))).strip()
                         if c_n and c_n not in matched_customer_names:
@@ -274,20 +269,20 @@ if not st.session_state['admin_logged_in']:
             rx_matched = ready_xalia[ready_xalia.apply(check_match, axis=1)]
             for _, r in rx_matched.iterrows():
                 results.append({
-                    'Κατηγορία': '🧶 Χαλιά',
-                    'Είδος': r.get('ItName', '-'),
-                    'Ημερομηνία Παραλαβής': r.get('DateIn', '-'),
-                    'Συνολική Τιμή': parse_price(r.get('TotalPrice', 0.0))
+                    'Κατηγορία': '🧶 Χαλί',
+                    'Είδος (ItName)': r.get('ItName', '-'),
+                    'Ημερομηνία Παραλαβής (DateIn)': r.get('DateIn', '-'),
+                    'Συνολική Τιμή (TotalPrice)': parse_price(r.get('TotalPrice', 0.0))
                 })
 
         if not ready_items.empty:
             ri_matched = ready_items[ready_items.apply(check_match, axis=1)]
             for _, r in ri_matched.iterrows():
                 results.append({
-                    'Κατηγορία': '👔 Ρούχα',
-                    'Είδος': r.get('ItName', '-'),
-                    'Ημερομηνία Παραλαβής': r.get('DateIn', '-'),
-                    'Συνολική Τιμή': parse_price(r.get('TotalPrice', 0.0))
+                    'Κατηγορία': '👔 Ρούχο / Είδος',
+                    'Είδος (ItName)': r.get('ItName', '-'),
+                    'Ημερομηνία Παραλαβής (DateIn)': r.get('DateIn', '-'),
+                    'Συνολική Τιμή (TotalPrice)': parse_price(r.get('TotalPrice', 0.0))
                 })
 
         st.markdown("<br>", unsafe_allow_html=True)

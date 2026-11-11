@@ -297,7 +297,6 @@ if st.session_state['active_subview'] == 'menu':
     with col_an1:
         st.markdown("##### 📊 Αναφορές & Στατιστικά")
         if st.button("📈 ΠΡΟΒΟΛΗ ΑΝΑΦΟΡΩΝ & ΤΖΙΡΟΥ", use_container_width=True):
-            # ΑΜΕΣΟΣ ΚΑΘΑΡΙΣΜΟΣ ΗΜΕΡΟΜΗΝΙΑΣ ΣΤΗ ΣΗΜΕΡΙΝΗ ΚΑΙ ΜΕΤΑΒΑΣΗ
             st.session_state['date_from'] = date.today()
             st.session_state['date_to'] = date.today()
             st.session_state['active_subview'] = 'analytics'
@@ -380,7 +379,6 @@ elif st.session_state['active_subview'] == 'manage_catalog_edit':
     )
 
 elif st.session_state['active_subview'] == 'analytics':
-    # ΑΠΛΟ, ΑΚΑΡΙΑΙΟ ΧΩΡΙΣ NETWORK DELAY (ΧΡΗΣΗ ΤΩΝ ΔΕΔΟΜΕΝΩΝ ΤΗΣ ΜΝΗΜΗΣ)
     col_btn, _ = st.columns([1, 4])
     with col_btn:
         if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
@@ -399,7 +397,7 @@ elif st.session_state['active_subview'] == 'analytics':
     if 'date_to' not in st.session_state:
         st.session_state['date_to'] = today
 
-    st.subheader("📅 Επιλογή Χρονικού Διαστήματος ")
+    st.subheader("📅 Επιλογή Χρονικού Διαστήματος (για τα Οικονομικά)")
 
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -479,7 +477,7 @@ elif st.session_state['active_subview'] == 'analytics':
     str_to_gr = format_greek_date(pd.to_datetime(date_to))
 
     st.markdown("---")
-   # st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({str_from_gr} - {str_to_gr})")
+    st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({str_from_gr} - {str_to_gr})")
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Έσοδα από Χαλιά", f"{revenue_xalia:,.2f} €")
@@ -491,7 +489,7 @@ elif st.session_state['active_subview'] == 'analytics':
     col_top_cust, col_top_items = st.columns(2, gap="large")
 
     with col_top_cust:
-        st.subheader("🏆 Top-10 Πελάτες ")
+        st.subheader("🏆 Top-10 Πελάτες (Συνολικά Παραδομένα)")
         
         combined_orders = []
         for df_f in [filtered_xalia_top, filtered_items_top]:
@@ -524,24 +522,48 @@ elif st.session_state['active_subview'] == 'analytics':
             st.info("Δεν υπάρχουν ολοκληρωμένες συναλλαγές.")
 
     with col_top_items:
-        st.subheader("🥇 Top-5 Δημοφιλή Είδη ")
+        st.subheader("🥇 Top-5 Δημοφιλή Είδη (Συνολικά Παραδομένα)")
         tab_c_items, tab_r_items = st.tabs(["🧶 Χαλιά", "👔 Ρούχα"])
 
         with tab_c_items:
             if not filtered_xalia_top.empty and 'ItName' in filtered_xalia_top.columns:
-                top_xalia = filtered_xalia_top.groupby('ItName').size().reset_index(name='Τεμάχια')
-                top_xalia = top_xalia.rename(columns={'ItName': 'Είδος Χαλιού'})
-                top_xalia = top_xalia.sort_values(by='Τεμάχια', ascending=False).head(5)
-                st.dataframe(top_xalia, use_container_width=True, hide_index=True)
+                grouped_xalia = filtered_xalia_top.groupby('ItName').agg(
+                    Τεμάχια=('Price', 'count'),
+                    Τζίρος=('Price', 'sum')
+                ).reset_index()
+
+                tab_x_qty, tab_x_rev = st.tabs(["🔢 Ανά Τεμάχια", "💶 Ανά Τζίρο (€)"])
+                
+                with tab_x_qty:
+                    top_xalia_qty = grouped_xalia.sort_values(by='Τεμάχια', ascending=False).head(5)
+                    top_xalia_qty = top_xalia_qty.rename(columns={'ItName': 'Είδος Χαλιού'})
+                    st.dataframe(top_xalia_qty, use_container_width=True, hide_index=True)
+                    
+                with tab_x_rev:
+                    top_xalia_rev = grouped_xalia.sort_values(by='Τζίρος', ascending=False).head(5)
+                    top_xalia_rev = top_xalia_rev.rename(columns={'ItName': 'Είδος Χαλιού'})
+                    st.dataframe(top_xalia_rev, use_container_width=True, hide_index=True)
             else:
                 st.info("Δεν βρέθηκαν δεδομένα για χαλιά.")
 
         with tab_r_items:
             if not filtered_items_top.empty and 'ItName' in filtered_items_top.columns:
-                top_rouxa = filtered_items_top.groupby('ItName').size().reset_index(name='Τεμάχια')
-                top_rouxa = top_rouxa.rename(columns={'ItName': 'Είδος Ρούχου'})
-                top_rouxa = top_rouxa.sort_values(by='Τεμάχια', ascending=False).head(5)
-                st.dataframe(top_rouxa, use_container_width=True, hide_index=True)
+                grouped_rouxa = filtered_items_top.groupby('ItName').agg(
+                    Τεμάχια=('Price', 'count'),
+                    Τζίρος=('Price', 'sum')
+                ).reset_index()
+
+                tab_r_qty, tab_r_rev = st.tabs(["🔢 Ανά Τεμάχια", "💶 Ανά Τζίρο (€)"])
+                
+                with tab_r_qty:
+                    top_rouxa_qty = grouped_rouxa.sort_values(by='Τεμάχια', ascending=False).head(5)
+                    top_rouxa_qty = top_rouxa_qty.rename(columns={'ItName': 'Είδος Ρούχου'})
+                    st.dataframe(top_rouxa_qty, use_container_width=True, hide_index=True)
+                    
+                with tab_r_rev:
+                    top_rouxa_rev = grouped_rouxa.sort_values(by='Τζίρος', ascending=False).head(5)
+                    top_rouxa_rev = top_rouxa_rev.rename(columns={'ItName': 'Είδος Ρούχου'})
+                    st.dataframe(top_rouxa_rev, use_container_width=True, hide_index=True)
             else:
                 st.info("Δεν βρέθηκαν δεδομένα για ρούχα.")
 
@@ -582,14 +604,14 @@ elif st.session_state['active_subview'] == 'ready_orders':
     rev_ready_items = ready_items['Price'].sum() if not ready_items.empty else 0.0
     total_ready_rev = rev_ready_xalia + rev_ready_items
 
-   # st.subheader("💰 Τζίρος & Αξία Έτοιμων Παραγγελιών")
+    st.subheader("💰 Τζίρος & Αξία Έτοιμων Παραγγελιών")
     rm1, rm2, rm3 = st.columns(3)
     rm1.metric("Έτοιμα Χαλιά", f"{rev_ready_xalia:,.2f} €")
     rm2.metric("Έτοιμα Ρούχα", f"{rev_ready_items:,.2f} €")
     rm3.metric("Συνολική Αξία Έτοιμων", f"{total_ready_rev:,.2f} €")
 
     st.markdown("---")
-    st.subheader("📋 Έτοιμα προς παράδοση")
+    st.subheader("📋 Αναλυτική Λίστα Πελατών με Έτοιμη Δουλειά")
 
     combined_ready = pd.concat([ready_xalia, ready_items], ignore_index=True)
 

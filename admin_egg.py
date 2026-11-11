@@ -173,7 +173,7 @@ def render_edit_item_tab(df_items, get_worksheet):
         curr_cat = str(row_data.get(col_desc_key, "Rouxa")) if col_desc_key else "Rouxa"
 
         st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
-        st.write(f"✏️ Epexergasia: **{real_name}**")
+        st.write(f"✏️ Επεξεργασία: **{real_name}**")
         
         new_it_name = st.text_input("ΠΕΡΙΓΡΑΦΗ ΕΙΔΟΥΣ", value=real_name, key=f"ei_name_{real_name}")
         

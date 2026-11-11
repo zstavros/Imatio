@@ -377,6 +377,16 @@ elif st.session_state['active_subview'] == 'manage_catalog_edit':
     )
 
 elif st.session_state['active_subview'] == 'analytics':
+    # ΑΥΤΟΜΑΤΗ ΑΝΑΝΕΩΣΗ (ΦΡΕΣΚΑΡΙΣΜΑ) ΔΕΔΟΜΕΝΩΝ ΧΩΡΙΣ F5
+    load_all_data()
+    try:
+        ws_tx_fresh = get_worksheet("TrXalia")
+        st.session_state['df_tr_xalia'] = pd.DataFrame(ws_tx_fresh.get_all_records())
+        ws_ti_fresh = get_worksheet("TrItems")
+        st.session_state['df_tr_items'] = pd.DataFrame(ws_ti_fresh.get_all_records())
+    except:
+        pass
+
     col_btn, _ = st.columns([1, 4])
     with col_btn:
         if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
@@ -390,8 +400,9 @@ elif st.session_state['active_subview'] == 'analytics':
 
     today = date.today()
 
+    # DEFAULT Η ΣΗΜΕΡΙΝΗ ΗΜΕΡΟΜΗΝΙΑ ΓΙΑ ΑΜΦΟΤΕΡΑ (ΑΠΟ / ΕΩΣ)
     if 'date_from' not in st.session_state:
-        st.session_state['date_from'] = today.replace(day=1)
+        st.session_state['date_from'] = today
     if 'date_to' not in st.session_state:
         st.session_state['date_to'] = today
 
@@ -475,7 +486,7 @@ elif st.session_state['active_subview'] == 'analytics':
     str_to_gr = format_greek_date(pd.to_datetime(date_to))
 
     st.markdown("---")
-    #st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({str_from_gr} - {str_to_gr})")
+    st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({str_from_gr} - {str_to_gr})")
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Έσοδα από Χαλιά", f"{revenue_xalia:,.2f} €")
@@ -542,6 +553,9 @@ elif st.session_state['active_subview'] == 'analytics':
                 st.info("Δεν βρέθηκαν δεδομένα για ρούχα.")
 
 elif st.session_state['active_subview'] == 'ready_orders':
+    # ΑΥΤΟΜΑΤΗ ΑΝΑΝΕΩΣΗ (ΦΡΕΣΚΑΡΙΣΜΑ) ΚΑΙ ΕΔΩ
+    load_all_data()
+
     col_btn, _ = st.columns([1, 4])
     with col_btn:
         if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):

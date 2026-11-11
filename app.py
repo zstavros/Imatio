@@ -208,16 +208,30 @@ if not st.session_state['admin_logged_in']:
         if st.button("🔐 Διαχείριση", use_container_width=True):
             st.session_state['show_admin_modal'] = True
 
-    # Εάν πατηθεί η διαχείριση, γίνεται απευθείας σύνδεση διαχειριστή βάσει των secrets/service account
+    # Εάν πατηθεί η διαχείριση, ελέγχουμε τα επιτρεπόμενα emails από τα Secrets (1ος τρόπος)
     if st.session_state.get('show_admin_modal', False):
-        st.info("🔵 Είσοδος Διαχειριστή (Ασφαλής Πιστοποίηση Google)")
-        if st.button("✔️ Είσοδος στο Admin Panel", use_container_width=True, key="secure_admin_enter"):
-            st.session_state['admin_logged_in'] = True
-            st.session_state['show_admin_modal'] = False
-            st.rerun()
-        if st.button("❌ Ακύρωση", use_container_width=True, key="secure_admin_cancel"):
-            st.session_state['show_admin_modal'] = False
-            st.rerun()
+        st.info("🔵 Σύνδεση Διαχειριστή")
+        user_email_input = st.text_input("Εισάγετε το Email Διαχειριστή (Gmail/Yahoo):", key="admin_email_box")
+        
+        # Ανάκτηση των 2 emails από τα secrets
+        email_1 = str(st.secrets.get("admin_email", "")).strip().lower()
+        email_2 = str(st.secrets.get("admin_email_2", "")).strip().lower()
+        allowed_admins = [e for e in [email_1, email_2] if e]
+
+        col_ok, col_cancel = st.columns(2)
+        with col_ok:
+            if st.button("Είσοδος", use_container_width=True, key="admin_email_submit"):
+                clean_input = user_email_input.strip().lower()
+                if clean_input in allowed_admins:
+                    st.session_state['admin_logged_in'] = True
+                    st.session_state['show_admin_modal'] = False
+                    st.rerun()
+                else:
+                    st.error("⚠️ Το email αυτό δεν διαθέτει δικαιώματα διαχειριστή.")
+        with col_cancel:
+            if st.button("Ακύρωση", use_container_width=True, key="admin_email_cancel"):
+                st.session_state['show_admin_modal'] = False
+                st.rerun()
         st.markdown("---")
 
     # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ (Ανοιχτό πλαίσιο τηλεφώνου)

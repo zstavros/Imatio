@@ -611,7 +611,7 @@ elif st.session_state['active_subview'] == 'ready_orders':
     rm3.metric("Συνολική Αξία Έτοιμων", f"{total_ready_rev:,.2f} €")
 
     st.markdown("---")
-    st.subheader("📋 Αναλυτική Λίστα Πελατών με Έτοιμη Δουλειά")
+    st.subheader("📋 Έτοιμα προς παράδοση")
 
     combined_ready = pd.concat([ready_xalia, ready_items], ignore_index=True)
 

@@ -69,7 +69,7 @@ def render_edit_customer_tab(df_customers, get_worksheet):
         c_row_data = valid_customers[valid_customers[name_col] == c_name_val].iloc[0]
         
         st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
-        st.write(f"✏️ Epexergasia: **{c_name_val}**")
+        st.write(f"✏️ Επεξεργασία: **{c_name_val}**")
         
         e_name = st.text_input("ΕΠΩΝΥΜΙΑ", value=str(c_row_data.get('CuName', c_row_data.get('Name', ''))), key=f"ec_name_{c_name_val}")
         e_mobile1 = st.text_input("ΤΗΛΕΦΩΝΟ-1", value=str(c_row_data.get('CuPhone', '')), key=f"ec_mob1_{c_name_val}")

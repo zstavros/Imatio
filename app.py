@@ -12,15 +12,13 @@ import admin_egg
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
-# --- STRICT CUSTOM STYLING & FULL STREAMLIT BADGE HIDE ---
+# --- STRICT CUSTOM STYLING & FULL MOBILE/DESKTOP BADGE HIDE ---
 st.markdown("""
     <style>
-        /* Απόκρυψη Header, Footer, MainMenu & Viewer Badges */
         header {visibility: hidden !important; display: none !important;}
         #MainMenu {visibility: hidden !important; display: none !important;}
         footer {visibility: hidden !important; display: none !important;}
         
-        /* Πλήρης απόκρυψη Streamlit Badge (κάτω δεξιά) για όλες τις εκδόσεις */
         .viewerBadge_container__1s5nd,
         .viewerBadge_link__1S137,
         div[class*="viewerBadge"],
@@ -31,11 +29,14 @@ st.markdown("""
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
+            height: 0 !important;
+            width: 0 !important;
+            pointer-events: none !important;
         }
 
         .block-container {
-            padding-top: 1.5rem !important;
-            padding-bottom: 2rem !important;
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
             max-width: 1200px;
         }
 
@@ -43,14 +44,14 @@ st.markdown("""
             display: flex;
             align-items: center;
             gap: 15px;
-            padding: 12px 20px;
+            padding: 10px 18px;
             background-color: #1b6338;
             border-radius: 10px;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
         }
 
         .brand-title {
-            font-size: 1.4rem !important;
+            font-size: 1.3rem !important;
             font-weight: 800 !important;
             color: #ffffff !important;
             margin: 0 !important;
@@ -102,27 +103,34 @@ st.markdown("""
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* ΚΕΝΤΡΑΡΙΣΜΑ ΠΙΝΑΚΩΝ ΠΕΛΑΤΗ (Στήλες και κεφαλίδες) */
+        /* ΚΕΝΤΡΑΡΙΣΜΑ ΟΛΩΝ ΤΩΝ ΣΤΗΛΩΝ ΣΤΟΝ ΠΙΝΑΚΑ ΠΕΛΑΤΗ (Κεφαλίδες & Δεδομένα) */
         div[data-testid="stDataFrame"] th {
             text-align: center !important;
+            justify-content: center !important;
         }
         div[data-testid="stDataFrame"] td {
             text-align: center !important;
         }
+        div[data-testid="stDataFrame"] td div {
+            text-align: center !important;
+            justify-content: center !important;
+        }
     </style>
     <script>
-        // Δυναμική αφαίρεση του badge/εικονιδίου κάτω δεξιά μέσω JavaScript
-        function hideStreamlitBadge() {
-            const elements = parent.document.querySelectorAll('iframe, [class*="viewerBadge"], [data-testid="stStatusWidget"], footer');
-            elements.forEach(el => {
-                if (el.tagName === 'FOOTER' || (el.className && el.className.includes && el.className.includes('viewerBadge'))) {
-                    el.style.display = 'none';
-                }
-            });
-            const stBadge = parent.document.querySelector('deploys-widget');
-            if (stBadge) { stBadge.style.display = 'none'; }
+        function purgeBadgesAndWatermarks() {
+            try {
+                const doc = window.parent.document;
+                const elements = doc.querySelectorAll('iframe, footer, [class*="viewerBadge"], [data-testid="stStatusWidget"], deploys-widget, div[class*="stAppViewerBadge"]');
+                elements.forEach(el => {
+                    el.style.setProperty('display', 'none', 'important');
+                    el.style.setProperty('visibility', 'hidden', 'important');
+                    el.style.setProperty('opacity', '0', 'important');
+                    el.style.setProperty('height', '0', 'important');
+                });
+            } catch(e) {}
         }
-        setInterval(hideStreamlitBadge, 500);
+        setInterval(purgeBadgesAndWatermarks, 200);
+        window.addEventListener('load', purgeBadgesAndWatermarks);
     </script>
 """, unsafe_allow_html=True)
 
@@ -223,30 +231,28 @@ if not st.session_state['admin_logged_in']:
     if logo_b64:
         st.markdown(f"""
             <div class="brand-header" style="justify-content: center;">
-                <img src="data:image/png;base64,{logo_b64}" style="height: 50px; width: auto; object-fit: contain;">
-                <span class="brand-title" style="font-size: 1.6rem !important;">IMATIO - ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
+                <img src="data:image/png;base64,{logo_b64}" style="height: 45px; width: auto; object-fit: contain;">
+                <span class="brand-title" style="font-size: 1.5rem !important;">IMATIO - ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
             </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
             <div class="brand-header" style="justify-content: center;">
-                <span style="font-size: 1.8rem;">🧺</span>
-                <span class="brand-title" style="font-size: 1.6rem !important;">IMATIO - ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
+                <span style="font-size: 1.6rem;">🧺</span>
+                <span class="brand-title" style="font-size: 1.5rem !important;">IMATIO - ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
             </div>
         """, unsafe_allow_html=True)
 
-    # Top bar με κουμπί διαχειριστή στη γωνία
+    # Top bar με κουμπί διαχειριστή στη γωνία (πιο μαζεμένο)
     col_empty, col_admin_btn = st.columns([5, 1])
     with col_admin_btn:
         if st.button("🔐 Διαχείριση", use_container_width=True):
             st.session_state['show_admin_modal'] = True
 
-    # Εάν πατηθεί η διαχείριση, ελέγχουμε τα επιτρεπόμενα emails από τα Secrets (1ος τρόπος)
     if st.session_state.get('show_admin_modal', False):
         st.info("🔵 Σύνδεση Διαχειριστή")
         user_email_input = st.text_input("Εισάγετε το Email Διαχειριστή (Gmail/Yahoo):", key="admin_email_box")
         
-        # Ανάκτηση των 2 emails από τα secrets
         email_1 = str(st.secrets.get("admin_email", "")).strip().lower()
         email_2 = str(st.secrets.get("admin_email_2", "")).strip().lower()
         allowed_admins = [e for e in [email_1, email_2] if e]
@@ -267,9 +273,9 @@ if not st.session_state['admin_logged_in']:
                 st.rerun()
         st.markdown("---")
 
-    # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ (Ανοιχτό πλαίσιο τηλεφώνου)
-    st.markdown("<br><h3 style='text-align: center; color: #fff;'>📱 Έτοιμα προς παράδοση</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #ccc;'>Πληκτρολογήστε τον αριθμό του κινητού σας τηλεφώνου για να δείτε τα έτοιμα είδη σας.</p>", unsafe_allow_html=True)
+    # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ (Με λιγότερα περιττά κενά)
+    st.markdown("<h3 style='text-align: center; color: #fff; margin-top: 5px;'>📱 Έτοιμα προς παράδοση</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #ccc; margin-bottom: 10px;'>Πληκτρολογήστε τον αριθμό του κινητού σας τηλεφώνου για να δείτε τα έτοιμα είδη σας.</p>", unsafe_allow_html=True)
     
     col_c1, col_search, col_c2 = st.columns([1, 2, 1])
     with col_search:
@@ -318,7 +324,7 @@ if not st.session_state['admin_logged_in']:
                 results.append({
                     'Είδος': r.get('ItName', '-'),
                     'Ημ. Παραλαβής': r.get('DateIn', '-'),
-                    'Αξία €': parse_price(r.get('TotalPrice', 0.0))
+                    'Αξία €': f"{parse_price(r.get('TotalPrice', 0.0)):.2f}"
                 })
 
         if not ready_items.empty:
@@ -327,10 +333,10 @@ if not st.session_state['admin_logged_in']:
                 results.append({
                     'Είδος': r.get('ItName', '-'),
                     'Ημ. Παραλαβής': r.get('DateIn', '-'),
-                    'Αξία €': parse_price(r.get('TotalPrice', 0.0))
+                    'Αξία €': f"{parse_price(r.get('TotalPrice', 0.0)):.2f}"
                 })
 
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
         if results:
             st.success(f"🎉 Βρέθηκαν **{len(results)}** έτοιμα είδη για εσάς!")
             df_res = pd.DataFrame(results)

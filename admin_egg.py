@@ -117,26 +117,13 @@ def render_new_item_tab(df_items, get_worksheet):
         
         it_name = st.text_input("ΠΕΡΙΓΡΑΦΗ ΕΙΔΟΥΣ")
         it_desc = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ ", ["Rouxa", "Xalia"])
-        
-        it_price_str = st.text_input("ΤΙΜΗ (€) (ΜΟΝΟ ΤΕΛΕΙΑ, Π.Χ. 5.50)", value="0.0")
-        it_price_m2_str = st.text_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²) (ΜΟΝΟ ΤΕΛΕΙΑ, Π.Χ. 12.00)", value="0.0")
+        it_price = st.number_input("ΤΙΜΗ (€)", min_value=0.0, step=0.5)
+        it_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", min_value=0.0, step=0.5)
         
         if submitted:
-            # ΑΥΣΤΗΡΟΣ ΕΛΕΓΧΟΣ: ΑΝ ΥΠΑΡΧΕΙ ΚΟΜΜΑ -> ΜΠΛΟΚΑΡΙΣΜΑ
-            if "," in it_price_str or "," in it_price_m2_str:
-                st.error("❌ ΑΠΑΓΟΡΕΥΕΤΑΙ ΤΟ ΚΟΜΜΑ! Χρησιμοποιήστε μόνο τελεία (.) για τα δεκαδικά.")
-                st.stop()
-
             if not it_name.strip():
                 st.error("Βάλτε είδος.")
             else:
-                try:
-                    it_price = float(it_price_str.strip())
-                    it_price_m2 = float(it_price_m2_str.strip())
-                except ValueError:
-                    st.error("❌ Μη έγκυρος αριθμός. Βάλτε αριθμό με τελεία (π.χ. 5.50).")
-                    st.stop()
-
                 item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(pd.to_numeric(df_items['ItemID'], errors='coerce').max() or 0) + 1
                 ws_items.append_row([item_id, it_name.strip(), it_desc, it_price, it_price_m2])
                 st.cache_data.clear()
@@ -193,22 +180,10 @@ def render_edit_item_tab(df_items, get_worksheet):
         cat_index = 0 if curr_cat.strip().lower() == "rouxa" else 1 if curr_cat.strip().lower() == "xalia" else 0
         new_cat = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ", ["Rouxa", "Xalia"], index=cat_index, key=f"ei_cat_{real_name}")
         
-        new_price_str = st.text_input("ΤΙΜΗ (€) (ΜΟΝΟ ΤΕΛΕΙΑ)", value=str(curr_price), key=f"ei_price_{real_name}")
-        new_price_m2_str = st.text_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²) (ΜΟΝΟ ΤΕΛΕΙΑ)", value=str(curr_price_m2), key=f"ei_pricem2_{real_name}")
+        new_price = st.number_input("ΤΙΜΗ (€)", value=curr_price, min_value=0.0, step=0.5, key=f"ei_price_{real_name}")
+        new_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", value=curr_price_m2, min_value=0.0, step=0.5, key=f"ei_pricem2_{real_name}")
         
         if btn_save_item:
-            # ΑΥΣΤΗΡΟΣ ΕΛΕΓΧΟΣ: ΑΝ ΥΠΑΡΧΕΙ ΚΟΜΜΑ -> ΜΠΛΟΚΑΡΙΣΜΑ
-            if "," in new_price_str or "," in new_price_m2_str:
-                st.error("❌ ΑΠΑΓΟΡΕΥΕΤΑΙ ΤΟ ΚΟΜΜΑ! Χρησιμοποιήστε μόνο τελεία (.) για τα δεκαδικά.")
-                st.stop()
-
-            try:
-                new_price = float(new_price_str.strip())
-                new_price_m2 = float(new_price_m2_str.strip())
-            except ValueError:
-                st.error("❌ Μη έγκυρος αριθμός. Βάλτε αριθμό με τελεία.")
-                st.stop()
-
             try:
                 cell = ws_items.find(real_name)
                 ws_items.update_cell(cell.row, 2, new_it_name)

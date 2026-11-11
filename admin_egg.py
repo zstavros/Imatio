@@ -154,7 +154,7 @@ def render_edit_item_tab(df_items, get_worksheet):
 
     valid_items = df_items[df_items[col_name_key].astype(str).str.strip() != ""]
     
-    item_options = ["-- Epilexte eidos --"]
+    item_options = ["-- Επιλέξτε είδος --"]
     item_map = {}
     for _, r in valid_items.iterrows():
         name_val = str(r[col_name_key]).strip()

@@ -297,6 +297,9 @@ if st.session_state['active_subview'] == 'menu':
     with col_an1:
         st.markdown("##### 📊 Αναφορές & Στατιστικά")
         if st.button("📈 ΠΡΟΒΟΛΗ ΑΝΑΦΟΡΩΝ & ΤΖΙΡΟΥ", use_container_width=True):
+            # ΑΜΕΣΟΣ ΚΑΘΑΡΙΣΜΟΣ ΗΜΕΡΟΜΗΝΙΑΣ ΣΤΗ ΣΗΜΕΡΙΝΗ ΚΑΙ ΜΕΤΑΒΑΣΗ
+            st.session_state['date_from'] = date.today()
+            st.session_state['date_to'] = date.today()
             st.session_state['active_subview'] = 'analytics'
             st.rerun()
             
@@ -377,21 +380,7 @@ elif st.session_state['active_subview'] == 'manage_catalog_edit':
     )
 
 elif st.session_state['active_subview'] == 'analytics':
-    # DIAVAZETAI EK NEOU APOLYTA STOCHEMENA MONO OTAN PATATAI TO EIKONIDIO/KOUMPI ANAFORON
-    try:
-        ws_tx = get_worksheet("TrXalia")
-        data_tx = ws_tx.get_all_records()
-        st.session_state['df_tr_xalia'] = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
-    except:
-        pass
-
-    try:
-        ws_ti = get_worksheet("TrItems")
-        data_ti = ws_ti.get_all_records()
-        st.session_state['df_tr_items'] = pd.DataFrame(data_ti) if data_ti else pd.DataFrame()
-    except:
-        pass
-
+    # ΑΠΛΟ, ΑΚΑΡΙΑΙΟ ΧΩΡΙΣ NETWORK DELAY (ΧΡΗΣΗ ΤΩΝ ΔΕΔΟΜΕΝΩΝ ΤΗΣ ΜΝΗΜΗΣ)
     col_btn, _ = st.columns([1, 4])
     with col_btn:
         if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
@@ -405,7 +394,6 @@ elif st.session_state['active_subview'] == 'analytics':
 
     today = date.today()
 
-    # DEFAULT Η ΣΗΜΕΡΙΝΗ ΗΜΕΡΟΜΗΝΙΑ ΓΙΑ ΑΜΦΟΤΕΡΑ (ΑΠΟ / ΕΩΣ)
     if 'date_from' not in st.session_state:
         st.session_state['date_from'] = today
     if 'date_to' not in st.session_state:

@@ -397,7 +397,7 @@ elif st.session_state['active_subview'] == 'analytics':
     if 'date_to' not in st.session_state:
         st.session_state['date_to'] = today
 
-    st.subheader("📅 Επιλογή Χρονικού Διαστήματος (για τα Οικονομικά)")
+    st.subheader("📅 Επιλογή Χρονικού Διαστήματος")
 
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -477,7 +477,7 @@ elif st.session_state['active_subview'] == 'analytics':
     str_to_gr = format_greek_date(pd.to_datetime(date_to))
 
     st.markdown("---")
-    st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({str_from_gr} - {str_to_gr})")
+  # st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({str_from_gr} - {str_to_gr})")
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Έσοδα από Χαλιά", f"{revenue_xalia:,.2f} €")
@@ -489,7 +489,7 @@ elif st.session_state['active_subview'] == 'analytics':
     col_top_cust, col_top_items = st.columns(2, gap="large")
 
     with col_top_cust:
-        st.subheader("🏆 Top-10 Πελάτες (Συνολικά Παραδομένα)")
+        st.subheader("🏆 Top-10 Πελάτες")
         
         combined_orders = []
         for df_f in [filtered_xalia_top, filtered_items_top]:
@@ -522,7 +522,7 @@ elif st.session_state['active_subview'] == 'analytics':
             st.info("Δεν υπάρχουν ολοκληρωμένες συναλλαγές.")
 
     with col_top_items:
-        st.subheader("🥇 Top-5 Δημοφιλή Είδη (Συνολικά Παραδομένα)")
+        st.subheader("🥇 Top-5 Δημοφιλή Είδη")
         tab_c_items, tab_r_items = st.tabs(["🧶 Χαλιά", "👔 Ρούχα"])
 
         with tab_c_items:
@@ -604,7 +604,7 @@ elif st.session_state['active_subview'] == 'ready_orders':
     rev_ready_items = ready_items['Price'].sum() if not ready_items.empty else 0.0
     total_ready_rev = rev_ready_xalia + rev_ready_items
 
-    st.subheader("💰 Τζίρος & Αξία Έτοιμων Παραγγελιών")
+   # st.subheader("💰 Τζίρος & Αξία Έτοιμων Παραγγελιών")
     rm1, rm2, rm3 = st.columns(3)
     rm1.metric("Έτοιμα Χαλιά", f"{rev_ready_xalia:,.2f} €")
     rm2.metric("Έτοιμα Ρούχα", f"{rev_ready_items:,.2f} €")

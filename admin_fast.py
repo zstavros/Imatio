@@ -130,7 +130,6 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 existing_data = ws_xalia.get_all_records()
                 df_xalia = pd.DataFrame(existing_data)
                 
-                # Βρίσκουμε την τρέχουσα μέγιστη τιμή TransactionID για να συνεχίσουμε αυξανόμενα
                 current_max_id = 0
                 if not df_xalia.empty and 'TransactionID' in df_xalia.columns:
                     ids = pd.to_numeric(df_xalia['TransactionID'], errors='coerce').dropna()
@@ -140,12 +139,11 @@ def render_fast_loading_tab(df_customers, df_items, get_worksheet):
                 rows_to_append = []
                 added_count = 0
                 
-                # Δημιουργία ξεχωριστού ID για κάθε μεμονωμένο χαλί/κωδικό
                 for current_code in range(int(from_code), int(to_code) + 1):
-                    current_max_id += 1  # ⬅️ Κάθε αντικείμενο παίρνει εντελώς μοναδικό, αυξανόμενο ID!
+                    current_max_id += 1  
                     
                     rows_to_append.append([
-                        current_max_id,         # TransactionID (Μοναδικό)
+                        current_max_id,          # TransactionID
                         cust_name_clean,        # CustomerName
                         selected_item,          # ItName
                         str(current_code),      # Code (Barcode)

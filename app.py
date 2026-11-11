@@ -274,7 +274,7 @@ if not st.session_state['admin_logged_in']:
             rx_matched = ready_xalia[ready_xalia.apply(check_match, axis=1)]
             for _, r in rx_matched.iterrows():
                 results.append({
-                    'Κατηγορία': '🧶 Χαλί',
+                    'Κατηγορία': '🧶 Χαλιά',
                     'Είδος (ItName)': r.get('ItName', '-'),
                     'Ημερομηνία Παραλαβής (DateIn)': r.get('DateIn', '-'),
                     'Συνολική Τιμή (TotalPrice)': parse_price(r.get('TotalPrice', 0.0))
@@ -284,7 +284,7 @@ if not st.session_state['admin_logged_in']:
             ri_matched = ready_items[ready_items.apply(check_match, axis=1)]
             for _, r in ri_matched.iterrows():
                 results.append({
-                    'Κατηγορία': '👔 Ρούχο / Είδος',
+                    'Κατηγορία': '👔 Ρούχα',
                     'Είδος (ItName)': r.get('ItName', '-'),
                     'Ημερομηνία Παραλαβής (DateIn)': r.get('DateIn', '-'),
                     'Συνολική Τιμή (TotalPrice)': parse_price(r.get('TotalPrice', 0.0))

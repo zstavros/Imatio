@@ -491,7 +491,7 @@ elif st.session_state['active_subview'] == 'analytics':
     col_top_cust, col_top_items = st.columns(2, gap="large")
 
     with col_top_cust:
-        st.subheader("🏆 Top-10 Πελάτες )")
+        st.subheader("🏆 Top-10 Πελάτες ")
         
         combined_orders = []
         for df_f in [filtered_xalia_top, filtered_items_top]:

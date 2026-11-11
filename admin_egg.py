@@ -126,24 +126,22 @@ def render_new_item_tab(df_items, get_worksheet):
             if not it_name.strip():
                 st.error("Βάλτε είδος.")
             else:
-                # Καθαρισμός και μετατροπή (αλλαγή τυχόν κόμματος σε τελεία για ασφάλεια)
+               # Καθαρισμός και μετατροπή (αντικατάσταση κόμματος σε τελεία)
                 try:
                     it_price = float(it_price_str.strip().replace(',', '.'))
                 except ValueError:
                     st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 5.50).")
-                    return
+                return
 
                 try:
                     it_price_m2 = float(it_price_m2_str.strip().replace(',', '.'))
                 except ValueError:
                     st.error("❌ Η Τιμή Τετραγωνικού δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 12.00).")
-                    return
+                return
 
-                item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(pd.to_numeric(df_items['ItemID'], errors='coerce').max() or 0) + 1
-                ws_items.append_row([item_id, it_name.strip(), it_desc, it_price, it_price_m2])
-                st.cache_data.clear()
-                st.session_state['active_subview'] = 'menu'
-                st.rerun()
+item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(pd.to_numeric(df_items['ItemID'], errors='coerce').max() or 0) + 1
+# Στέλνουμε το καθαρό float `it_price` και `it_price_m2` απευθείας στο Google Sheet
+ws_items.append_row([item_id, it_name.strip(), it_desc, it_price, it_price_m2])
 
 # ---------------------------------------------------------
 # 4. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ (Με αυστηρό έλεγχο τελείας αντί κόμματος)

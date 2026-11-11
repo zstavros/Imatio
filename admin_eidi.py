@@ -29,8 +29,6 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
             st.session_state['active_subview'] = 'menu'
             st.rerun()
 
-    #st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Χαλιών (TrXalia)")
-    
     if df_xalia.empty:
         st.info("Δεν βρέθηκαν εγγραφές στα Χαλιά.")
         return
@@ -73,7 +71,6 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                             phones.append(clean_p)
                 cust_phone_map[cust_name] = " ".join(phones)
 
-    # --- ΔΗΜΙΟΥΡΓΙΑ LISTAS ΠΕΛΑΤΩΝ (ΜΟΝΟ ΟΝΟΜΑ & ΤΗΛΕΦΩΝΟ) ---
     search_options = ["-- Όλοι οι Πελάτες --"]
     unique_customers = set()
 
@@ -94,7 +91,6 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
         key="search_xalia_selectbox"
     )
 
-    # Φιλτράρισμα: Επιστρέφει ΟΛΕΣ τις εγγραφές του επιλεγμένου πελάτη
     if search_selection != "-- Όλοι οι Πελάτες --":
         def match_selected(row):
             c_name = str(row.get('CustomerName', '')).strip()
@@ -142,7 +138,7 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
             with col3:
                 new_place = st.text_input("Θέση", value=str(place_val), key=f"plc_{tr_id}_{idx}")
             with col4:
-                new_price = st.number_input("Τιμή (€)", value=price_val, step=1.0, key=f"prc_{tr_id}_{idx}")
+                new_price_str = st.text_input("Τιμή (€) (με τελεία)", value=str(price_val), key=f"prc_{tr_id}_{idx}")
             with col5:
                 curr_st = row.get('Status', STATUS_OPTIONS[0])
                 new_st = st.selectbox(
@@ -152,6 +148,12 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                 )
 
             if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_x_{tr_id}_{idx}", type="primary", use_container_width=True):
+                try:
+                    new_price = float(new_price_str.strip().replace(',', '.'))
+                except ValueError:
+                    st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 12.50).")
+                    return
+
                 try:
                     id_col = ws.col_values(1)
                     sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
@@ -229,7 +231,6 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                             phones.append(clean_p)
                 cust_phone_map[cust_name] = " ".join(phones)
 
-    # --- ΔΗΜΙΟΥΡΓΙΑ LISTAS ΠΕΛΑΤΩΝ (ΜΟΝΟ ΟΝΟΜΑ & ΤΗΛΕΦΩΝΟ) ---
     search_options = ["-- Όλοι οι Πελάτες --"]
     unique_customers = set()
 
@@ -250,7 +251,6 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
         key="search_items_selectbox"
     )
 
-    # Φιλτράρισμα: Επιστρέφει ΟΛΕΣ τις εγγραφές του επιλεγμένου πελάτη
     if search_selection != "-- Όλοι οι Πελάτες --":
         def match_selected(row):
             c_name = str(row.get('CustomerName', '')).strip()
@@ -293,7 +293,7 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
             with col1:
                 new_place = st.text_input("Ράφι / Θέση", value=str(place_val), key=f"plc_it_{tr_id}_{idx}")
             with col2:
-                new_price = st.number_input("Τιμή (€)", value=curr_pr, step=0.5, key=f"prc_it_{tr_id}_{idx}")
+                new_price_str = st.text_input("Τιμή (€) (με τελεία)", value=str(curr_pr), key=f"prc_it_{tr_id}_{idx}")
             with col3:
                 curr_st = str(status_val).strip()
                 new_st = st.selectbox(
@@ -303,6 +303,12 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                 )
 
             if st.button("💾 Αποθήκευση Αλλαγών", key=f"btn_save_it_{tr_id}_{idx}", type="primary", use_container_width=True):
+                try:
+                    new_price = float(new_price_str.strip().replace(',', '.'))
+                except ValueError:
+                    st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 12.50).")
+                    return
+
                 try:
                     id_col = [str(x) for x in ws.col_values(1)]
                     sheet_row = id_col.index(tr_id) + 1 if tr_id in id_col else idx + 2
@@ -364,13 +370,22 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
         sel_cust = st.selectbox("Πελάτης", cust_choices)
         sel_item = st.selectbox("Είδος", item_choices)
         shelf = st.text_input("Ράφι / Θέση")
-        price = st.number_input("Τιμή (€)", min_value=0.0, step=0.5)
+        
+        # Χρήση text_input για αποφυγή κόμματος και υποχρεωτική χρήση τελείας
+        price_str = st.text_input("Τιμή (€) (Χρησιμοποιήστε τελεία π.χ. 5.50)", value="0.0")
+        
         status = st.selectbox("Εργασία / Κατάσταση", ["Πλύσιμο", "Στεγνό Καθάρισμα", "Σιδέρωμα"])
 
     if submitted:
         if sel_cust == "-- Επιλέξτε Πελάτη --" or sel_item == "-- Επιλέξτε Είδος --":
             st.error("❌ Παρακαλώ συμπληρώστε Πελάτη και Είδος!")
         else:
+            try:
+                price = float(price_str.strip().replace(',', '.'))
+            except ValueError:
+                st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 5.50).")
+                return
+
             try:
                 ws = get_worksheet_fn("TrItems")
                 data = ws.get_all_records()

@@ -136,7 +136,6 @@ def parse_price(val):
     if not s_val:
         return 0.0
 
-    # Απλή και γρήγορη αντικατάσταση για τα κόμματα
     s_val = s_val.replace('.', '').replace(',', '.') if ',' in s_val and '.' in s_val else s_val.replace(',', '.')
 
     try:
@@ -144,7 +143,7 @@ def parse_price(val):
     except:
         return 0.0
 
-# --- FAST DATA LOADING (Χωρίς περιττές καθυστερήσεις) ---
+# --- FAST DATA LOADING ---
 def load_all_data():
     try:
         ws_c = get_worksheet("Customers")
@@ -402,9 +401,9 @@ elif st.session_state['active_subview'] == 'analytics':
     
     f_col1, f_col2 = st.columns(2)
     with f_col1:
-        date_from = st.date_input("Από Ημερομηνία:", value=st.session_state['date_from'])
+        date_from = st.date_input("Από Ημερομηνία (DD/MM/YYYY):", value=st.session_state['date_from'])
     with f_col2:
-        date_to = st.date_input("Έως Ημερομηνία:", value=st.session_state['date_to'])
+        date_to = st.date_input("Έως Ημερομηνία (DD/MM/YYYY):", value=st.session_state['date_to'])
 
     t_from = pd.to_datetime(date_from)
     t_to = pd.to_datetime(date_to) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
@@ -414,9 +413,9 @@ elif st.session_state['active_subview'] == 'analytics':
             return pd.DataFrame()
         df_filtered = df.copy()
         
-        # ΑΛΛΑΓΗ ΕΔΩ: Φιλτράρισμα βάσει DateOut (Ημερομηνία Παράδοσης) αντί για DateIn
+        # Φιλτράρισμα βάσει DateOut με dayfirst=True για αποφυγή μπερδέματος ημερας/μηνα
         if 'DateOut' in df_filtered.columns:
-            df_filtered['DateOut'] = pd.to_datetime(df_filtered['DateOut'], errors='coerce')
+            df_filtered['DateOut'] = pd.to_datetime(df_filtered['DateOut'], errors='coerce', dayfirst=True)
             df_filtered = df_filtered[(df_filtered['DateOut'] >= t_from) & (df_filtered['DateOut'] <= t_to)]
 
         if 'Status' in df_filtered.columns:

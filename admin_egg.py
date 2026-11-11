@@ -39,7 +39,7 @@ def render_new_customer_tab(df_customers, get_worksheet):
                 st.rerun()
 
 # ---------------------------------------------------------
-# 2. TROPOPOISI PELATI
+# 2. ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ
 # ---------------------------------------------------------
 def render_edit_customer_tab(df_customers, get_worksheet):
     ws_customers = get_worksheet("Customers")
@@ -113,10 +113,10 @@ def render_new_item_tab(df_items, get_worksheet):
         with col_save:
             submitted = st.form_submit_button("💾 SAVE", type="primary", use_container_width=True)
 
-        st.markdown("### ➕ Neo Eidos Katalogoy")
+        st.markdown("### ➕ Νέο Είδος Καταλόγου")
         
         it_name = st.text_input("ΠΕΡΙΓΡΑΦΗ ΕΙΔΟΥΣ")
-        it_desc = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ ", ["Rouxa", "Xalia"])
+        it_desc = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ", ["Ρούχα", "Χαλιά"])
         it_price = st.number_input("ΤΙΜΗ (€)", min_value=0.0, step=0.5)
         it_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", min_value=0.0, step=0.5)
         
@@ -158,7 +158,7 @@ def render_edit_item_tab(df_items, get_worksheet):
     item_map = {}
     for _, r in valid_items.iterrows():
         name_val = str(r[col_name_key]).strip()
-        cat_val = str(r[col_desc_key]).strip() if col_desc_key and pd.notnull(r[col_desc_key]) else "Rouxa"
+        cat_val = str(r[col_desc_key]).strip() if col_desc_key and pd.notnull(r[col_desc_key]) else "Ρούχα"
         display_str = f"{name_val} ({cat_val})"
         item_options.append(display_str)
         item_map[display_str] = name_val
@@ -170,15 +170,21 @@ def render_edit_item_tab(df_items, get_worksheet):
         row_data = valid_items[valid_items[col_name_key].astype(str).str.strip() == real_name].iloc[0]
         curr_price = float(row_data.get('Price', 0.0) or 0.0) if 'Price' in df_items.columns else 0.0
         curr_price_m2 = float(row_data.get('Price m2', row_data.get('Price_m2', 0.0)) or 0.0)
-        curr_cat = str(row_data.get(col_desc_key, "Rouxa")) if col_desc_key else "Rouxa"
+        curr_cat = str(row_data.get(col_desc_key, "Ρούχα")) if col_desc_key else "Ρούχα"
 
         st.markdown("<hr style='margin: 8px 0px;'>", unsafe_allow_html=True)
         st.write(f"✏️ Επεξεργασία: **{real_name}**")
         
         new_it_name = st.text_input("ΠΕΡΙΓΡΑΦΗ ΕΙΔΟΥΣ", value=real_name, key=f"ei_name_{real_name}")
         
-        cat_index = 0 if curr_cat.strip().lower() == "rouxa" else 1 if curr_cat.strip().lower() == "xalia" else 0
-        new_cat = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ", ["Rouxa", "Xalia"], index=cat_index, key=f"ei_cat_{real_name}")
+        # Υποστήριξη και για παλαιότερες αγγλικές τιμές (Rouxa/Xalia) ώστε να μην πετάει λάθος
+        norm_cat = curr_cat.strip().lower()
+        if norm_cat in ["xalia", "χαλιά"]:
+            cat_index = 1
+        else:
+            cat_index = 0
+            
+        new_cat = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ", ["Ρούχα", "Χαλιά"], index=cat_index, key=f"ei_cat_{real_name}")
         
         new_price = st.number_input("ΤΙΜΗ (€)", value=curr_price, min_value=0.0, step=0.5, key=f"ei_price_{real_name}")
         new_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", value=curr_price_m2, min_value=0.0, step=0.5, key=f"ei_pricem2_{real_name}")

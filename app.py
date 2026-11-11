@@ -285,8 +285,8 @@ if not st.session_state['admin_logged_in']:
                 results.append({
                     #'Κατηγορία': '🧶 Χαλί',
                     'Είδος': r.get('ItName', '-'),
-                    'Ημερομηνία Παραλαβής': r.get('DateIn', '-'),
-                    'Συνολική Τιμή': parse_price(r.get('TotalPrice', 0.0))
+                    'Ημ. Παραλαβής': r.get('DateIn', '-'),
+                    'Αξία €': parse_price(r.get('TotalPrice', 0.0))
                 })
 
         if not ready_items.empty:
@@ -295,8 +295,8 @@ if not st.session_state['admin_logged_in']:
                 results.append({
                     #'Κατηγορία': '👔 Ρούχο / Είδος',
                     'Είδος': r.get('ItName', '-'),
-                    'Ημερομηνία Παραλαβής': r.get('DateIn', '-'),
-                    'Συνολική Τιμή': parse_price(r.get('TotalPrice', 0.0))
+                    'Ημ. Παραλαβής': r.get('DateIn', '-'),
+                    'Αξία €': parse_price(r.get('TotalPrice', 0.0))
                 })
 
         st.markdown("<br>", unsafe_allow_html=True)

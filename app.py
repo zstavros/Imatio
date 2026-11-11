@@ -256,7 +256,11 @@ if st.session_state['active_subview'] == 'menu':
         if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ & ΠΑΡΑΔΟΣΗ ΧΑΛΙΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'edit_xalia'
             st.rerun()
-
+        
+        if st.button("✅ ΠΑΡΑΔΟΜΕΝΑ ΧΑΛΙΑ", use_container_width=True):
+            st.session_state['active_subview'] = 'delivered_xalia'
+            st.rerun()
+    
     with col2:
         st.markdown("##### 👕 Τμήμα Ρούχων")
         if st.button("👕 ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ", use_container_width=True):
@@ -266,7 +270,11 @@ if st.session_state['active_subview'] == 'menu':
         if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ & ΠΑΡΑΔΟΣΗ ΡΟΥΧΩΝ", use_container_width=True):
             st.session_state['active_subview'] = 'edit_items'
             st.rerun()
-
+        
+        if st.button("✅ ΠΑΡΑΔΟΜΕΝΑ ΡΟΥΧΑ", use_container_width=True):
+            st.session_state['active_subview'] = 'delivered_items'
+            st.rerun()
+    
     st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
 
     col_c1, col_c2 = st.columns(2, gap="large")

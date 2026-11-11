@@ -21,7 +21,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia) ---
+# --- 1. ΤΡΟΠΟΠΟΙΗΣΗ ΧΑΛΙΩΝ (TrXalia - Ενεργές) ---
 def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
     col_nav, col_space = st.columns([1, 2])
     with col_nav:
@@ -171,7 +171,111 @@ def render_edit_xalia_tab(df_xalia, df_customers, df_items, get_worksheet_fn):
                     st.error(f"❌ Σφάλμα: {e}")
 
 
-# --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrItems) ---
+# --- 1Β. ΠΑΡΑΔΟΜΕΝΑ ΧΑΛΙΑ (Με ίδια οθόνη & φίλτρα, μόνο Παραδομένα) ---
+def render_delivered_xalia_tab(df_xalia, df_customers, get_worksheet_fn):
+    col_nav, col_space = st.columns([1, 2])
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_del_xalia", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
+
+    if df_xalia.empty:
+        st.info("Δεν βρέθηκαν εγγραφές στα Χαλιά.")
+        return
+
+    df_delivered = df_xalia[df_xalia['Status'].astype(str).str.strip().str.lower() == 'παραδόθηκε'].copy()
+
+    if df_delivered.empty:
+        st.info("Δεν υπάρχουν παραδομένα χαλιά.")
+        return
+
+    cust_phone_map = {}
+    if not df_customers.empty:
+        df_cust_copy = df_customers.copy()
+        df_cust_copy.columns = df_cust_copy.columns.str.strip()
+        c_name_col = next((c for c in ['CuName', 'Name', 'CustomerName'] if c in df_cust_copy.columns), None)
+        
+        if c_name_col:
+            for _, c_row in df_cust_copy.iterrows():
+                cust_name = str(c_row[c_name_col]).strip()
+                phones = []
+                for p_col in ['CuMobile', 'CuPhone', 'Mobile', 'Phone', 'TEL', 'Τηλέφωνο']:
+                    if p_col in df_cust_copy.columns and pd.notnull(c_row[p_col]):
+                        clean_p = str(c_row[p_col]).replace(" ", "").replace("-", "").replace("+", "").replace("(", "").replace(")", "").strip()
+                        if clean_p:
+                            phones.append(clean_p)
+                cust_phone_map[cust_name] = " ".join(phones)
+
+    search_options = ["-- Όλοι οι Πελάτες --"]
+    unique_customers = set()
+
+    for _, row in df_delivered.iterrows():
+        c_name = str(row.get('CustomerName', '')).strip()
+        phone_show = cust_phone_map.get(c_name, '').strip()
+        
+        if c_name:
+            display_str = f"{c_name} ({phone_show})" if phone_show else c_name
+            unique_customers.add(display_str)
+
+    search_options.extend(sorted(list(unique_customers)))
+
+    search_selection = st.selectbox(
+        "🔎 Αναζήτηση Πελάτη (Πληκτρολογήστε όνομα ή τηλέφωνο):",
+        options=search_options,
+        index=0,
+        key="search_del_xalia_selectbox"
+    )
+
+    if search_selection != "-- Όλοι οι Πελάτες --":
+        def match_selected(row):
+            c_name = str(row.get('CustomerName', '')).strip()
+            phone_show = cust_phone_map.get(c_name, '').strip()
+            display_str = f"{c_name} ({phone_show})" if phone_show else c_name
+            return display_str == search_selection
+
+        df_filtered = df_delivered[df_delivered.apply(match_selected, axis=1)]
+    else:
+        df_filtered = df_delivered
+
+    if df_filtered.empty:
+        st.warning("⚠️ Δεν βρέθηκαν παραδομένες εγγραφές.")
+        return
+
+    st.write(f"Βρέθηκαν **{len(df_filtered)}** παραδομένες εγγραφές χαλιών:")
+    ws = get_worksheet_fn("TrXalia")
+
+    for idx, row in df_filtered.iterrows():
+        tr_id = str(row['TransactionID'])
+        c_name = row.get('CustomerName', 'Άγνωστος')
+        code_val = str(row.get('Code', '-'))
+        place_val = row.get('Place', row.get('Shelf', '-'))
+        status_val = row.get('Status', '-')
+        item_name = row.get('ItName', '')
+        phone_show = cust_phone_map.get(c_name, '-')
+        date_out = row.get('DateOut', '-')
+        
+        try:
+            price_val = float(row.get('TotalPrice', 0.0))
+        except:
+            price_val = 0.0
+
+        expander_label = f"✅ ID: #{tr_id} 🔹 {c_name} ({phone_show}) 🔹 Barcode: {code_val} 🔹 Τιμή: {price_val}€ 🔹 Παράδοση: {date_out} 🔹 {item_name}"
+
+        with st.expander(expander_label):
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                st.text_input("Μήκος (m)", value=str(row.get('Length', '')), disabled=True, key=f"d_len_{tr_id}_{idx}")
+            with col2:
+                st.text_input("Ύψος (m)", value=str(row.get('Height', '')), disabled=True, key=f"d_hei_{tr_id}_{idx}")
+            with col3:
+                st.text_input("Θέση", value=str(place_val), disabled=True, key=f"d_plc_{tr_id}_{idx}")
+            with col4:
+                st.number_input("Τιμή (€)", value=price_val, disabled=True, key=f"d_prc_{tr_id}_{idx}")
+            with col5:
+                st.text_input("Κατάσταση", value=str(status_val), disabled=True, key=f"d_st_{tr_id}_{idx}")
+
+
+# --- 2. ΤΡΟΠΟΠΟΙΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ (TrItems - Ενεργές) ---
 def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
     col_nav, col_space = st.columns([1, 2])
     with col_nav:
@@ -179,8 +283,6 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
             st.session_state['active_subview'] = 'menu'
             st.rerun()
 
-   # st.markdown("### 🔍 Αναζήτηση & Τροποποίηση Ρούχων / Ειδών (TrItems)")
-    
     if df_items_trans is None or df_items_trans.empty:
         try:
             ws_ti = get_worksheet_fn("TrItems")
@@ -319,6 +421,121 @@ def render_edit_items_tab(df_items_trans, df_customers, get_worksheet_fn):
                     st.error(f"❌ Σφάλμα: {e}")
 
 
+# --- 2Β. ΠΑΡΑΔΟΜΕΝΑ ΡΟΥΧΑ (Με ίδια οθόνη & φίλτρα, μόνο Παραδομένα) ---
+def render_delivered_items_tab(df_items_trans, df_customers, get_worksheet_fn):
+    col_nav, col_space = st.columns([1, 2])
+    with col_nav:
+        if st.button("🏠 ΑΡΧΙΚΗ", key="back_home_del_items", use_container_width=True):
+            st.session_state['active_subview'] = 'menu'
+            st.rerun()
+
+    if df_items_trans is None or df_items_trans.empty:
+        try:
+            ws_ti = get_worksheet_fn("TrItems")
+            data_ti = ws_ti.get_all_records()
+            df_items_trans = pd.DataFrame(data_ti) if data_ti else pd.DataFrame()
+            st.session_state['df_tr_items'] = df_items_trans
+        except Exception as e:
+            st.error(f"Σφάλμα φόρτωσης TrItems: {e}")
+            return
+
+    if df_items_trans.empty:
+        st.info("Δεν βρέθηκαν εγγραφές στα Ρούχα.")
+        return
+
+    df_items_trans.columns = df_items_trans.columns.str.strip()
+
+    if 'Status' in df_items_trans.columns:
+        df_delivered = df_items_trans[
+            df_items_trans['Status'].astype(str).str.strip().str.lower() == 'παραδόθηκε'
+        ].copy()
+    else:
+        df_delivered = pd.DataFrame()
+
+    if df_delivered.empty:
+        st.info("Δεν υπάρχουν παραδομένα ρούχα.")
+        return
+
+    cust_phone_map = {}
+    if not df_customers.empty:
+        df_cust_copy = df_customers.copy()
+        df_cust_copy.columns = df_cust_copy.columns.str.strip()
+        c_name_col = next((c for c in ['CuName', 'Name', 'CustomerName'] if c in df_cust_copy.columns), None)
+        
+        if c_name_col:
+            for _, c_row in df_cust_copy.iterrows():
+                cust_name = str(c_row[c_name_col]).strip()
+                phones = []
+                for p_col in ['CuMobile', 'CuPhone', 'Mobile', 'Phone', 'TEL', 'Τηλέφωνο']:
+                    if p_col in df_cust_copy.columns and pd.notnull(c_row[p_col]):
+                        clean_p = str(c_row[p_col]).replace(" ", "").replace("-", "").replace("+", "").replace("(", "").replace(")", "").strip()
+                        if clean_p: 
+                            phones.append(clean_p)
+                cust_phone_map[cust_name] = " ".join(phones)
+
+    search_options = ["-- Όλοι οι Πελάτες --"]
+    unique_customers = set()
+
+    for _, row in df_delivered.iterrows():
+        c_name = str(row.get('CustomerName', '')).strip()
+        phone_show = cust_phone_map.get(c_name, '').strip()
+        
+        if c_name:
+            display_str = f"{c_name} ({phone_show})" if phone_show else c_name
+            unique_customers.add(display_str)
+
+    search_options.extend(sorted(list(unique_customers)))
+
+    search_selection = st.selectbox(
+        "🔎 Αναζήτηση Πελάτη (Πληκτρολογήστε όνομα ή τηλέφωνο):",
+        options=search_options,
+        index=0,
+        key="search_del_items_selectbox"
+    )
+
+    if search_selection != "-- Όλοι οι Πελάτες --":
+        def match_selected(row):
+            c_name = str(row.get('CustomerName', '')).strip()
+            phone_show = cust_phone_map.get(c_name, '').strip()
+            display_str = f"{c_name} ({phone_show})" if phone_show else c_name
+            return display_str == search_selection
+
+        df_filtered = df_delivered[df_delivered.apply(match_selected, axis=1)]
+    else:
+        df_filtered = df_delivered
+
+    if df_filtered.empty:
+        st.warning("⚠️ Δεν βρέθηκαν παραδομένες εγγραφές.")
+        return
+
+    st.write(f"Βρέθηκαν **{len(df_filtered)}** παραδομένες εγγραφές ρούχων:")
+
+    for idx, row in df_filtered.iterrows():
+        tr_id = str(row.get('TransactionID', ''))
+        c_name = row.get('CustomerName', 'Άγνωστος')
+        phone_show = cust_phone_map.get(c_name, '-')
+        place_val = row.get('Place', row.get('Shelf', '-'))
+        status_val = row.get('Status', '-')
+        item_name = row.get('ItName', '')
+        date_out = row.get('DateOut', '-')
+        
+        try:
+            curr_pr = float(row.get('TotalPrice', 0.0))
+        except:
+            curr_pr = 0.0
+
+        expander_label = f"✅ ID: #{tr_id} 🔹 {c_name} ({phone_show}) 🔹 Θέση: {place_val} 🔹 Τιμή: {curr_pr}€ 🔹 Παράδοση: {date_out} 🔹 {item_name}"
+
+        with st.expander(expander_label):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.text_input("Ράφι / Θέση", value=str(place_val), disabled=True, key=f"d_plc_it_{tr_id}_{idx}")
+            with col2:
+                st.number_input("Τιμή (€)", value=curr_pr, disabled=True, key=f"d_prc_it_{tr_id}_{idx}")
+            with col3:
+                st.text_input("Κατάσταση", value=str(status_val), disabled=True, key=f"d_st_it_{tr_id}_{idx}")
+
+
 # --- 3. ΚΑΤΑΧΩΡΗΣΗ ΡΟΥΧΩΝ / ΕΙΔΩΝ ---
 def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
     if df_customers.empty:
@@ -376,8 +593,14 @@ def render_item_loading_tab(df_customers, df_items, get_worksheet_fn):
                     if not ids.empty: next_id = int(ids.max()) + 1
 
                 row_data = [
-                    next_id, sel_cust, sel_item, shelf,
-                    datetime.now().strftime("%Y-%m-%d %H:%M"), "", price, status
+                    next_id, 
+                    sel_cust, 
+                    sel_item, 
+                    shelf, 
+                    datetime.now().strftime("%Y-%m-%d %H:%M"), 
+                    "", 
+                    price, 
+                    status
                 ]
                 
                 ws.append_row(row_data)

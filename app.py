@@ -12,31 +12,23 @@ import admin_egg
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
-# --- ULTRA STRICT CSS & JS TO KILL ALL ANDROID/DESKTOP BADGES ---
+# --- ULTRA STRICT CSS & BADGE BLOCKER (ΜΑΥΡΗ ΓΡΑΜΜΗ / ΚΑΛΥΜΜΑ ΚΑΤΩ ΔΕΞΙΑ) ---
 st.markdown("""
     <style>
         header {visibility: hidden !important; display: none !important;}
         #MainMenu {visibility: hidden !important; display: none !important;}
         footer {visibility: hidden !important; display: none !important;}
         
-        /* Καθολικό κλείδωμα και απόκρυψη για οποιοδήποτε Streamlit Badge / Widget */
-        .viewerBadge_container__1s5nd,
-        .viewerBadge_link__1S137,
-        div[class*="viewerBadge"],
-        div[data-testid="stStatusWidget"],
-        .stAppViewerBadge,
-        div[class*="stAppViewerBadge"],
-        #stDecoration,
-        iframe[src*="streamlit"],
-        div:has(> iframe[src*="streamlit"]) {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            height: 0 !important;
-            width: 0 !important;
+        /* ΜΑΥΡΗ ΓΡΑΜΜΗ / ΚΑΛΥΜΜΑ ΓΙΑ ΤΟ BADGE ΚΑΤΩ ΔΕΞΙΑ */
+        .badge-blocker {
+            position: fixed !important;
+            bottom: 0 !important;
+            right: 0 !important;
+            width: 140px !important;
+            height: 60px !important;
+            background-color: #0e1117 !important; /* Ταιριάζει ακριβώς με το σκούρο φόντο του Streamlit */
+            z-index: 999999999 !important;
             pointer-events: none !important;
-            position: absolute !important;
-            z-index: -999999 !important;
         }
 
         .block-container {
@@ -121,30 +113,7 @@ st.markdown("""
             justify-content: center !important;
         }
     </style>
-    <script>
-        function removeBadgesAggressive() {
-            try {
-                const targetDocs = [window, window.parent, window.top];
-                targetDocs.forEach(win => {
-                    if (!win || !win.document) return;
-                    const doc = win.document;
-                    // Αναζήτηση και άμεση διαγραφή στοιχείων badge/widget
-                    const selectors = ['iframe', '[class*="viewerBadge"]', '[data-testid="stStatusWidget"]', 'deploys-widget', '[class*="stAppViewerBadge"]'];
-                    selectors.forEach(sel => {
-                        doc.querySelectorAll(sel).forEach(el => {
-                            // Αποφυγή διαγραφής βασικών στοιχείων της εφαρμογής
-                            if (el.src && (el.src.includes('streamlit') || el.src.includes('badge'))) {
-                                el.remove();
-                            } else if (!el.src) {
-                                el.remove();
-                            }
-                        });
-                    });
-                });
-            } catch(e) {}
-        }
-        setInterval(removeBadgesAggressive, 100);
-    </script>
+    <div class="badge-blocker"></div>
 """, unsafe_allow_html=True)
 
 # --- GOOGLE SHEETS CONNECTION ---

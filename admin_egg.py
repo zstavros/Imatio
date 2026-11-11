@@ -97,7 +97,7 @@ def render_edit_customer_tab(df_customers, get_worksheet):
                 st.error(f"❌ Sfalma: {e}")
 
 # ---------------------------------------------------------
-# 3. NEO EIDOS KATALOGOY (Με αυστηρό έλεγχο τελείας αντί κόμματος)
+# 3. NEO EIDOS KATALOGOY
 # ---------------------------------------------------------
 def render_new_item_tab(df_items, get_worksheet):
     ws_items = get_worksheet("Items")
@@ -118,33 +118,33 @@ def render_new_item_tab(df_items, get_worksheet):
         it_name = st.text_input("ΠΕΡΙΓΡΑΦΗ ΕΙΔΟΥΣ")
         it_desc = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ ", ["Rouxa", "Xalia"])
         
-        # Χρήση text_input για να ελέγξουμε την αποφυγή κόμματος και τη χρήση τελείας
-        it_price_str = st.text_input("ΤΙΜΗ (€) (Χρησιμοποιήστε τελεία π.χ. 5.50)", value="0.0")
-        it_price_m2_str = st.text_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²) (Χρησιμοποιήστε τελεία π.χ. 12.00)", value="0.0")
+        it_price_str = st.text_input("ΤΙΜΗ (€) (Χρησιμοποιήστε τελεία ή κόμμα)", value="0.0")
+        it_price_m2_str = st.text_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²) (Χρησιμοποιήστε τελεία ή κόμμα)", value="0.0")
         
         if submitted:
             if not it_name.strip():
                 st.error("Βάλτε είδος.")
             else:
-               # Καθαρισμός και μετατροπή (αντικατάσταση κόμματος σε τελεία)
                 try:
                     it_price = float(it_price_str.strip().replace(',', '.'))
                 except ValueError:
-                    st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 5.50).")
-                return
+                    st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός.")
+                    return
 
                 try:
                     it_price_m2 = float(it_price_m2_str.strip().replace(',', '.'))
                 except ValueError:
-                    st.error("❌ Η Τιμή Τετραγωνικού δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 12.00).")
-                return
+                    st.error("❌ Η Τιμή Τετραγωνικού δεν είναι έγκυρος αριθμός.")
+                    return
 
-item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(pd.to_numeric(df_items['ItemID'], errors='coerce').max() or 0) + 1
-# Στέλνουμε το καθαρό float `it_price` και `it_price_m2` απευθείας στο Google Sheet
-ws_items.append_row([item_id, it_name.strip(), it_desc, it_price, it_price_m2])
+                item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(pd.to_numeric(df_items['ItemID'], errors='coerce').max() or 0) + 1
+                ws_items.append_row([item_id, it_name.strip(), it_desc, it_price, it_price_m2])
+                st.cache_data.clear()
+                st.session_state['active_subview'] = 'menu'
+                st.rerun()
 
 # ---------------------------------------------------------
-# 4. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ (Με αυστηρό έλεγχο τελείας αντί κόμματος)
+# 4. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ
 # ---------------------------------------------------------
 def render_edit_item_tab(df_items, get_worksheet):
     ws_items = get_worksheet("Items")
@@ -193,21 +193,20 @@ def render_edit_item_tab(df_items, get_worksheet):
         cat_index = 0 if curr_cat.strip().lower() == "rouxa" else 1 if curr_cat.strip().lower() == "xalia" else 0
         new_cat = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ", ["Rouxa", "Xalia"], index=cat_index, key=f"ei_cat_{real_name}")
         
-        # Χρήση text_input για αποφυγή κόμματος και υποχρεωτική χρήση τελείας
-        new_price_str = st.text_input("ΤΙΜΗ (€) (Χρησιμοποιήστε τελεία π.χ. 5.50)", value=str(curr_price), key=f"ei_price_{real_name}")
-        new_price_m2_str = st.text_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²) (Χρησιμοποιήστε τελεία π.χ. 12.00)", value=str(curr_price_m2), key=f"ei_pricem2_{real_name}")
+        new_price_str = st.text_input("ΤΙΜΗ (€)", value=str(curr_price), key=f"ei_price_{real_name}")
+        new_price_m2_str = st.text_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", value=str(curr_price_m2), key=f"ei_pricem2_{real_name}")
         
         if btn_save_item:
             try:
                 new_price = float(new_price_str.strip().replace(',', '.'))
             except ValueError:
-                st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 5.50).")
+                st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός.")
                 return
 
             try:
                 new_price_m2 = float(new_price_m2_str.strip().replace(',', '.'))
             except ValueError:
-                st.error("❌ Η Τιμή Τετραγωνικού δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 12.00).")
+                st.error("❌ Η Τιμή Τετραγωνικού δεν είναι έγκυρος αριθμός.")
                 return
 
             try:

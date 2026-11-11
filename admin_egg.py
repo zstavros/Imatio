@@ -18,8 +18,6 @@ def render_new_customer_tab(df_customers, get_worksheet):
         with col_save:
             submitted = st.form_submit_button("💾 SAVE", type="primary", use_container_width=True)
 
-        #st.markdown("### ➕ Nea Eggrafi Pelati")
-        
         n_name = st.text_input("ΕΠΩΝΥΜΙΑ")
         n_mobile1 = st.text_input("ΤΗΛΕΦΩΝΟ-1")
         n_mobile2 = st.text_input("ΤΗΛΕΦΩΝΟ-2")
@@ -57,10 +55,8 @@ def render_edit_customer_tab(df_customers, get_worksheet):
     with col_save:
         btn_save = st.button("💾 SAVE", key="btn_save_edit_cust", type="primary", use_container_width=True)
 
-   # st.markdown("### ✏️ Tropopoiisi Stoixeiwn Pelati")
-
     if df_customers.empty or name_col not in df_customers.columns:
-        st.info("Den vrethikan apothikeymenoi pelates.")
+        st.info("Δεν βρέθηκαν αποθηκευμένοι πελάτες.")
         return
 
     valid_customers = df_customers[df_customers[name_col].astype(str).str.strip() != ""]
@@ -77,7 +73,7 @@ def render_edit_customer_tab(df_customers, get_worksheet):
         
         e_name = st.text_input("ΕΠΩΝΥΜΙΑ", value=str(c_row_data.get('CuName', c_row_data.get('Name', ''))), key=f"ec_name_{c_name_val}")
         e_mobile1 = st.text_input("ΤΗΛΕΦΩΝΟ-1", value=str(c_row_data.get('CuPhone', '')), key=f"ec_mob1_{c_name_val}")
-        e_mobile2 = st.text_input("ΤΗΕΛΦΩΝΟ-2", value=str(c_row_data.get('CuMobile', '')), key=f"ec_mob2_{c_name_val}")
+        e_mobile2 = st.text_input("ΤΗΛΕΦΩΝΟ-2", value=str(c_row_data.get('CuMobile', '')), key=f"ec_mob2_{c_name_val}")
         e_address = st.text_input("ΔΙΕΥΘΥΝΣΗ", value=str(c_row_data.get('CuAddress', '')), key=f"ec_addr_{c_name_val}")
         e_city = st.text_input("ΠΟΛΗ", value=str(c_row_data.get('CuCity', '')), key=f"ec_city_{c_name_val}")
         e_email = st.text_input("EMAIL", value=str(c_row_data.get('CuEmail', '')), key=f"ec_email_{c_name_val}")
@@ -101,7 +97,7 @@ def render_edit_customer_tab(df_customers, get_worksheet):
                 st.error(f"❌ Sfalma: {e}")
 
 # ---------------------------------------------------------
-# 3. NEO EIDOS KATALOGOY
+# 3. NEO EIDOS KATALOGOY (Με αυστηρό έλεγχο τελείας αντί κόμματος)
 # ---------------------------------------------------------
 def render_new_item_tab(df_items, get_worksheet):
     ws_items = get_worksheet("Items")
@@ -121,13 +117,28 @@ def render_new_item_tab(df_items, get_worksheet):
         
         it_name = st.text_input("ΠΕΡΙΓΡΑΦΗ ΕΙΔΟΥΣ")
         it_desc = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ ", ["Rouxa", "Xalia"])
-        it_price = st.number_input("ΤΙΜΗ (€)", min_value=0.0, step=0.5)
-        it_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", min_value=0.0, step=0.5)
+        
+        # Χρήση text_input για να ελέγξουμε την αποφυγή κόμματος και τη χρήση τελείας
+        it_price_str = st.text_input("ΤΙΜΗ (€) (Χρησιμοποιήστε τελεία π.χ. 5.50)", value="0.0")
+        it_price_m2_str = st.text_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²) (Χρησιμοποιήστε τελεία π.χ. 12.00)", value="0.0")
         
         if submitted:
             if not it_name.strip():
                 st.error("Βάλτε είδος.")
             else:
+                # Καθαρισμός και μετατροπή (αλλαγή τυχόν κόμματος σε τελεία για ασφάλεια)
+                try:
+                    it_price = float(it_price_str.strip().replace(',', '.'))
+                except ValueError:
+                    st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 5.50).")
+                    return
+
+                try:
+                    it_price_m2 = float(it_price_m2_str.strip().replace(',', '.'))
+                except ValueError:
+                    st.error("❌ Η Τιμή Τετραγωνικού δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 12.00).")
+                    return
+
                 item_id = 1 if df_items.empty or 'ItemID' not in df_items.columns else int(pd.to_numeric(df_items['ItemID'], errors='coerce').max() or 0) + 1
                 ws_items.append_row([item_id, it_name.strip(), it_desc, it_price, it_price_m2])
                 st.cache_data.clear()
@@ -135,7 +146,7 @@ def render_new_item_tab(df_items, get_worksheet):
                 st.rerun()
 
 # ---------------------------------------------------------
-# 4. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ
+# 4. ΤΡΟΠΟΠΟΙΗΣΗ ΚΑΤΑΛΟΓΟΥ (Με αυστηρό έλεγχο τελείας αντί κόμματος)
 # ---------------------------------------------------------
 def render_edit_item_tab(df_items, get_worksheet):
     ws_items = get_worksheet("Items")
@@ -151,8 +162,6 @@ def render_edit_item_tab(df_items, get_worksheet):
 
     with col_save:
         btn_save_item = st.button("💾 SAVE", key="btn_save_edit_item", type="primary", use_container_width=True)
-
-    #st.markdown("### ✏️ Tropopoiisi Katalogoy")
 
     if df_items.empty or col_name_key not in df_items.columns:
         st.info("Δεν υπάρχουν καταχωρημένα είδη.")
@@ -186,10 +195,23 @@ def render_edit_item_tab(df_items, get_worksheet):
         cat_index = 0 if curr_cat.strip().lower() == "rouxa" else 1 if curr_cat.strip().lower() == "xalia" else 0
         new_cat = st.selectbox("ΚΑΤΗΓΟΡΙΑ ΕΙΔΟΥΣ", ["Rouxa", "Xalia"], index=cat_index, key=f"ei_cat_{real_name}")
         
-        new_price = st.number_input("ΤΙΜΗ (€)", value=curr_price, min_value=0.0, step=0.5, key=f"ei_price_{real_name}")
-        new_price_m2 = st.number_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²)", value=curr_price_m2, min_value=0.0, step=0.5, key=f"ei_pricem2_{real_name}")
+        # Χρήση text_input για αποφυγή κόμματος και υποχρεωτική χρήση τελείας
+        new_price_str = st.text_input("ΤΙΜΗ (€) (Χρησιμοποιήστε τελεία π.χ. 5.50)", value=str(curr_price), key=f"ei_price_{real_name}")
+        new_price_m2_str = st.text_input("ΤΙΜΗ ΤΕΤΡΑΓΩΝΙΚΟΥ (€/m²) (Χρησιμοποιήστε τελεία π.χ. 12.00)", value=str(curr_price_m2), key=f"ei_pricem2_{real_name}")
         
         if btn_save_item:
+            try:
+                new_price = float(new_price_str.strip().replace(',', '.'))
+            except ValueError:
+                st.error("❌ Η Τιμή δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 5.50).")
+                return
+
+            try:
+                new_price_m2 = float(new_price_m2_str.strip().replace(',', '.'))
+            except ValueError:
+                st.error("❌ Η Τιμή Τετραγωνικού δεν είναι έγκυρος αριθμός. Χρησιμοποιήστε τελεία (π.χ. 12.00).")
+                return
+
             try:
                 cell = ws_items.find(real_name)
                 ws_items.update_cell(cell.row, 2, new_it_name)

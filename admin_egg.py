@@ -165,7 +165,7 @@ def render_edit_item_tab(df_items, get_worksheet):
 
     selected_display = st.selectbox("Anazitisi Eidous", item_options, label_visibility="collapsed", key="search_item_selectbox_top")
 
-    if selected_display and selected_display != "-- Epilexte eidos --":
+    if selected_display and selected_display != "-- Επιλέξτε είδος --":
         real_name = item_map[selected_display]
         row_data = valid_items[valid_items[col_name_key].astype(str).str.strip() == real_name].iloc[0]
         curr_price = float(row_data.get('Price', 0.0) or 0.0) if 'Price' in df_items.columns else 0.0

@@ -12,26 +12,31 @@ import admin_egg
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
-# --- STRICT CUSTOM STYLING & FULL MOBILE/DESKTOP BADGE HIDE ---
+# --- ULTRA STRICT CSS & JS TO KILL ALL ANDROID/DESKTOP BADGES ---
 st.markdown("""
     <style>
         header {visibility: hidden !important; display: none !important;}
         #MainMenu {visibility: hidden !important; display: none !important;}
         footer {visibility: hidden !important; display: none !important;}
         
+        /* Καθολικό κλείδωμα και απόκρυψη για οποιοδήποτε Streamlit Badge / Widget */
         .viewerBadge_container__1s5nd,
         .viewerBadge_link__1S137,
         div[class*="viewerBadge"],
         div[data-testid="stStatusWidget"],
         .stAppViewerBadge,
         div[class*="stAppViewerBadge"],
-        #stDecoration {
+        #stDecoration,
+        iframe[src*="streamlit"],
+        div:has(> iframe[src*="streamlit"]) {
             display: none !important;
             visibility: hidden !important;
             opacity: 0 !important;
             height: 0 !important;
             width: 0 !important;
             pointer-events: none !important;
+            position: absolute !important;
+            z-index: -999999 !important;
         }
 
         .block-container {
@@ -103,7 +108,7 @@ st.markdown("""
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* ΚΕΝΤΡΑΡΙΣΜΑ ΟΛΩΝ ΤΩΝ ΣΤΗΛΩΝ ΣΤΟΝ ΠΙΝΑΚΑ ΠΕΛΑΤΗ (Κεφαλίδες & Δεδομένα) */
+        /* ΚΕΝΤΡΑΡΙΣΜΑ ΟΛΩΝ ΤΩΝ ΣΤΗΛΩΝ ΣΤΟΝ ΠΙΝΑΚΑ ΠΕΛΑΤΗ */
         div[data-testid="stDataFrame"] th {
             text-align: center !important;
             justify-content: center !important;
@@ -117,20 +122,28 @@ st.markdown("""
         }
     </style>
     <script>
-        function purgeBadgesAndWatermarks() {
+        function removeBadgesAggressive() {
             try {
-                const doc = window.parent.document;
-                const elements = doc.querySelectorAll('iframe, footer, [class*="viewerBadge"], [data-testid="stStatusWidget"], deploys-widget, div[class*="stAppViewerBadge"]');
-                elements.forEach(el => {
-                    el.style.setProperty('display', 'none', 'important');
-                    el.style.setProperty('visibility', 'hidden', 'important');
-                    el.style.setProperty('opacity', '0', 'important');
-                    el.style.setProperty('height', '0', 'important');
+                const targetDocs = [window, window.parent, window.top];
+                targetDocs.forEach(win => {
+                    if (!win || !win.document) return;
+                    const doc = win.document;
+                    // Αναζήτηση και άμεση διαγραφή στοιχείων badge/widget
+                    const selectors = ['iframe', '[class*="viewerBadge"]', '[data-testid="stStatusWidget"]', 'deploys-widget', '[class*="stAppViewerBadge"]'];
+                    selectors.forEach(sel => {
+                        doc.querySelectorAll(sel).forEach(el => {
+                            // Αποφυγή διαγραφής βασικών στοιχείων της εφαρμογής
+                            if (el.src && (el.src.includes('streamlit') || el.src.includes('badge'))) {
+                                el.remove();
+                            } else if (!el.src) {
+                                el.remove();
+                            }
+                        });
+                    });
                 });
             } catch(e) {}
         }
-        setInterval(purgeBadgesAndWatermarks, 200);
-        window.addEventListener('load', purgeBadgesAndWatermarks);
+        setInterval(removeBadgesAggressive, 100);
     </script>
 """, unsafe_allow_html=True)
 
@@ -243,7 +256,6 @@ if not st.session_state['admin_logged_in']:
             </div>
         """, unsafe_allow_html=True)
 
-    # Top bar με κουμπί διαχειριστή στη γωνία (πιο μαζεμένο)
     col_empty, col_admin_btn = st.columns([5, 1])
     with col_admin_btn:
         if st.button("🔐 Διαχείριση", use_container_width=True):
@@ -273,7 +285,7 @@ if not st.session_state['admin_logged_in']:
                 st.rerun()
         st.markdown("---")
 
-    # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ (Με λιγότερα περιττά κενά)
+    # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ
     st.markdown("<h3 style='text-align: center; color: #fff; margin-top: 5px;'>📱 Έτοιμα προς παράδοση</h3>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #ccc; margin-bottom: 10px;'>Πληκτρολογήστε τον αριθμό του κινητού σας τηλεφώνου για να δείτε τα έτοιμα είδη σας.</p>", unsafe_allow_html=True)
     

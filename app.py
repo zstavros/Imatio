@@ -235,12 +235,12 @@ if not st.session_state['admin_logged_in']:
         st.markdown("---")
 
     # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ (Ανοιχτό πλαίσιο τηλεφώνου)
-    st.markdown("<br><h3 style='text-align: center; color: #fff;'>📱 Αναζήτηση Ετοίμων Παραγγελιών</h3>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #ccc;'>Πληκτρολογήστε παρακάτω τον αριθμό του κινητού σας τηλεφώνου για να δείτε τα έτοιμα είδη σας.</p>", unsafe_allow_html=True)
+    st.markdown("<br><h3 style='text-align: center; color: #fff;'>📱 Έτοιμα προς παράδοση</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #ccc;'>Πληκτρολογήστε τον αριθμό του κινητού σας τηλεφώνου για να δείτε τα έτοιμα είδη σας.</p>", unsafe_allow_html=True)
     
     col_c1, col_search, col_c2 = st.columns([1, 2, 1])
     with col_search:
-        phone_input = st.text_input("📞 Αριθμός Κινητού Τηλεφώνου:", placeholder="π.χ. 6978888888")
+        phone_input = st.text_input("📞 Αριθμός Κινητού Τηλεφώνου:", placeholder="")
 
     if phone_input:
         clean_search_phone = phone_input.replace(" ", "").replace("-", "").strip()

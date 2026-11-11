@@ -200,8 +200,10 @@ if 'active_subview' not in st.session_state:
 subview_titles = {
     'fast_loading': 'ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ',
     'edit_xalia': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΧΑΛΙΩΝ',
+    'delivered_xalia': 'ΠΑΡΑΔΟΜΕΝΑ ΧΑΛΙΑ',
     'item_loading': 'ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ',
     'edit_items': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΡΟΥΧΩΝ',
+    'delivered_items': 'ΠΑΡΑΔΟΜΕΝΑ ΡΟΥΧΑ',
     'manage_customers_new': 'ΝΕΟΣ ΠΕΛΑΤΗΣ',
     'manage_customers_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ',
     'manage_catalog_new': 'ΝΕΑ ΕΙΔΗ & ΧΑΛΙΑ',
@@ -348,6 +350,30 @@ elif st.session_state['active_subview'] == 'item_loading':
 elif st.session_state['active_subview'] == 'edit_items':
     admin_eidi.render_edit_items_tab(
         st.session_state.get('df_tr_items', pd.DataFrame()),
+        st.session_state.get('df_customers', pd.DataFrame()),
+        get_worksheet
+    )
+    
+elif st.session_state['active_subview'] == 'delivered_xalia':
+    ws_tx = get_worksheet("TrXalia")
+    data_tx = ws_tx.get_all_records()
+    df_fresh_tx = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
+    st.session_state['df_tr_xalia'] = df_fresh_tx
+    
+    admin_eidi.render_delivered_xalia_tab(
+        df_fresh_tx,
+        st.session_state.get('df_customers', pd.DataFrame()),
+        get_worksheet
+    )
+
+elif st.session_state['active_subview'] == 'delivered_items':
+    ws_ti = get_worksheet("TrItems")
+    data_ti = ws_ti.get_all_records()
+    df_fresh_ti = pd.DataFrame(data_ti) if data_ti else pd.DataFrame()
+    st.session_state['df_tr_items'] = df_fresh_ti
+    
+    admin_eidi.render_delivered_items_tab(
+        df_fresh_ti,
         st.session_state.get('df_customers', pd.DataFrame()),
         get_worksheet
     )

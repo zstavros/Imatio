@@ -414,9 +414,10 @@ elif st.session_state['active_subview'] == 'analytics':
             return pd.DataFrame()
         df_filtered = df.copy()
         
-        if 'DateIn' in df_filtered.columns:
-            df_filtered['DateIn'] = pd.to_datetime(df_filtered['DateIn'], errors='coerce')
-            df_filtered = df_filtered[(df_filtered['DateIn'] >= t_from) & (df_filtered['DateIn'] <= t_to)]
+        # ΑΛΛΑΓΗ ΕΔΩ: Φιλτράρισμα βάσει DateOut (Ημερομηνία Παράδοσης) αντί για DateIn
+        if 'DateOut' in df_filtered.columns:
+            df_filtered['DateOut'] = pd.to_datetime(df_filtered['DateOut'], errors='coerce')
+            df_filtered = df_filtered[(df_filtered['DateOut'] >= t_from) & (df_filtered['DateOut'] <= t_to)]
 
         if 'Status' in df_filtered.columns:
             df_filtered = df_filtered[df_filtered['Status'].astype(str).str.strip() == "Παραδόθηκε"]

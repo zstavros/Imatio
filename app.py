@@ -101,7 +101,29 @@ st.markdown("""
             padding: 16px 18px !important;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
+
+        /* ΚΕΝΤΡΑΡΙΣΜΑ ΠΙΝΑΚΩΝ ΠΕΛΑΤΗ (Στήλες και κεφαλίδες) */
+        div[data-testid="stDataFrame"] th {
+            text-align: center !important;
+        }
+        div[data-testid="stDataFrame"] td {
+            text-align: center !important;
+        }
     </style>
+    <script>
+        // Δυναμική αφαίρεση του badge/εικονιδίου κάτω δεξιά μέσω JavaScript
+        function hideStreamlitBadge() {
+            const elements = parent.document.querySelectorAll('iframe, [class*="viewerBadge"], [data-testid="stStatusWidget"], footer');
+            elements.forEach(el => {
+                if (el.tagName === 'FOOTER' || (el.className && el.className.includes && el.className.includes('viewerBadge'))) {
+                    el.style.display = 'none';
+                }
+            });
+            const stBadge = parent.document.querySelector('deploys-widget');
+            if (stBadge) { stBadge.style.display = 'none'; }
+        }
+        setInterval(hideStreamlitBadge, 500);
+    </script>
 """, unsafe_allow_html=True)
 
 # --- GOOGLE SHEETS CONNECTION ---

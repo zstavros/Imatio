@@ -12,16 +12,27 @@ import admin_egg
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
-# --- STRICT CUSTOM STYLING ---
+# --- STRICT CUSTOM STYLING & FULL STREAMLIT BADGE HIDE ---
 st.markdown("""
     <style>
-        header {visibility: hidden;}
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
+        /* Απόκρυψη Header, Footer, MainMenu & Viewer Badges */
+        header {visibility: hidden !important; display: none !important;}
+        #MainMenu {visibility: hidden !important; display: none !important;}
+        footer {visibility: hidden !important; display: none !important;}
         
-        .viewerBadge_link__1S137 {display: none !important;}
-        div[class*="viewerBadge"] {display: none !important;}
-        
+        /* Πλήρης απόκρυψη Streamlit Badge (κάτω δεξιά) για όλες τις εκδόσεις */
+        .viewerBadge_container__1s5nd,
+        .viewerBadge_link__1S137,
+        div[class*="viewerBadge"],
+        div[data-testid="stStatusWidget"],
+        .stAppViewerBadge,
+        div[class*="stAppViewerBadge"],
+        #stDecoration {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
         .block-container {
             padding-top: 1.5rem !important;
             padding-bottom: 2rem !important;
@@ -283,7 +294,6 @@ if not st.session_state['admin_logged_in']:
             rx_matched = ready_xalia[ready_xalia.apply(check_match, axis=1)]
             for _, r in rx_matched.iterrows():
                 results.append({
-                    #'Κατηγορία': '🧶 Χαλί',
                     'Είδος': r.get('ItName', '-'),
                     'Ημ. Παραλαβής': r.get('DateIn', '-'),
                     'Αξία €': parse_price(r.get('TotalPrice', 0.0))
@@ -293,7 +303,6 @@ if not st.session_state['admin_logged_in']:
             ri_matched = ready_items[ready_items.apply(check_match, axis=1)]
             for _, r in ri_matched.iterrows():
                 results.append({
-                    #'Κατηγορία': '👔 Ρούχο / Είδος',
                     'Είδος': r.get('ItName', '-'),
                     'Ημ. Παραλαβής': r.get('DateIn', '-'),
                     'Αξία €': parse_price(r.get('TotalPrice', 0.0))

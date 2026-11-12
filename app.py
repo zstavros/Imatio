@@ -92,13 +92,6 @@ st.markdown("""
             background-color: transparent !important;
         }
 
-        .menu-cards div[data-testid="stColumn"] {
-            background-color: #6c8ebf !important;
-            border-radius: 14px;
-            padding: 16px 18px !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
         div[data-testid="stDataFrame"] th {
             text-align: center !important;
             justify-content: center !important;
@@ -177,24 +170,6 @@ if 'df_customers' not in st.session_state or st.session_state['df_customers'].em
 
 if 'admin_logged_in' not in st.session_state:
     st.session_state['admin_logged_in'] = False
-
-if 'active_subview' not in st.session_state:
-    st.session_state['active_subview'] = 'menu'
-
-subview_titles = {
-    'fast_loading': 'ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ',
-    'edit_xalia': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΧΑΛΙΩΝ',
-    'delivered_xalia': 'ΠΑΡΑΔΟΜΕΝΑ ΧΑΛΙΑ',
-    'item_loading': 'ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ',
-    'edit_items': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΡΟΥΧΩΝ',
-    'delivered_items': 'ΠΑΡΑΔΟΜΕΝΑ ΡΟΥΧΑ',
-    'manage_customers_new': 'ΝΕΟΣ ΠΕΛΑΤΗΣ',
-    'manage_customers_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΗ',
-    'manage_catalog_new': 'ΝΕΑ ΕΙΔΗ & ΧΑΛΙΑ',
-    'manage_catalog_edit': 'ΤΡΟΠΟΠΟΙΗΣΗ ΕΙΔΩΝ-ΧΑΛΙΩΝ',
-    'analytics': 'ΑΝΑΦΟΡΕΣ & ΣΤΑΤΙΣΤΙΚΑ',
-    'ready_orders': 'ΕΤΟΙΜΑ ΠΡΟΣ ΠΑΡΑΔΟΣΗ'
-}
 
 def get_base64_image(image_path):
     if os.path.exists(image_path):
@@ -325,125 +300,49 @@ if not st.session_state['admin_logged_in']:
 
 
 # ==========================================
-# ΠΕΡΙΒΑΛΛΟΝ ΔΙΑΧΕΙΡΙΣΤΗ (Admin Panel)
+# ΠΕΡΙΒΑΛΛΟΝ ΔΙΑΧΕΙΡΙΣΤΗ (Admin Panel με TABS ψηλά)
 # ==========================================
-current_subview = st.session_state.get('active_subview', 'menu')
-if current_subview == 'menu':
-    header_text = "IMATIO - ΠΙΝΑΚΑΣ ΔΙΑΧΕΙΡΙΣΗΣ (ADMIN)"
-else:
-    header_text = subview_titles.get(current_subview, "")
-
 if logo_b64:
     header_html = f"""
-        <div class="brand-header" style="justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <img src="data:image/png;base64,{logo_b64}" style="height: 42px; width: auto; object-fit: contain;">
-                <span class="brand-title">{header_text}</span>
-            </div>
+        <div class="brand-header" style="justify-content: flex-start;">
+            <img src="data:image/png;base64,{logo_b64}" style="height: 42px; width: auto; object-fit: contain;">
+            <span class="brand-title">IMATIO - ΠΙΝΑΚΑΣ ΔΙΑΧΕΙΡΙΣΗΣ (ADMIN)</span>
+        </div>
     """
 else:
     header_html = f"""
-        <div class="brand-header" style="justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <span style="font-size: 1.6rem;">🧺</span>
-                <span class="brand-title">{header_text}</span>
-            </div>
+        <div class="brand-header" style="justify-content: flex-start;">
+            <span style="font-size: 1.6rem;">🧺</span>
+            <span class="brand-title">IMATIO - ΠΙΝΑΚΑΣ ΔΙΑΧΕΙΡΙΣΗΣ (ADMIN)</span>
+        </div>
     """
 
-st.markdown(header_html + "</div>", unsafe_allow_html=True)
+st.markdown(header_html, unsafe_allow_html=True)
 
-col_logout_space, col_logout_btn = st.columns([5, 1])
-with col_logout_btn:
-    if st.button("🔒 ΑΠΟΣΥΝΔΕΣΗ", use_container_width=True):
-        st.session_state['admin_logged_in'] = False
-        st.session_state['active_subview'] = 'menu'
-        st.rerun()
+# Δημιουργία Tabs στην κορυφή
+tab_fast, tab_edit_x, tab_del_x, tab_item, tab_edit_i, tab_del_i, tab_cust_n, tab_cust_e, tab_cat_n, tab_cat_e, tab_analytics, tab_ready = st.tabs([
+    "🚚 Παρ. Χαλιών", 
+    "✏️ Τροπ. Χαλιών", 
+    "✅ Παρδ. Χαλιά", 
+    "👕 Παρ. Ρούχων", 
+    "✏️ Τροπ. Ρούχων", 
+    "✅ Παρδ. Ρούχα", 
+    "➕ Νέος Πελ.", 
+    "✏️ Τροπ. Πελ.", 
+    "➕ Νέα Είδη", 
+    "✏️ Τροπ. Ειδών", 
+    "📊 Αναφορές & Top", 
+    "📦 Έτοιμα"
+])
 
-# --- ΚΕΝΤΡΙΚΟ ΜΕΝΟΥ ΔΙΑΧΕΙΡΙΣΤΗ ---
-if st.session_state['active_subview'] == 'menu':
-    st.markdown('<div class="menu-cards">', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2, gap="large")
-    
-    with col1:
-        st.markdown("##### 🚚 Τμήμα Χαλιών")
-        if st.button("🚚 ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'fast_loading'
-            st.rerun()
-            
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ & ΠΑΡΑΔΟΣΗ ΧΑΛΙΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'edit_xalia'
-            st.rerun()
-
-        if st.button("✅ ΠΑΡΑΔΟΜΕΝΑ ΧΑΛΙΑ", use_container_width=True):
-            st.session_state['active_subview'] = 'delivered_xalia'
-            st.rerun()
-
-    with col2:
-        st.markdown("##### 👕 Τμήμα Ρούχων")
-        if st.button("👕 ΠΑΡΑΛΑΒΗ ΡΟΥΧΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'item_loading'
-            st.rerun()
-            
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ & ΠΑΡΑΔΟΣΗ ΡΟΥΧΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'edit_items'
-            st.rerun()
-
-        if st.button("✅ ΠΑΡΑΔΟΜΕΝΑ ΡΟΥΧΑ", use_container_width=True):
-            st.session_state['active_subview'] = 'delivered_items'
-            st.rerun()
-
-    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
-
-    col_c1, col_c2 = st.columns(2, gap="large")
-    
-    with col_c1:
-        st.markdown("##### 👤 Διαχείριση Πελατών")
-        if st.button("➕ ΝΕΟΣ ΠΕΛΑΤΗΣ", use_container_width=True):
-            st.session_state['active_subview'] = 'manage_customers_new'
-            st.rerun()
-            
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΠΕΛΑΤΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'manage_customers_edit'
-            st.rerun()
-            
-    with col_c2:
-        st.markdown("##### 📦 Διαχείριση Ειδών & Χαλιών")
-        if st.button("➕ ΝΕΑ ΕΙΔΗ & ΧΑΛΙΑ", use_container_width=True):
-            st.session_state['active_subview'] = 'manage_catalog_new'
-            st.rerun()
-            
-        if st.button("✏️ ΤΡΟΠΟΠΟΙΗΣΗ ΕΙΔΩΝ & ΧΑΛΙΩΝ", use_container_width=True):
-            st.session_state['active_subview'] = 'manage_catalog_edit'
-            st.rerun()
-
-    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
-
-    col_an1, col_an2 = st.columns(2, gap="large")
-    with col_an1:
-        st.markdown("##### 📊 Αναφορές & Στατιστικά")
-        if st.button("📈 ΠΡΟΒΟΛΗ ΑΝΑΦΟΡΩΝ & ΤΖΙΡΟΥ", use_container_width=True):
-            st.session_state['date_from'] = date.today()
-            st.session_state['date_to'] = date.today()
-            st.session_state['active_subview'] = 'analytics'
-            st.rerun()
-            
-    with col_an2:
-        st.markdown("##### 📦 Έτοιμα προς Παράδοση")
-        if st.button("📦 ΤΙ ΕΧΟΥΜΕ ΑΠΟ ΕΤΟΙΜΑ", use_container_width=True):
-            st.session_state['active_subview'] = 'ready_orders'
-            st.rerun()
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-elif st.session_state['active_subview'] == 'fast_loading':
+with tab_fast:
     admin_fast.render_fast_loading_tab(
         st.session_state.get('df_customers', pd.DataFrame()),
         st.session_state.get('df_items', pd.DataFrame()),
         get_worksheet
     )
 
-elif st.session_state['active_subview'] == 'edit_xalia':
+with tab_edit_x:
     ws_tx = get_worksheet("TrXalia")
     data_tx = ws_tx.get_all_records()
     df_fresh_tx = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
@@ -456,7 +355,7 @@ elif st.session_state['active_subview'] == 'edit_xalia':
         get_worksheet
     )
 
-elif st.session_state['active_subview'] == 'delivered_xalia':
+with tab_del_x:
     ws_tx = get_worksheet("TrXalia")
     data_tx = ws_tx.get_all_records()
     df_fresh_tx = pd.DataFrame(data_tx) if data_tx else pd.DataFrame()
@@ -468,21 +367,21 @@ elif st.session_state['active_subview'] == 'delivered_xalia':
         get_worksheet
     )
 
-elif st.session_state['active_subview'] == 'item_loading':
+with tab_item:
     admin_eidi.render_item_loading_tab(
         st.session_state.get('df_customers', pd.DataFrame()),
         st.session_state.get('df_items', pd.DataFrame()),
         get_worksheet
     )
 
-elif st.session_state['active_subview'] == 'edit_items':
+with tab_edit_i:
     admin_eidi.render_edit_items_tab(
         st.session_state.get('df_tr_items', pd.DataFrame()),
         st.session_state.get('df_customers', pd.DataFrame()),
         get_worksheet
     )
 
-elif st.session_state['active_subview'] == 'delivered_items':
+with tab_del_i:
     ws_ti = get_worksheet("TrItems")
     data_ti = ws_ti.get_all_records()
     df_fresh_ti = pd.DataFrame(data_ti) if data_ti else pd.DataFrame()
@@ -494,13 +393,13 @@ elif st.session_state['active_subview'] == 'delivered_items':
         get_worksheet
     )
 
-elif st.session_state['active_subview'] == 'manage_customers_new':
+with tab_cust_n:
     admin_egg.render_new_customer_tab(
         st.session_state.get('df_customers', pd.DataFrame()), 
         get_worksheet
     )
 
-elif st.session_state['active_subview'] == 'manage_customers_edit':
+with tab_cust_e:
     ws_cust = get_worksheet("Customers")
     fresh_cust_data = ws_cust.get_all_records()
     df_fresh_customers = pd.DataFrame(fresh_cust_data) if fresh_cust_data else pd.DataFrame()
@@ -511,13 +410,13 @@ elif st.session_state['active_subview'] == 'manage_customers_edit':
         get_worksheet
     )
 
-elif st.session_state['active_subview'] == 'manage_catalog_new':
+with tab_cat_n:
     admin_egg.render_new_item_tab(
         st.session_state.get('df_items', pd.DataFrame()), 
         get_worksheet
     )
 
-elif st.session_state['active_subview'] == 'manage_catalog_edit':
+with tab_cat_e:
     ws_items = get_worksheet("Items")
     fresh_items_data = ws_items.get_all_records()
     df_fresh_items = pd.DataFrame(fresh_items_data) if fresh_items_data else pd.DataFrame()
@@ -528,14 +427,7 @@ elif st.session_state['active_subview'] == 'manage_catalog_edit':
         get_worksheet
     )
 
-elif st.session_state['active_subview'] == 'analytics':
-    col_btn, _ = st.columns([1, 4])
-    with col_btn:
-        if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
-    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
-    
+with tab_analytics:
     df_xalia = st.session_state.get('df_tr_xalia', pd.DataFrame())
     df_items = st.session_state.get('df_tr_items', pd.DataFrame())
     
@@ -607,7 +499,6 @@ elif st.session_state['active_subview'] == 'analytics':
     st.markdown("---")
     st.subheader("🏆 Top 10 Πελατών (με βάση τον τζίρο)")
     
-    # Συνένωση παραγγελιών χαλιών και ρούχων για εύρεση Top πελατών & ειδών
     frames_to_concat = []
     if not df_x_filtered.empty:
         frames_to_concat.append(df_x_filtered)
@@ -638,14 +529,7 @@ elif st.session_state['active_subview'] == 'analytics':
     else:
         st.info("Δεν υπάρχουν παραδόσεις για την επιλεγμένη χρονική περίοδο ώστε να εμφανιστούν τα Top 10.")
 
-elif st.session_state['active_subview'] == 'ready_orders':
-    col_btn, _ = st.columns([1, 4])
-    with col_btn:
-        if st.button("🏠 ΑΡΧΙΚΗ", use_container_width=True):
-            st.session_state['active_subview'] = 'menu'
-            st.rerun()
-    st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
-    
+with tab_ready:
     df_xalia = st.session_state.get('df_tr_xalia', pd.DataFrame())
     df_items = st.session_state.get('df_tr_items', pd.DataFrame())
     df_cust = st.session_state.get('df_customers', pd.DataFrame())

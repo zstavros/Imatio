@@ -575,37 +575,68 @@ elif st.session_state['active_subview'] == 'analytics':
 
     def process_df_revenue(df):
         if df.empty:
-            return 0.0
+            return pd.DataFrame(), 0.0
         df_f = df.copy()
         
         if 'Status' in df_f.columns:
             df_f = df_f[df_f['Status'].astype(str).str.strip() == "Παραδόθηκε"]
         else:
-            return 0.0
+            return pd.DataFrame(), 0.0
 
         if 'DateOut' in df_f.columns:
             df_f['DateOut_dt'] = pd.to_datetime(df_f['DateOut'], errors='coerce', dayfirst=True)
             df_f = df_f[(df_f['DateOut_dt'] >= t_from) & (df_f['DateOut_dt'] <= t_to)]
         else:
-            return 0.0
+            return pd.DataFrame(), 0.0
 
         if df_f.empty:
-            return 0.0
+            return pd.DataFrame(), 0.0
 
-        total_rev = 0.0
-        for _, row in df_f.iterrows():
-            p_val = parse_price(row.get('TotalPrice', 0.0))
-            total_rev += p_val
-            
-        return float(total_rev)
+        df_f['Price'] = df_f['TotalPrice'].apply(parse_price) if 'TotalPrice' in df_f.columns else 0.0
+        total_rev = df_f['Price'].sum()
+        return df_f, float(total_rev)
 
-    rev_x = process_df_revenue(df_xalia)
-    rev_i = process_df_revenue(df_items)
+    df_x_filtered, rev_x = process_df_revenue(df_xalia)
+    df_i_filtered, rev_i = process_df_revenue(df_items)
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Έσοδα από Χαλιά", f"{rev_x:,.2f} €")
     m2.metric("Έσοδα από Ρούχα", f"{rev_i:,.2f} €")
     m3.metric("Συνολικός Τζίρος", f"{(rev_x + rev_i):,.2f} €")
+
+    st.markdown("---")
+    st.subheader("🏆 Top 10 Πελατών (με βάση τον τζίρο)")
+    
+    # Συνένωση παραγγελιών χαλιών και ρούχων για εύρεση Top πελατών & ειδών
+    frames_to_concat = []
+    if not df_x_filtered.empty:
+        frames_to_concat.append(df_x_filtered)
+    if not df_i_filtered.empty:
+        frames_to_concat.append(df_i_filtered)
+        
+    if frames_to_concat:
+        all_delivered = pd.concat(frames_to_concat, ignore_index=True)
+        
+        if 'CustomerName' in all_delivered.columns and not all_delivered.empty:
+            top_cust = all_delivered.groupby('CustomerName')['Price'].sum().reset_index()
+            top_cust = top_cust.sort_values(by='Price', ascending=False).head(10)
+            top_cust.columns = ['Πελάτης', 'Συνολικός Τζίρος (€)']
+            top_cust['Συνολικός Τζίρος (€)'] = top_cust['Συνολικός Τζίρος (€)'].apply(lambda x: f"{x:,.2f} €")
+            st.dataframe(top_cust, use_container_width=True, hide_index=True)
+        else:
+            st.info("Δεν βρέθηκαν δεδομένα πελατών για την επιλεγμένη περίοδο.")
+            
+        st.markdown("---")
+        st.subheader("🔥 Top 10 Δημοφιλή Είδη")
+        if 'ItName' in all_delivered.columns and not all_delivered.empty:
+            top_items = all_delivered.groupby('ItName').size().reset_index(name='Ποσότητα')
+            top_items = top_items.sort_values(by='Ποσότητα', ascending=False).head(10)
+            top_items.columns = ['Είδος', 'Πλήθος Παραγγελιών']
+            st.dataframe(top_items, use_container_width=True, hide_index=True)
+        else:
+            st.info("Δεν βρέθηκαν δεδομένα ειδών για την επιλεγμένη περίοδο.")
+    else:
+        st.info("Δεν υπάρχουν παραδόσεις για την επιλεγμένη χρονική περίοδο ώστε να εμφανιστούν τα Top 10.")
 
 elif st.session_state['active_subview'] == 'ready_orders':
     col_btn, _ = st.columns([1, 4])

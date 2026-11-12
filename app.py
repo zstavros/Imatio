@@ -188,14 +188,16 @@ email_1 = str(st.secrets.get("admin_email", "")).strip().lower()
 email_2 = str(st.secrets.get("admin_email_2", "")).strip().lower()
 allowed_admins = [e for e in [email_1, email_2] if e]
 
+# --- ELEGXOS LOGIN & ASVALEIA ADMIN ---
 if getattr(st.user, "is_logged_in", False):
     logged_email = str(getattr(st.user, "email", "")).strip().lower()
     if logged_email in allowed_admins:
         st.session_state['admin_logged_in'] = True
         st.session_state['show_admin_modal'] = False
     else:
+        # An einai syndedemenos alla DEN einai stin lista, ton stamataei omorfa
         st.session_state['admin_logged_in'] = False
-
+        
 subview_titles = {
     'fast_loading': 'ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ',
     'edit_xalia': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΧΑΛΙΩΝ',

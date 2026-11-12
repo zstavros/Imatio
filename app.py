@@ -193,6 +193,8 @@ if getattr(st.user, "is_logged_in", False):
     if logged_email in allowed_admins:
         st.session_state['admin_logged_in'] = True
         st.session_state['show_admin_modal'] = False
+    else:
+        st.session_state['admin_logged_in'] = False
 
 subview_titles = {
     'fast_loading': 'ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ',

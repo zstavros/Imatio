@@ -193,7 +193,9 @@ def load_all_data():
 if 'df_customers' not in st.session_state or st.session_state['df_customers'].empty:
     load_all_data()
 
-# --- ROUTING & MENU ---
+if 'admin_logged_in' not in st.session_state:
+    st.session_state['admin_logged_in'] = False
+
 if 'active_subview' not in st.session_state:
     st.session_state['active_subview'] = 'menu'
 
@@ -220,6 +222,129 @@ def get_base64_image(image_path):
 
 logo_b64 = get_base64_image("logo.png")
 
+# ==========================================
+# ΑΡΧΙΚΗ ΟΘΟΝΗ: ΠΕΛΑΤΗΣ & ADMIN PASSWORD LOGIN
+# ==========================================
+if not st.session_state['admin_logged_in']:
+    if logo_b64:
+        st.markdown(f"""
+            <div class="brand-header" style="justify-content: center;">
+                <img src="data:image/png;base64,{logo_b64}" style="height: 45px; width: auto; object-fit: contain;">
+                <span class="brand-title" style="font-size: 1.5rem !important;">IMATIO - ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+            <div class="brand-header" style="justify-content: center;">
+                <span style="font-size: 1.6rem;">🧺</span>
+                <span class="brand-title" style="font-size: 1.5rem !important;">IMATIO - ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ</span>
+            </div>
+        """, unsafe_allow_html=True)
+
+    col_empty, col_admin_btn = st.columns([5, 1])
+    with col_admin_btn:
+        if st.button("🔐 Διαχείριση", use_container_width=True):
+            st.session_state['show_admin_modal'] = True
+
+    if st.session_state.get('show_admin_modal', False):
+        st.info("🔵 Σύνδεση Διαχειριστή")
+        
+        with st.form("admin_login_form"):
+            pwd_input = st.text_input("Κωδικός Πρόσβασης Διαχειριστή:", type="password")
+            submitted = st.form_submit_button("Σύνδεση")
+            
+            if submitted:
+                correct_pwd = str(st.secrets.get("admin_password", "imatio123"))
+                if pwd_input == correct_pwd:
+                    st.session_state['admin_logged_in'] = True
+                    st.session_state['show_admin_modal'] = False
+                    st.rerun()
+                else:
+                    st.error("❌ Λάθος κωδικός πρόσβασης.")
+                    
+        if st.button("Ακύρωση", use_container_width=True, key="admin_modal_close"):
+            st.session_state['show_admin_modal'] = False
+            st.rerun()
+            
+        st.markdown("---")
+
+    # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ
+    st.markdown("<h3 style='text-align: center; color: #fff; margin-top: 5px;'>📱 Έτοιμα προς παράδοση</h3>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #ccc; margin-bottom: 10px;'>Πληκτρολογήστε τον αριθμό του κινητού σας τηλεφώνου για να δείτε τα έτοιμα είδη σας.</p>", unsafe_allow_html=True)
+    
+    col_c1, col_search, col_c2 = st.columns([1, 2, 1])
+    with col_search:
+        phone_input = st.text_input("📞 Αριθμός Κινητού Τηλεφώνου:", placeholder="")
+
+    if phone_input:
+        clean_search_phone = phone_input.replace(" ", "").replace("-", "").strip()
+        df_cust = st.session_state.get('df_customers', pd.DataFrame())
+        
+        matched_customer_names = []
+        if not df_cust.empty:
+            df_cust.columns = df_cust.columns.str.strip()
+            phone_cols = [c for c in ['CuMobile', 'CuPhone', 'Mobile', 'Phone', 'TEL', 'Τηλέφωνο'] if c in df_cust.columns]
+            
+            for _, row in df_cust.iterrows():
+                for p_col in phone_cols:
+                    val_p = str(row.get(p_col, ''))
+                    clean_db_p = val_p.replace(" ", "").replace("-", "").replace("+", "").replace("(", "").replace(")", "").strip()
+                    
+                    if clean_search_phone != "" and (clean_search_phone == clean_db_p or clean_db_p.endswith(clean_search_phone)):
+                        c_n = str(row.get('CuName', row.get('Name', ''))).strip()
+                        if c_n and c_n not in matched_customer_names:
+                            matched_customer_names.append(c_n)
+
+        df_xalia = st.session_state.get('df_tr_xalia', pd.DataFrame())
+        df_items = st.session_state.get('df_tr_items', pd.DataFrame())
+
+        ready_xalia = pd.DataFrame()
+        ready_items = pd.DataFrame()
+
+        if not df_xalia.empty and 'Status' in df_xalia.columns:
+            ready_xalia = df_xalia[df_xalia['Status'].astype(str).str.strip().str.lower() == 'έτοιμο'].copy()
+            
+        if not df_items.empty and 'Status' in df_items.columns:
+            ready_items = df_items[df_items['Status'].astype(str).str.strip().str.lower() == 'έτοιμο'].copy()
+
+        results = []
+
+        def check_match(row):
+            c_name = str(row.get('CustomerName', '')).strip()
+            return c_name in matched_customer_names
+
+        if not ready_xalia.empty:
+            rx_matched = ready_xalia[ready_xalia.apply(check_match, axis=1)]
+            for _, r in rx_matched.iterrows():
+                results.append({
+                    'Είδος': r.get('ItName', '-'),
+                    'Ημ. Παραλαβής': r.get('DateIn', '-'),
+                    'Αξία €': f"{parse_price(r.get('TotalPrice', 0.0)):.2f}"
+                })
+
+        if not ready_items.empty:
+            ri_matched = ready_items[ready_items.apply(check_match, axis=1)]
+            for _, r in ri_matched.iterrows():
+                results.append({
+                    'Είδος': r.get('ItName', '-'),
+                    'Ημ. Παραλαβής': r.get('DateIn', '-'),
+                    'Αξία €': f"{parse_price(r.get('TotalPrice', 0.0)):.2f}"
+                })
+
+        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+        if results:
+            st.success(f"🎉 Βρέθηκαν **{len(results)}** έτοιμα είδη για εσάς!")
+            df_res = pd.DataFrame(results)
+            st.dataframe(df_res, use_container_width=True, hide_index=True)
+        else:
+            st.warning("⚠️ Δεν βρέθηκαν έτοιμα είδη για αυτόν τον αριθμό τηλεφώνου.")
+
+    st.stop()
+
+
+# ==========================================
+# ΠΕΡΙΒΑΛΛΟΝ ΔΙΑΧΕΙΡΙΣΤΗ (Admin Panel)
+# ==========================================
 current_subview = st.session_state.get('active_subview', 'menu')
 if current_subview == 'menu':
     header_text = "IMATIO-ΣΤΕΓΝΟΚΑΘΑΡΙΣΤΗΡΙΑ"
@@ -511,7 +636,6 @@ elif st.session_state['active_subview'] == 'analytics':
     str_to_gr = format_greek_date(pd.to_datetime(date_to))
 
     st.markdown("---")
-  # st.subheader(f"💰 Οικονομικά Αποτελέσματα (Παραδόθηκε) ({str_from_gr} - {str_to_gr})")
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Έσοδα από Χαλιά", f"{revenue_xalia:,.2f} €")
@@ -638,7 +762,6 @@ elif st.session_state['active_subview'] == 'ready_orders':
     rev_ready_items = ready_items['Price'].sum() if not ready_items.empty else 0.0
     total_ready_rev = rev_ready_xalia + rev_ready_items
 
-   # st.subheader("💰 Τζίρος & Αξία Έτοιμων Παραγγελιών")
     rm1, rm2, rm3 = st.columns(3)
     rm1.metric("Έτοιμα Χαλιά", f"{rev_ready_xalia:,.2f} €")
     rm2.metric("Έτοιμα Ρούχα", f"{rev_ready_items:,.2f} €")

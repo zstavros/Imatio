@@ -238,7 +238,7 @@ if not st.session_state['admin_logged_in']:
         email_2 = str(st.secrets.get("admin_email_2", "")).strip().lower()
         allowed_admins = [e for e in [email_1, email_2] if e]
 
-    col_ok, col_cancel = st.columns(2)
+        col_ok, col_cancel = st.columns(2)
         with col_ok:
             if st.button("Είσοδος", use_container_width=True, key="admin_email_submit"):
                 # --- ΕΔΩ ΤΟ ΒΑΖΟΥΜΕ ΓΙΑ ΤΟ DEBUG ---
@@ -256,6 +256,9 @@ if not st.session_state['admin_logged_in']:
                 st.session_state['show_admin_modal'] = False
                 st.rerun()
         st.markdown("---")
+### test
+    
+
 
     # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ
     st.markdown("<h3 style='text-align: center; color: #fff; margin-top: 5px;'>📱 Έτοιμα προς παράδοση</h3>", unsafe_allow_html=True)

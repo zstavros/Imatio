@@ -236,7 +236,7 @@ if not st.session_state['admin_logged_in']:
             submitted = st.form_submit_button("Σύνδεση")
             
             if submitted:
-                correct_pwd = st.secrets.get("admin_password", "imatio123")
+                correct_pwd = str(st.secrets.get("admin_password", "imatio123"))
                 if pwd_input == correct_pwd:
                     st.session_state['admin_logged_in'] = True
                     st.session_state['show_admin_modal'] = False
@@ -575,18 +575,32 @@ elif st.session_state['active_subview'] == 'analytics':
 
     def process_df_revenue(df):
         if df.empty:
-            return pd.DataFrame()
+            return 0.0
         df_f = df.copy()
-        if 'DateOut' in df_f.columns:
-            df_f['DateOut'] = pd.to_datetime(df_f['DateOut'], errors='coerce', dayfirst=True)
-            df_f = df_f[(df_f['DateOut'] >= t_from) & (df_f['DateOut'] <= t_to)]
+        
         if 'Status' in df_f.columns:
             df_f = df_f[df_f['Status'].astype(str).str.strip() == "Παραδόθηκε"]
-        df_f['Price'] = df_f['TotalPrice'].apply(parse_price) if 'TotalPrice' in df_f.columns else 0.0
-        return df_f
+        else:
+            return 0.0
 
-    rev_x = process_df_revenue(df_xalia)['Price'].sum()
-    rev_i = process_df_revenue(df_items)['Price'].sum()
+        if 'DateOut' in df_f.columns:
+            df_f['DateOut_dt'] = pd.to_datetime(df_f['DateOut'], errors='coerce', dayfirst=True)
+            df_f = df_f[(df_f['DateOut_dt'] >= t_from) & (df_f['DateOut_dt'] <= t_to)]
+        else:
+            return 0.0
+
+        if df_f.empty:
+            return 0.0
+
+        total_rev = 0.0
+        for _, row in df_f.iterrows():
+            p_val = parse_price(row.get('TotalPrice', 0.0))
+            total_rev += p_val
+            
+        return float(total_rev)
+
+    rev_x = process_df_revenue(df_xalia)
+    rev_i = process_df_revenue(df_items)
     
     m1, m2, m3 = st.columns(3)
     m1.metric("Έσοδα από Χαλιά", f"{rev_x:,.2f} €")

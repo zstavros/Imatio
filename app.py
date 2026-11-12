@@ -12,14 +12,13 @@ import admin_egg
 
 st.set_page_config(page_title="IMATIO", layout="wide", initial_sidebar_state="collapsed")
 
-# --- ULTRA STRICT CSS & BADGE BLOCKER (ΜΑΥΡΗ ΓΡΑΜΜΗ / ΚΑΛΥΜΜΑ ΚΑΤΩ ΔΕΞΙΑ) ---
+# --- ULTRA STRICT CSS & BADGE BLOCKER ---
 st.markdown("""
     <style>
         header {visibility: hidden !important; display: none !important;}
         #MainMenu {visibility: hidden !important; display: none !important;}
         footer {visibility: hidden !important; display: none !important;}
         
-        /* ΜΑΥΡΗ ΓΡΑΜΜΗ / ΚΑΛΥΜΜΑ ΓΙΑ ΤΟ BADGE ΚΑΤΩ ΔΕΞΙΑ */
         .badge-blocker {
             position: fixed !important;
             bottom: 0 !important;
@@ -100,7 +99,6 @@ st.markdown("""
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* ΚΕΝΤΡΑΡΙΣΜΑ ΟΛΩΝ ΤΩΝ ΣΤΗΛΩΝ ΣΤΟΝ ΠΙΝΑΚΑ ΠΕΛΑΤΗ */
         div[data-testid="stDataFrame"] th {
             text-align: center !important;
             justify-content: center !important;
@@ -183,21 +181,6 @@ if 'admin_logged_in' not in st.session_state:
 if 'active_subview' not in st.session_state:
     st.session_state['active_subview'] = 'menu'
 
-# --- ΑΥΤΟΜΑΤΟΣ ΕΛΕΓΧΟΣ GOOGLE OAUTH ΜΕΤΑ ΤΟ REDIRECT ---
-email_1 = str(st.secrets.get("admin_email", "")).strip().lower()
-email_2 = str(st.secrets.get("admin_email_2", "")).strip().lower()
-allowed_admins = [e for e in [email_1, email_2] if e]
-
-# --- ELEGXOS LOGIN & ASVALEIA ADMIN ---
-if getattr(st.user, "is_logged_in", False):
-    logged_email = str(getattr(st.user, "email", "")).strip().lower()
-    if logged_email in allowed_admins:
-        st.session_state['admin_logged_in'] = True
-        st.session_state['show_admin_modal'] = False
-    else:
-        # An einai syndedemenos alla DEN einai stin lista, ton stamataei omorfa
-        st.session_state['admin_logged_in'] = False
-        
 subview_titles = {
     'fast_loading': 'ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ',
     'edit_xalia': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΧΑΛΙΩΝ',
@@ -222,7 +205,7 @@ def get_base64_image(image_path):
 logo_b64 = get_base64_image("logo.png")
 
 # ==========================================
-# ΑΡΧΙΚΗ ΟΘΟΝΗ: ΠΕΛΑΤΗΣ & ADMIN LOGIN
+# ΑΡΧΙΚΗ ΟΘΟΝΗ: ΠΕΛΑΤΗΣ & ADMIN PASSWORD LOGIN
 # ==========================================
 if not st.session_state['admin_logged_in']:
     if logo_b64:
@@ -248,26 +231,23 @@ if not st.session_state['admin_logged_in']:
     if st.session_state.get('show_admin_modal', False):
         st.info("🔵 Σύνδεση Διαχειριστή")
         
-        if not getattr(st.user, "is_logged_in", False):
-            col_ok, col_cancel = st.columns(2)
-            with col_ok:
-                if st.button("🔐 Σύνδεση με Google", use_container_width=True, key="google_login_btn"):
-                    st.login("google")
-            with col_cancel:
-                if st.button("Ακύρωση", use_container_width=True, key="admin_email_cancel"):
+        with st.form("admin_login_form"):
+            pwd_input = st.text_input("Κωδικός Πρόσβασης Διαχειριστή:", type="password")
+            submitted = st.form_submit_button("Σύνδεση")
+            
+            if submitted:
+                correct_pwd = st.secrets.get("admin_password", "imatio123")
+                if pwd_input == correct_pwd:
+                    st.session_state['admin_logged_in'] = True
                     st.session_state['show_admin_modal'] = False
                     st.rerun()
-        else:
-            logged_email = str(getattr(st.user, "email", "")).strip().lower()
-            st.error(f"⚠️ Ο λογαριασμός ({logged_email}) δεν διαθέτει δικαιώματα διαχειριστή.")
-            col_out, col_cancel = st.columns(2)
-            with col_out:
-                if st.button("Αλλαγή Λογαριασμού Google", use_container_width=True, key="google_switch_btn"):
-                    st.logout()
-            with col_cancel:
-                if st.button("Κλείσιμο", use_container_width=True, key="admin_modal_close"):
-                    st.session_state['show_admin_modal'] = False
-                    st.rerun()
+                else:
+                    st.error("❌ Λάθος κωδικός πρόσβασης.")
+                    
+        if st.button("Ακύρωση", use_container_width=True, key="admin_modal_close"):
+            st.session_state['show_admin_modal'] = False
+            st.rerun()
+            
         st.markdown("---")
 
     # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ
@@ -377,10 +357,7 @@ with col_logout_btn:
     if st.button("🔒 ΑΠΟΣΥΝΔΕΣΗ", use_container_width=True):
         st.session_state['admin_logged_in'] = False
         st.session_state['active_subview'] = 'menu'
-        if getattr(st.user, "is_logged_in", False):
-            st.logout()
-        else:
-            st.rerun()
+        st.rerun()
 
 # --- ΚΕΝΤΡΙΚΟ ΜΕΝΟΥ ΔΙΑΧΕΙΡΙΣΤΗ ---
 if st.session_state['active_subview'] == 'menu':

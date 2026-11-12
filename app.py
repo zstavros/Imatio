@@ -238,9 +238,12 @@ if not st.session_state['admin_logged_in']:
         email_2 = str(st.secrets.get("admin_email_2", "")).strip().lower()
         allowed_admins = [e for e in [email_1, email_2] if e]
 
-        col_ok, col_cancel = st.columns(2)
+    col_ok, col_cancel = st.columns(2)
         with col_ok:
             if st.button("Είσοδος", use_container_width=True, key="admin_email_submit"):
+                # --- ΕΔΩ ΤΟ ΒΑΖΟΥΜΕ ΓΙΑ ΤΟ DEBUG ---
+                st.write("DEBUG - Email 1:", email_1, " | Email 2:", email_2, " | Πληκτρολογήσατε:", user_email_input)
+                
                 clean_input = user_email_input.strip().lower()
                 if clean_input in allowed_admins:
                     st.session_state['admin_logged_in'] = True

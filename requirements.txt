@@ -2,6 +2,5 @@ streamlit
 pandas
 gspread
 google-auth
-authlib
 httpx
 httpx2

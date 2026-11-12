@@ -233,11 +233,17 @@ if not st.session_state['admin_logged_in']:
     if st.session_state.get('show_admin_modal', False):
         st.info("🔵 Σύνδεση Διαχειριστή")
         user_email_input = st.text_input("Εισάγετε το Email Διαχειριστή (Gmail/Yahoo):", key="admin_email_box")
-        
-        email_1 = str(st.secrets.get("admin_email", "")).strip().lower()
-        email_2 = str(st.secrets.get("admin_email_2", "")).strip().lower()
+        # Ασφαλής ανάγνωση από τα secrets (υποστηρίζει και flat και nested μορφή)
+        email_1 = ""
+        email_2 = ""
+        try:
+            email_1 = str(st.secrets.get("admin_email", st.secrets.get("general", {}).get("admin_email", ""))).strip().lower()
+            email_2 = str(st.secrets.get("admin_email_2", st.secrets.get("general", {}).get("admin_email_2", ""))).strip().lower()
+        except:
+            pass
+            
         allowed_admins = [e for e in [email_1, email_2] if e]
-
+       
         col_ok, col_cancel = st.columns(2)
         with col_ok:
             if st.button("Είσοδος", use_container_width=True, key="admin_email_submit"):
@@ -256,9 +262,6 @@ if not st.session_state['admin_logged_in']:
                 st.session_state['show_admin_modal'] = False
                 st.rerun()
         st.markdown("---")
-### test
-    
-
 
     # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ
     st.markdown("<h3 style='text-align: center; color: #fff; margin-top: 5px;'>📱 Έτοιμα προς παράδοση</h3>", unsafe_allow_html=True)

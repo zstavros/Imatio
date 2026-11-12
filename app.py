@@ -26,7 +26,7 @@ st.markdown("""
             right: 0 !important;
             width: 140px !important;
             height: 60px !important;
-            background-color: #0e1117 !important; /* Ταιριάζει ακριβώς με το σκούρο φόντο του Streamlit */
+            background-color: #0e1117 !important;
             z-index: 999999999 !important;
             pointer-events: none !important;
         }
@@ -183,6 +183,17 @@ if 'admin_logged_in' not in st.session_state:
 if 'active_subview' not in st.session_state:
     st.session_state['active_subview'] = 'menu'
 
+# --- ΑΥΤΟΜΑΤΟΣ ΕΛΕΓΧΟΣ GOOGLE OAUTH ΜΕΤΑ ΤΟ REDIRECT ---
+email_1 = str(st.secrets.get("admin_email", "")).strip().lower()
+email_2 = str(st.secrets.get("admin_email_2", "")).strip().lower()
+allowed_admins = [e for e in [email_1, email_2] if e]
+
+if getattr(st.user, "is_logged_in", False):
+    logged_email = str(getattr(st.user, "email", "")).strip().lower()
+    if logged_email in allowed_admins:
+        st.session_state['admin_logged_in'] = True
+        st.session_state['show_admin_modal'] = False
+
 subview_titles = {
     'fast_loading': 'ΠΑΡΑΛΑΒΗ ΧΑΛΙΩΝ',
     'edit_xalia': 'ΤΡΟΠΟΠΟΙΗΣΗ ΠΑΡ.ΧΑΛΙΩΝ',
@@ -232,35 +243,27 @@ if not st.session_state['admin_logged_in']:
 
     if st.session_state.get('show_admin_modal', False):
         st.info("🔵 Σύνδεση Διαχειριστή")
-        user_email_input = st.text_input("Εισάγετε το Email Διαχειριστή (Gmail/Yahoo):", key="admin_email_box")
-        # Ασφαλής ανάγνωση από τα secrets (υποστηρίζει και flat και nested μορφή)
-        email_1 = ""
-        email_2 = ""
-        try:
-            email_1 = str(st.secrets.get("admin_email", st.secrets.get("general", {}).get("admin_email", ""))).strip().lower()
-            email_2 = str(st.secrets.get("admin_email_2", st.secrets.get("general", {}).get("admin_email_2", ""))).strip().lower()
-        except:
-            pass
-            
-        allowed_admins = [e for e in [email_1, email_2] if e]
-       
-        col_ok, col_cancel = st.columns(2)
-        with col_ok:
-            if st.button("Είσοδος", use_container_width=True, key="admin_email_submit"):
-                # --- ΕΔΩ ΤΟ ΒΑΖΟΥΜΕ ΓΙΑ ΤΟ DEBUG ---
-                st.write("DEBUG - Email 1:", email_1, " | Email 2:", email_2, " | Πληκτρολογήσατε:", user_email_input)
-                
-                clean_input = user_email_input.strip().lower()
-                if clean_input in allowed_admins:
-                    st.session_state['admin_logged_in'] = True
+        
+        if not getattr(st.user, "is_logged_in", False):
+            col_ok, col_cancel = st.columns(2)
+            with col_ok:
+                if st.button("🔐 Σύνδεση με Google", use_container_width=True, key="google_login_btn"):
+                    st.login("google")
+            with col_cancel:
+                if st.button("Ακύρωση", use_container_width=True, key="admin_email_cancel"):
                     st.session_state['show_admin_modal'] = False
                     st.rerun()
-                else:
-                    st.error("⚠️ Το email αυτό δεν διαθέτει δικαιώματα διαχειριστή.")
-        with col_cancel:
-            if st.button("Ακύρωση", use_container_width=True, key="admin_email_cancel"):
-                st.session_state['show_admin_modal'] = False
-                st.rerun()
+        else:
+            logged_email = str(getattr(st.user, "email", "")).strip().lower()
+            st.error(f"⚠️ Ο λογαριασμός ({logged_email}) δεν διαθέτει δικαιώματα διαχειριστή.")
+            col_out, col_cancel = st.columns(2)
+            with col_out:
+                if st.button("Αλλαγή Λογαριασμού Google", use_container_width=True, key="google_switch_btn"):
+                    st.logout()
+            with col_cancel:
+                if st.button("Κλείσιμο", use_container_width=True, key="admin_modal_close"):
+                    st.session_state['show_admin_modal'] = False
+                    st.rerun()
         st.markdown("---")
 
     # ΚΥΡΙΟ VIEW ΓΙΑ ΤΟΝ ΠΕΛΑΤΗ
@@ -370,7 +373,10 @@ with col_logout_btn:
     if st.button("🔒 ΑΠΟΣΥΝΔΕΣΗ", use_container_width=True):
         st.session_state['admin_logged_in'] = False
         st.session_state['active_subview'] = 'menu'
-        st.rerun()
+        if getattr(st.user, "is_logged_in", False):
+            st.logout()
+        else:
+            st.rerun()
 
 # --- ΚΕΝΤΡΙΚΟ ΜΕΝΟΥ ΔΙΑΧΕΙΡΙΣΤΗ ---
 if st.session_state['active_subview'] == 'menu':
